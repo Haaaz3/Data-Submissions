@@ -2827,6 +2827,8 @@ tr:nth-child(even) td {
 .customer-phase-guide,
 .mvp-selection-workbench,
 .provider-assignment-planner,
+.mvp-reporting-rules,
+.provider-mvp-forecast,
 .scenario-progress-note {
   border: 1px solid var(--oracle-border-soft);
   border-radius: 8px;
@@ -2838,6 +2840,11 @@ tr:nth-child(even) td {
 
 .provider-assignment-planner {
   padding-bottom: 10px;
+}
+
+.mvp-reporting-rules,
+.provider-mvp-forecast {
+  margin: 12px 0;
 }
 
 .phase-guide-title,
@@ -3026,7 +3033,8 @@ tr:nth-child(even) td {
   font-weight: 700;
 }
 
-.mvp-choice-controls {
+.mvp-choice-controls,
+.forecast-controls {
   display: grid;
   grid-template-columns: minmax(160px, 1fr) minmax(150px, 210px) minmax(150px, 210px) auto;
   gap: 10px;
@@ -3034,12 +3042,18 @@ tr:nth-child(even) td {
   margin-bottom: 12px;
 }
 
-.mvp-choice-controls label {
+.forecast-controls {
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+}
+
+.mvp-choice-controls label,
+.forecast-controls label {
   display: grid;
   gap: 5px;
 }
 
-.mvp-choice-controls select {
+.mvp-choice-controls select,
+.forecast-controls select {
   min-height: 36px;
   border: 1px solid #b9b2ab;
   border-radius: 4px;
@@ -3110,7 +3124,8 @@ tr:nth-child(even) td {
   margin: 0;
 }
 
-.mvp-selection-workbench.compact .mvp-choice-controls {
+.mvp-selection-workbench.compact .mvp-choice-controls,
+.provider-mvp-forecast.compact .forecast-controls {
   grid-template-columns: 1fr;
 }
 
@@ -3176,6 +3191,39 @@ tr:nth-child(even) td {
 .provider-assignment-planner.compact .assignment-table th,
 .provider-assignment-planner.compact .assignment-table td {
   padding: 7px 8px;
+}
+
+.forecast-table {
+  min-width: 1100px;
+}
+
+.forecast-table td strong {
+  color: var(--oracle-ink);
+}
+
+.hospital-handoff {
+  border: 1px dashed #d7bb71;
+  border-radius: 8px;
+  background: #fffaf0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+}
+
+.hospital-handoff strong,
+.hospital-handoff span {
+  display: block;
+}
+
+.hospital-handoff strong {
+  margin: 6px 0 3px;
+}
+
+.hospital-handoff p {
+  color: var(--oracle-ink-soft);
+  margin: 0;
 }
 
 .assignment-grid {
@@ -3862,6 +3910,8 @@ body.oj-redwood {
   .phase-card-row,
   .mvp-selector-heading,
   .mvp-choice-controls,
+  .forecast-controls,
+  .hospital-handoff,
   .assignment-grid,
   .score-header,
   .score-controls,

@@ -1,5 +1,13 @@
 # Changelog
 
+## v24
+
+- Removed Hospital Quality Reporting as a top-line in-app submission path.
+- Kept EH/hospital measures visible as a separate out-of-app handoff signal.
+- Added MVP reporting-level rules for group, subgroup, individual, and APM Entity selection.
+- Changed MVP setup so specialty is facility-selected, not inferred from TIN/NPI.
+- Added provider-level MVP performance forecasting before assignment.
+
 ## v23
 
 - Restored Production Today so the measure inventory is not the first production screen.

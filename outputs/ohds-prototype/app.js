@@ -16,10 +16,9 @@ const defaultScenarioByProgram = {
   MVP: "mvp-zmvp4",
   APPPLUS: "appplus-score",
   QRDA: "qrda-export",
-  HQR: "hqr-reporting",
 };
 
-const programOrder = ["MVP", "HQR", "APPPLUS", "QRDA", "MIPS"];
+const programOrder = ["MVP", "APPPLUS", "QRDA", "MIPS"];
 
 const scenarioDefinitions = {
   "mvp-zmvp4": {
@@ -62,14 +61,6 @@ const scenarioDefinitions = {
     goal: "Generate a QRDA I or QRDA III package for the selected program and scope.",
     signal: "Can QRDA be treated as a submission pathway rather than a disconnected utility?",
   },
-  "hqr-reporting": {
-    label: "Hospital Quality Reporting Review",
-    program: "HQR",
-    route: "performance",
-    selectedOrg: null,
-    goal: "Review hospital quality reporting readiness and prepare a submission package for hospital programs.",
-    signal: "Can hospital quality reporting sit beside MVP submission as a clear customer pathway?",
-  },
   "new-submission": {
     label: "Create Submission Draft",
     program: "MVP",
@@ -85,11 +76,10 @@ const customerProfiles = {
     name: "ZzMount Desert Island Hospital",
     reportingYear: "PY 2026",
     strategy: "Show legacy as disabled",
-    activeSummary: "MVP Submission + Hospital Quality Reporting + APP Plus + QRDA",
-    inactiveNote: "Traditional MIPS remains visible only as transition context while future work shifts to MVP Submission, Hospital Quality Reporting, APP Plus, and QRDA.",
+    activeSummary: "MVP Submission + APP Plus + QRDA",
+    inactiveNote: "Traditional MIPS remains visible only as transition context. Hospital quality reporting is surfaced as an out-of-app handoff, not a top-line submission path.",
     programs: {
       MVP: { status: "active", label: "MVP Submission", note: "4 MVP subgroups" },
-      HQR: { status: "active", label: "Hospital Quality", note: "Hospital eCQM reporting path" },
       APPPLUS: { status: "active", label: "Active", note: "APP Plus score review" },
       QRDA: { status: "active", label: "Active", note: "QRDA package generation" },
       MIPS: { status: "legacy", label: "Transition only", note: "Legacy scorecard available for customer context" },
@@ -99,11 +89,10 @@ const customerProfiles = {
     name: "CCPM Community Care Partnership of Maine",
     reportingYear: "PY 2026",
     strategy: "Hide retired paths, disable unused paths",
-    activeSummary: "MVP Submission + Hospital Quality Reporting + APP Plus + QRDA",
-    inactiveNote: "Traditional MIPS is removed from the customer workspace; MVP Submission and Hospital Quality Reporting remain visible so users can see the enterprise submission menu even when a specific customer pathway is not yet configured.",
+    activeSummary: "MVP Submission + APP Plus + QRDA",
+    inactiveNote: "Traditional MIPS and hospital quality reporting are removed from the top-line customer workspace; hospital submission readiness is handled through a separate experience.",
     programs: {
       MVP: { status: "active", label: "MVP Submission", note: "MVP submission workflow visible" },
-      HQR: { status: "active", label: "Hospital Quality", note: "Hospital quality reporting path visible" },
       APPPLUS: { status: "active", label: "Primary", note: "1 APM Entity" },
       QRDA: { status: "active", label: "Active", note: "QRDA III package support" },
       MIPS: { status: "hidden", label: "Retired", note: "Hidden from this customer experience" },
@@ -118,14 +107,14 @@ const measureInventoryProfiles = {
     ownerType: "Mixed EC + EH",
     period: "PY 2026",
     lastRefresh: "2026-07-15",
-    summary: "Enabled EC eCQMs support MVP and transition MIPS quality review; enabled hospital eCQMs support Hospital Quality Reporting; QRDA is available as the export path for both.",
+    summary: "Enabled EC eCQMs support MVP and transition MIPS quality review. Hospital eCQMs are flagged for a separate hospital submission experience, while QRDA remains available for supported export workflows.",
     measures: [
       { id: "CMS153v14", name: "Chlamydia Screening in Women", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Women's Health", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
       { id: "CMS349v8", name: "HIV Screening", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Infectious Disease", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
       { id: "CMS2v15", name: "Preventive Care and Screening: Screening for Depression and Follow-Up Plan", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Mental Health", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
       { id: "CMS130v14", name: "Colorectal Cancer Screening", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
-      { id: "ED-2", name: "Admit Decision Time to ED Departure Time", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Emergency Department", programs: ["HQR", "QRDA"], status: "Enabled" },
-      { id: "STK-2", name: "Discharged on Antithrombotic Therapy", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Stroke Care", programs: ["HQR", "QRDA"], status: "Enabled" },
+      { id: "ED-2", name: "Admit Decision Time to ED Departure Time", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Emergency Department", programs: ["QRDA"], status: "Out-of-app handoff" },
+      { id: "STK-2", name: "Discharged on Antithrombotic Therapy", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Stroke Care", programs: ["QRDA"], status: "Out-of-app handoff" },
     ],
   },
   ambulatory: {
@@ -148,12 +137,12 @@ const measureInventoryProfiles = {
     ownerType: "EH only",
     period: "CY 2026",
     lastRefresh: "2026-07-15",
-    summary: "Only hospital-owned measures are enabled. Hospital Quality Reporting and QRDA export are applicable; clinician MIPS/MVP paths are hidden unless EC measures are later enabled.",
+    summary: "Only hospital-owned measures are enabled. This app should not expose a top-line clinician submission path; users see an out-of-app hospital submission handoff and QRDA export context.",
     measures: [
-      { id: "ED-2", name: "Admit Decision Time to ED Departure Time", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Emergency Department", programs: ["HQR", "QRDA"], status: "Enabled" },
-      { id: "STK-2", name: "Discharged on Antithrombotic Therapy", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Stroke Care", programs: ["HQR", "QRDA"], status: "Enabled" },
-      { id: "PC-05", name: "Exclusive Breast Milk Feeding", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Maternal Care", programs: ["HQR", "QRDA"], status: "Enabled" },
-      { id: "VTE-1", name: "Venous Thromboembolism Prophylaxis", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Inpatient Quality", programs: ["HQR", "QRDA"], status: "Enabled" },
+      { id: "ED-2", name: "Admit Decision Time to ED Departure Time", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Emergency Department", programs: ["QRDA"], status: "Out-of-app handoff" },
+      { id: "STK-2", name: "Discharged on Antithrombotic Therapy", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Stroke Care", programs: ["QRDA"], status: "Out-of-app handoff" },
+      { id: "PC-05", name: "Exclusive Breast Milk Feeding", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Maternal Care", programs: ["QRDA"], status: "Out-of-app handoff" },
+      { id: "VTE-1", name: "Venous Thromboembolism Prophylaxis", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Inpatient Quality", programs: ["QRDA"], status: "Out-of-app handoff" },
     ],
   },
   appplus: {
@@ -416,24 +405,61 @@ const providerAssignmentRows = [
   },
 ];
 
+const mvpReportingLevelRules = [
+  {
+    level: "Group",
+    status: "Allowed for selected cases",
+    rule: "Single-specialty practices and multispecialty small practices can report an MVP as a group.",
+    userDecision: "Confirm practice specialty mix and small-practice status before enabling group MVP submission.",
+  },
+  {
+    level: "Group",
+    status: "Blocked for large multispecialty",
+    rule: "Multispecialty practices that are not small practices cannot report an MVP as a group beginning with PY 2026.",
+    userDecision: "Route to individual, subgroup, or APM Entity when the TIN is multispecialty and not small.",
+  },
+  {
+    level: "Subgroup",
+    status: "Registration required",
+    rule: "Subgroup reporting is MVP-only, tied to a single TIN, and requires advance registration with included clinicians.",
+    userDecision: "Collect subgroup roster, selected MVP, subgroup identifier, and whole-TIN PI context.",
+  },
+  {
+    level: "Individual / APM Entity",
+    status: "Alternative paths",
+    rule: "Clinicians may participate through multiple levels and receive the highest final score for the same TIN/NPI combination.",
+    userDecision: "Forecast individual, subgroup, group, and APM Entity outcomes before locking the submission path.",
+  },
+];
+
+const providerMvpForecastRows = [
+  { provider: "Jane Coleman, MD", npi: "1942000000", selectedSpecialty: "Infectious Disease", mvpId: "M1368", mvpName: "Prevention and Treatment of Infectious Disorders Including Hepatitis C and HIV", current: "61.2", forecast: "74.8", delta: "+13.6", confidence: "High", gaps: "HIV Screening denominator, depression follow-up numerator" },
+  { provider: "Marcus Bell, NP", npi: "1942000001", selectedSpecialty: "Infectious Disease", mvpId: "M1368", mvpName: "Prevention and Treatment of Infectious Disorders Including Hepatitis C and HIV", current: "58.9", forecast: "70.4", delta: "+11.5", confidence: "Medium", gaps: "Low HIV numerator; chlamydia denominator volume" },
+  { provider: "Nadia Singh, MD", npi: "1942000002", selectedSpecialty: "Cardiology", mvpId: "G0055", mvpName: "Advancing Care for Heart Disease", current: "67.4", forecast: "79.1", delta: "+11.7", confidence: "High", gaps: "CAD beta-blocker numerator and blood pressure control" },
+  { provider: "Robert Kane, PA", npi: "1942000003", selectedSpecialty: "Cardiology", mvpId: "G0055", mvpName: "Advancing Care for Heart Disease", current: "48.2", forecast: "55.9", delta: "+7.7", confidence: "Low", gaps: "Case minimum risk; measure attribution review" },
+  { provider: "Elena Morales, MD", npi: "1942000004", selectedSpecialty: "Mental Health", mvpId: "M1369", mvpName: "Quality Care in Mental Health and Substance Use Disorders", current: "69.1", forecast: "82.6", delta: "+13.5", confidence: "High", gaps: "Depression follow-up and SUD screening" },
+  { provider: "Priya Shah, CNM", npi: "1942000005", selectedSpecialty: "Gynecology", mvpId: "M1366", mvpName: "Focusing on Women's Health", current: "63.8", forecast: "77.0", delta: "+13.2", confidence: "Medium", gaps: "Chlamydia screening stratification and breast cancer screening" },
+  { provider: "Thomas Riley, MD", npi: "1942000006", selectedSpecialty: "Family Medicine", mvpId: "M0005", mvpName: "Value in Primary Care", current: "72.5", forecast: "81.3", delta: "+8.8", confidence: "High", gaps: "Colorectal screening and blood pressure control" },
+];
+
 const customerPhaseSteps = [
   {
     phase: "Input",
     title: "Enabled Measures Loaded",
     decision: "Use the site’s enabled measure inventory to classify EC, EH, APM, eCQM, and CQM coverage before showing submission paths.",
-    evidence: "Enabled measures, owner type, collection format, site scope, QPP/HQR applicability",
+    evidence: "Enabled measures, owner type, collection format, site scope, QPP applicability, hospital handoff",
   },
   {
     phase: "Choose",
-    title: "Choose MVP",
-    decision: "Filter the CMS MVP catalog by specialty or clinical focus and select the MVP the customer intends to register.",
-    evidence: "MVP ID, most applicable specialties, provider count, specialty fit",
+    title: "Choose Specialty and MVP",
+    decision: "Have the facility select specialty focus, review matching MVPs, and choose the MVP and reporting level they intend to register.",
+    evidence: "Facility-selected specialty, MVP ID, practice structure, small-practice status, measure fit",
   },
   {
     phase: "Validate",
-    title: "Confirm Measures",
-    decision: "Pick 4 quality measures from the selected MVP, including an outcome or high-priority measure, and choose eCQM/CQM collection type.",
-    evidence: "Measure availability, CEHRT/eCQM support, case minimum, data completeness",
+    title: "Forecast Provider Fit",
+    decision: "Forecast each provider’s performance against the selected MVP measures before assigning them to an individual, subgroup, group, or APM Entity path.",
+    evidence: "Provider-level rates, case minimum, data completeness, projected MVP score, confidence",
   },
   {
     phase: "Submit",
@@ -636,11 +662,6 @@ const pathwayCards = [
     title: "MIPS Value Pathways (MVP)",
     text: "MVPs are one way to meet MIPS reporting requirements. MVPs include a subset of measures and activities tied to a specialty, clinical condition, or episode of care.",
     buttons: [{ label: "Open MVP", program: "MVP" }],
-  },
-  {
-    title: "Hospital Quality Reporting",
-    text: "Hospital quality reporting supports hospital-focused eCQM and quality program packages with readiness review, validation, and submission tracking.",
-    buttons: [{ label: "Open HQR", program: "HQR" }],
   },
   {
     title: "APM Performance Pathways (APP Plus)",
@@ -1075,15 +1096,15 @@ function renderProviderAssignmentPlanner(scenario, options = {}) {
     <section class="provider-assignment-planner ${options.compact ? "compact" : ""}">
       <div class="phase-guide-title">
         <div>
-          <span class="eyebrow">Roster Assignment</span>
-          <h3>Provider Assignment Planner</h3>
-          <p>How practices decide group, subgroup, individual, or APM Entity submissions.</p>
+          <span class="eyebrow">MVP Assignment Planning</span>
+          <h3>Choose specialty, then assign providers to an MVP</h3>
+          <p>The facility selects the specialty/MVP context. TIN/NPI tells us roster and eligibility, but it is not enough to infer specialty or the best MVP.</p>
         </div>
         <span>TIN/NPI based</span>
       </div>
       <div class="assignment-practice-note">
         <strong>Preloaded input</strong>
-        <span>TIN/NPI eligibility, specialty, roster ownership, and data aggregation are already loaded.</span>
+        <span>TIN/NPI eligibility, provider roster, and historical measure performance are loaded. Specialty and MVP intent are customer-selected inputs.</span>
       </div>
       <div class="assignment-table-wrap">
         <table class="assignment-table">
@@ -1115,6 +1136,87 @@ function renderProviderAssignmentPlanner(scenario, options = {}) {
   `;
 }
 
+function renderMvpReportingLevelRules(options = {}) {
+  return `
+    <section class="mvp-reporting-rules ${options.compact ? "compact" : ""}">
+      <div class="phase-guide-title">
+        <div>
+          <span class="eyebrow">MVP Reporting Level Rules</span>
+          <h3>Group reporting depends on specialty mix and small-practice status</h3>
+          <p>Use this decision table before enabling a group MVP package for the selected facility.</p>
+        </div>
+        <span>PY 2026 rule</span>
+      </div>
+      <div class="assignment-table-wrap">
+        <table class="assignment-table">
+          <thead>
+            <tr><th>Level</th><th>Status</th><th>Rule</th><th>Prototype Decision</th></tr>
+          </thead>
+          <tbody>
+            ${mvpReportingLevelRules.map((row) => `
+              <tr>
+                <td><strong>${row.level}</strong></td>
+                <td><span class="status-chip ${row.status.includes("Blocked") ? "warn" : "ready"}">${row.status}</span></td>
+                <td>${row.rule}</td>
+                <td>${row.userDecision}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+function mvpForecastRowsForSpecialty(specialty) {
+  const rows = specialty === "All Specialties" ? providerMvpForecastRows : providerMvpForecastRows.filter((row) => row.selectedSpecialty === specialty);
+  return rows.length ? rows : providerMvpForecastRows.slice(0, 4);
+}
+
+function renderProviderMvpForecast(scenario, options = {}) {
+  const specialty = selectedMvpSpecialty(scenario);
+  const rows = mvpForecastRowsForSpecialty(specialty).slice(0, options.compact ? 3 : 7);
+  const avgForecast = rows.length ? Math.round(rows.reduce((sum, row) => sum + Number(row.forecast), 0) / rows.length) : 0;
+  return `
+    <section class="provider-mvp-forecast ${options.compact ? "compact" : ""}">
+      <div class="phase-guide-title">
+        <div>
+          <span class="eyebrow">Provider Performance Forecast</span>
+          <h3>Forecast performance as providers are assigned to the selected MVP</h3>
+          <p>Projected score uses the provider’s historical measure performance against the measures included in the selected MVP. Specialty is selected by the facility.</p>
+        </div>
+        <span>${avgForecast}% projected avg</span>
+      </div>
+      <div class="forecast-controls">
+        <label>Facility-selected specialty<select data-mvp-specialty aria-label="Forecast specialty">${mvpSpecialtyOptions().map((option) => `<option value="${option}"${option === specialty ? " selected" : ""}>${option}</option>`).join("")}</select></label>
+        <label>Practice structure<select aria-label="Practice structure"><option>Multispecialty, not small</option><option>Single specialty</option><option>Multispecialty small practice</option></select></label>
+        <label>Assignment mode<select aria-label="Assignment mode"><option>Subgroup recommended</option><option>Individual review</option><option>APM Entity if applicable</option><option>Group if allowed</option></select></label>
+      </div>
+      <div class="assignment-table-wrap">
+        <table class="assignment-table forecast-table">
+          <thead>
+            <tr><th>Provider</th><th>Selected Specialty</th><th>MVP</th><th class="numeric">Current</th><th class="numeric">Forecast</th><th>Confidence</th><th>Performance Drivers</th><th></th></tr>
+          </thead>
+          <tbody>
+            ${rows.map((row) => `
+              <tr>
+                <td><strong>${row.provider}</strong><span class="subline">NPI ${row.npi}</span></td>
+                <td>${row.selectedSpecialty}</td>
+                <td><strong>${row.mvpId}</strong><span class="subline">${row.mvpName}</span></td>
+                <td class="numeric">${row.current}</td>
+                <td class="numeric"><strong>${row.forecast}</strong><span class="subline">${row.delta}</span></td>
+                <td><span class="status-chip ${row.confidence === "High" ? "ready" : "warn"}">${row.confidence}</span></td>
+                <td>${row.gaps}</td>
+                <td><button class="link" data-toast="${row.provider} assigned to ${row.mvpId} forecast cohort">Assign</button></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
 function renderMvpSelectionWorkbench(scenario, options = {}) {
   const active = scenario.program === "MVP" || state.scenario.startsWith("mvp") || state.scenario === "new-submission";
   const specialty = selectedMvpSpecialty(scenario);
@@ -1125,21 +1227,22 @@ function renderMvpSelectionWorkbench(scenario, options = {}) {
       <div class="mvp-selector-heading">
         <div>
           <span class="eyebrow">MVP Submission Decision</span>
-          <h3>Choose MVP by provider specialty and reporting fit</h3>
-          <p>Specialty narrows the candidate MVPs, but the customer still confirms the reporting level, selected MVP, quality measures, and registration package.</p>
+          <h3>Facility chooses specialty, MVP, measures, and reporting level</h3>
+          <p>The prototype does not infer specialty from TIN/NPI. The facility selects a specialty focus, reviews the associated MVP measures, and forecasts provider performance before assignment.</p>
         </div>
         <div class="mvp-rule-card">
           <span>Rule of thumb</span>
-          <strong>Specialty suggests. Customer confirms.</strong>
-          <em>Group and subgroup choices depend on roster, practice structure, and CMS registration requirements.</em>
+          <strong>Specialty is customer-selected.</strong>
+          <em>TIN/NPI supports roster and eligibility; it does not choose the MVP. Group reporting depends on specialty mix and small-practice status.</em>
         </div>
       </div>
       <div class="mvp-choice-controls">
-        <label>Specialty filter<select data-mvp-specialty aria-label="Specialty filter">${mvpSpecialtyOptions().map((option) => `<option value="${option}"${option === specialty ? " selected" : ""}>${option}</option>`).join("")}</select></label>
-        <label>Participation level<select><option>Subgroup</option><option>Individual</option><option>Group</option><option>APM Entity</option></select></label>
+        <label>Facility-selected specialty<select data-mvp-specialty aria-label="Specialty filter">${mvpSpecialtyOptions().map((option) => `<option value="${option}"${option === specialty ? " selected" : ""}>${option}</option>`).join("")}</select></label>
+        <label>MVP reporting level<select><option>Subgroup</option><option>Individual</option><option>APM Entity</option><option>Group if allowed</option></select></label>
         <label>Measure mode<select><option>eCQM & CQM</option><option>eCQM</option><option>CQM</option></select></label>
         <button class="btn small" data-toast="MVP specialty fit recalculated">Recalculate Fit</button>
       </div>
+      ${renderMvpReportingLevelRules({ compact: options.compact })}
       <div class="mvp-filter-summary">
         <strong>Recommended MVPs</strong>
         <span>${visibleRows.length} match${visibleRows.length === 1 ? "" : "es"} for ${specialty}</span>
@@ -1164,6 +1267,7 @@ function renderMvpSelectionWorkbench(scenario, options = {}) {
           </article>
         `).join("")}
       </div>
+      ${renderProviderMvpForecast(scenario, { compact: options.compact })}
     </section>
   `;
 }
@@ -1257,7 +1361,7 @@ function renderMeasureSummaryCards(profile) {
     <div class="measure-summary-grid">
       <div class="measure-summary-card"><span>Total Enabled</span><strong>${counts.total}</strong><em>quality measures</em></div>
       <div class="measure-summary-card"><span>EC Measures</span><strong>${counts.EC}</strong><em>MIPS/MVP candidates</em></div>
-      <div class="measure-summary-card"><span>EH Measures</span><strong>${counts.EH}</strong><em>hospital quality candidates</em></div>
+      <div class="measure-summary-card"><span>EH Measures</span><strong>${counts.EH}</strong><em>separate handoff</em></div>
       <div class="measure-summary-card"><span>APM Measures</span><strong>${counts.APM}</strong><em>APP Plus candidates</em></div>
       <div class="measure-summary-card"><span>Formats</span><strong>${counts.eCQM} / ${counts.CQM}</strong><em>eCQM / CQM</em></div>
     </div>
@@ -1284,6 +1388,21 @@ function renderMeasurePathwayMatrix(profile, options = {}) {
           </article>
         `;
       }).join("")}
+    </div>
+  `;
+}
+
+function renderHospitalQualityHandoff(profile) {
+  const counts = measureCounts(profile);
+  if (!counts.EH) return "";
+  return `
+    <div class="hospital-handoff">
+      <div>
+        <span class="status-pill warn">Separate experience</span>
+        <strong>Hospital quality reporting is not a top-line path in this app</strong>
+        <p>${counts.EH} hospital-owned eCQM measure${counts.EH === 1 ? "" : "s"} detected. Route these users to the separate hospital quality submission workflow while keeping QRDA export context visible here.</p>
+      </div>
+      <button class="btn small secondary" data-toast="Hospital quality workflow is handled outside this prototype">View handoff note</button>
     </div>
   `;
 }
@@ -1396,6 +1515,7 @@ function renderMeasurePathwayQualifier(options = {}) {
       </div>
       ${renderMeasureSummaryCards(profile)}
       ${renderMeasurePathwayMatrix(profile, { compact: true })}
+      ${renderHospitalQualityHandoff(profile)}
     </section>
   `;
 }
@@ -2514,7 +2634,7 @@ function renderSmartRecommendationTable(scenario) {
         </div>
         <div class="smart-filters">
           <input value="" placeholder="Search by TIN or name" />
-          <select><option>All Pathways</option><option>MVP Submission</option><option>Hospital Quality Reporting</option><option>APP Plus</option><option>QRDA</option></select>
+          <select><option>All Pathways</option><option>MVP Submission</option><option>APP Plus</option><option>QRDA</option><option>Traditional MIPS transition</option></select>
           <select><option>eCQM & CQM</option><option>eCQM</option><option>CQM</option></select>
           <select><option>All Statuses</option><option>Ready</option><option>Not Registered</option></select>
         </div>
@@ -2546,7 +2666,7 @@ function renderSmartRecommendationTable(scenario) {
 
 function renderSmartSubmitReview(scenario) {
   const row = smartRecommendations[3];
-  const pathwayLabel = scenario.program === "APPPLUS" ? "APP Plus APM Entity" : scenario.program === "HQR" ? "Hospital Quality Reporting" : "MVP Subgroup";
+  const pathwayLabel = scenario.program === "APPPLUS" ? "APP Plus APM Entity" : "MVP Subgroup";
   return `
     <section class="smart-panel">
       <div class="entity-score-band">
@@ -2616,21 +2736,10 @@ function renderScenarioFocus(scenario) {
     return `
       <dl class="focus-list">
         <div><dt>Export Type</dt><dd>QRDA I / QRDA III</dd></div>
-        <div><dt>Programs</dt><dd>MVP Submission, Hospital Quality Reporting, APP Plus</dd></div>
+        <div><dt>Programs</dt><dd>MVP Submission, APP Plus, QRDA export</dd></div>
         <div><dt>Scopes</dt><dd>Individual, Group, Subgroup, APM Entity</dd></div>
         <div><dt>Status</dt><dd>Ready to configure</dd></div>
       </dl>
-    `;
-  }
-  if (scenario.program === "HQR") {
-    return `
-      <dl class="focus-list">
-        <div><dt>Program</dt><dd>Hospital Quality Reporting</dd></div>
-        <div><dt>Hospital</dt><dd>ZzMount Desert Island Hospital</dd></div>
-        <div><dt>Readiness</dt><dd>86% ready</dd></div>
-        <div><dt>Package Status</dt><dd>Validation needed</dd></div>
-      </dl>
-      ${miniScoreRows("HQR", "ZzMount Desert Island Hospital")}
     `;
   }
   return `
@@ -2694,8 +2803,8 @@ function renderWorkflowEvidence(scenario, step) {
     return `
       <div class="qrda-flow">
         <label>Category<select><option>QRDA III aggregate package</option><option>QRDA I patient-level package</option></select></label>
-        <label>Program<select><option>${programLabel(scenario.program === "QRDA" ? "APPPLUS" : scenario.program)}</option><option>MVP Submission</option><option>Hospital Quality Reporting</option><option>APP Plus</option></select></label>
-        <label>Scope<select><option>APM Entity</option><option>Hospital</option><option>Subgroup</option><option>Individual</option><option>Group</option></select></label>
+        <label>Program<select><option>${programLabel(scenario.program === "QRDA" ? "APPPLUS" : scenario.program)}</option><option>MVP Submission</option><option>APP Plus</option><option>Traditional MIPS transition</option></select></label>
+        <label>Scope<select><option>APM Entity</option><option>Subgroup</option><option>Individual</option><option>Group if allowed</option></select></label>
       </div>
     `;
   }
@@ -2707,26 +2816,26 @@ function workflowSteps(scenario) {
   const terminal = (label, verb = "Done") => ({ label, verb, next: false, toast: `${label} queued` });
   const map = {
     "mvp-zmvp4": [
-      { title: "Review Specialty-Mapped Cohorts", body: "Start from the already-mapped provider specialty cohorts and confirm which cohort the customer wants to prepare for MVP submission.", signal: "The first action is reviewing a loaded specialty cohort, not mapping providers from scratch.", view: "scope", actions: [action("Review specialty cohorts"), terminal("Explain legacy MIPS", "Note")] },
-      { title: "Choose MVP and Level", body: "Filter the CMS MVP catalog by specialty, compare candidate MVP IDs, then choose whether the customer will report as a subgroup, individual, group, or APM Entity.", signal: "Users can choose ZzMVP4 or another specialty-aligned MVP without re-selecting customer or year.", view: "submissions", actions: [action("Select MVP candidate"), terminal("Compare MVPs", "Compare")] },
-      { title: "Confirm Measures", body: "Select the required quality measures from the chosen MVP, confirm outcome/high-priority coverage, and check eCQM/CQM collection type, case minimum, and data completeness.", signal: "Measure detail is close to Quality mode, CMS session state, denominator readiness, and export action.", view: "score", actions: [action("Review measure fit"), terminal("Flag low score", "Flag")] },
+      { title: "Load Roster and Measures", body: "Start from enabled measures, provider roster, TIN/NPI eligibility, and historical measure performance. Specialty is not inferred from the TIN/NPI combination.", signal: "The first action is confirming loaded data and asking the facility to choose the specialty focus.", view: "scope", actions: [action("Choose specialty"), terminal("Explain legacy MIPS", "Note")] },
+      { title: "Choose Specialty, MVP, and Level", body: "Have the facility choose specialty focus, compare candidate MVP IDs, then choose subgroup, individual, APM Entity, or group only when CMS group rules allow it.", signal: "Group MVP is blocked for multispecialty practices that are not small; subgroup/individual/APM Entity stay available.", view: "submissions", actions: [action("Select MVP candidate"), terminal("Compare levels", "Compare")] },
+      { title: "Forecast Provider Fit", body: "Forecast each provider’s score against the selected MVP measures before assigning the provider to the MVP cohort.", signal: "Measure performance drives assignment decisions instead of a static specialty/TIN assumption.", view: "score", actions: [action("Review provider forecast"), terminal("Flag low confidence", "Flag")] },
       { title: "Register and Package", body: "Register the MVP or subgroup when needed, preserve the subgroup ID, freeze the submission-ready package, and queue the CMS submit or export action.", signal: "Submission intent is obvious and carries customer, MVP, level, subgroup, and performance period forward.", view: "score", actions: [terminal("Queue MVP package", "Queue"), terminal("Download details", "Download")] },
     ],
     "appplus-score": [
-      { title: "Confirm Submission Strategy", body: "Open a customer workspace where MVP Submission, Hospital Quality Reporting, APP Plus, and QRDA remain visible while retired Traditional MIPS is hidden.", signal: "Unused or retired programs do not compete with the active submission strategy.", view: "scope", actions: [action("Open APP Plus"), terminal("View hidden paths", "View")] },
+      { title: "Confirm Submission Strategy", body: "Open a customer workspace where MVP Submission, APP Plus, and QRDA remain visible while retired Traditional MIPS is transition context and hospital quality reporting is handled separately.", signal: "Unused or out-of-app programs do not compete with the active submission strategy.", view: "scope", actions: [action("Open APP Plus"), terminal("View handoff note", "View")] },
       { title: "Open APM Entity", body: "Land on the APM Entity score context with the entity name, score, and reporting period already selected.", signal: "APP Plus feels like a peer pathway but keeps APM-specific language.", view: "score", actions: [action("Review CQM scores"), terminal("Open entity roster", "Open")] },
       { title: "Resolve Score Signals", body: "Surface high-volume measures, weak rates, selected eCQM/CQM mode, and missing supplemental inputs before export.", signal: "The screen tells users what needs attention instead of only listing numbers.", view: "score", actions: [action("Review outliers"), terminal("Assign follow-up", "Assign")] },
       { title: "Export APP Plus Package", body: "Prepare a package with program, entity, year, and file format already scoped from the customer strategy.", signal: "The export path carries context forward.", view: "qrda", actions: [terminal("Queue APP Plus export", "Queue"), terminal("Download score data", "Download")] },
     ],
     "mips-performance": [
-      { title: "Show Transition Context", body: "Traditional MIPS is available only as a legacy reference while MVP Submission and Hospital Quality Reporting remain visible as future-state paths.", signal: "Users understand MIPS is not the primary future pathway.", view: "scope", actions: [action("Open legacy scorecard"), terminal("View migration note", "Note")] },
+      { title: "Show Transition Context", body: "Traditional MIPS is available only as a legacy reference while MVP Submission, APP Plus, and QRDA remain the in-app future-state paths.", signal: "Users understand MIPS is not the primary future pathway.", view: "scope", actions: [action("Open legacy scorecard"), terminal("View migration note", "Note")] },
       { title: "Review Customer Score", body: "Display the customer-level quality score and provider count using the same production data shape.", signal: "Legacy data remains accessible without driving the future workflow.", view: "score", actions: [action("Open score detail"), terminal("Export legacy report", "Export")] },
-      { title: "Route to Future Pathway", body: "Offer the next likely customer action: MVP Submission, Hospital Quality Reporting, APP Plus review, or QRDA package generation.", signal: "The UI nudges users from MIPS reference data toward configured future paths.", view: "scope", actions: [terminal("Recommend MVP path", "Recommend"), terminal("Create QRDA package", "Queue")] },
+      { title: "Route to Future Pathway", body: "Offer the next likely customer action: MVP Submission, APP Plus review, or QRDA package generation.", signal: "The UI nudges users from MIPS reference data toward configured future paths.", view: "scope", actions: [terminal("Recommend MVP path", "Recommend"), terminal("Create QRDA package", "Queue")] },
     ],
     "mvp-individual": [
-      { title: "Review Specialty-Mapped Clinicians", body: "Keep the user inside MVP Submission and start from the loaded clinician roster, specialty, TIN/NPI, eligibility, and available participation levels.", signal: "The dependent filters make sense because the selected pathway and specialty context are persistent.", view: "scope", actions: [action("Choose Individual scope"), terminal("Review subgroup scope", "Review")] },
-      { title: "Choose MVP for Clinician", body: "Choose the subgroup or individual clinician first, then filter available MVPs by the clinician specialty and patient population.", signal: "Disabled fields explain what must be selected before an eligible clinician or MVP can be chosen.", view: "submissions", actions: [action("Select subgroup"), terminal("Clear filters", "Clear")] },
-      { title: "Create Individual Draft", body: "Show clinician, chosen MVP, TIN/NPI, quality measures, QPP OAuth status, and missing supplemental data before draft creation.", signal: "The user can see whether the individual MVP submission is viable before registering or packaging.", view: "draft", actions: [terminal("Create individual draft", "Create"), terminal("Save filter set", "Save")] },
+      { title: "Review Eligible Clinicians", body: "Keep the user inside MVP Submission and start from clinician roster, TIN/NPI eligibility, and historical measure performance. Specialty is a facility-selected filter.", signal: "The dependent filters make sense because selected specialty and pathway context are explicit.", view: "scope", actions: [action("Choose Individual scope"), terminal("Review subgroup scope", "Review")] },
+      { title: "Choose Specialty and MVP", body: "Choose the individual clinician, select the facility-confirmed specialty, then filter available MVPs by patient population and measure fit.", signal: "Disabled fields explain what must be selected before an eligible clinician or MVP can be chosen.", view: "submissions", actions: [action("Select clinician"), terminal("Clear filters", "Clear")] },
+      { title: "Forecast Individual Draft", body: "Show clinician, chosen MVP, TIN/NPI, quality measures, forecast score, QPP OAuth status, and missing supplemental data before draft creation.", signal: "The user can see whether the individual MVP submission is viable before registering or packaging.", view: "draft", actions: [terminal("Create individual draft", "Create"), terminal("Save filter set", "Save")] },
     ],
     "qrda-export": [
       { title: "Start from Export Pathway", body: "QRDA is treated as a first-class pathway with customer and active program strategy visible.", signal: "File generation is no longer a detached utility screen.", view: "scope", actions: [action("Configure QRDA package"), terminal("View generated files", "Open")] },
@@ -2734,14 +2843,8 @@ function workflowSteps(scenario) {
       { title: "Confirm Scope", body: "Scope options adapt to the program: subgroup for MVP, APM Entity for APP Plus, and individual when supported.", signal: "Program rules are visible in the controls instead of hidden behind validation errors.", view: "qrda", actions: [action("Confirm scope"), terminal("Preview package name", "Preview")] },
       { title: "Generate Package", body: "Queue a ZIP package and expose status, warnings, and download actions in the same pathway.", signal: "Users can understand package readiness and next action immediately.", view: "qrda", actions: [terminal("Generate ZIP", "Generate"), terminal("Download history", "Open")] },
     ],
-    "hqr-reporting": [
-      { title: "Confirm Submission Strategy", body: "Start from the same customer pathway menu, with MVP Submission and Hospital Quality Reporting visible alongside APP Plus and QRDA.", signal: "Hospital quality reporting is visible as a core submission path, not a hidden utility.", view: "scope", actions: [action("Open Hospital Quality Reporting"), terminal("Review MVP Submission path", "Review")] },
-      { title: "Review Hospital Readiness", body: "Show hospital-level quality readiness, reporting period, and package status before users enter submission details.", signal: "Users can see whether the hospital path is ready before creating a package.", view: "score", actions: [action("Open readiness detail"), terminal("Flag missing data", "Flag")] },
-      { title: "Validate Hospital Package", body: "Check hospital eCQM measures, validation warnings, and required identifiers for the selected reporting period.", signal: "Validation work is part of the guided path instead of a separate upload/error loop.", view: "draft", actions: [action("Resolve validation items"), terminal("Export validation report", "Export")] },
-      { title: "Submit or Export", body: "Queue the hospital quality reporting package and preserve customer, hospital, year, and reporting program context.", signal: "The final action is clear and carries the full submission context forward.", view: "qrda", actions: [terminal("Queue HQR package", "Queue"), terminal("Download package", "Download")] },
-    ],
     "new-submission": [
-      { title: "Choose Draft Pathway", body: "Create a draft from the customer’s active pathway list, then choose MVP Submission, HQR, APP Plus, or QRDA based on the customer’s submission strategy.", signal: "Draft creation respects each customer’s configured submission mix.", view: "scope", actions: [action("Create MVP draft"), terminal("Use APP Plus instead", "Switch")] },
+      { title: "Choose Draft Pathway", body: "Create a draft from the customer’s active pathway list, then choose MVP Submission, APP Plus, or QRDA based on the customer’s submission strategy.", signal: "Draft creation respects each customer’s configured submission mix.", view: "scope", actions: [action("Create MVP draft"), terminal("Use APP Plus instead", "Switch")] },
       { title: "Choose MVP and Measures", body: "For MVP drafts, filter by provider specialty, pick the MVP, choose the reporting level, then confirm 4 quality measures and collection type.", signal: "MVP setup is visible before the user commits to the draft.", view: "draft", actions: [action("Resolve missing inputs"), terminal("Create anyway", "Create")] },
       { title: "Save for Review", body: "Persist the draft with owner, due date, selected MVP, subgroup or clinician roster, CMS QPP OAuth state, and submission path.", signal: "The draft has operational context, not just form fields.", view: "draft", actions: [terminal("Save draft", "Save"), terminal("Assign reviewer", "Assign")] },
     ],
