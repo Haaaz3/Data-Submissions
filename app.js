@@ -77,7 +77,7 @@ const customerProfiles = {
     reportingYear: "PY 2026",
     strategy: "Show legacy as disabled",
     activeSummary: "MVP Submission + APP Plus + QRDA",
-    inactiveNote: "Traditional MIPS remains visible only as transition context. Hospital quality reporting is surfaced as an out-of-app handoff, not a top-line submission path.",
+    inactiveNote: "Traditional MIPS remains visible only as transition context.",
     programs: {
       MVP: { status: "active", label: "MVP Submission", note: "4 MVP subgroups" },
       APPPLUS: { status: "active", label: "Active", note: "APP Plus score review" },
@@ -90,7 +90,7 @@ const customerProfiles = {
     reportingYear: "PY 2026",
     strategy: "Hide retired paths, disable unused paths",
     activeSummary: "MVP Submission + APP Plus + QRDA",
-    inactiveNote: "Traditional MIPS and hospital quality reporting are removed from the top-line customer workspace; hospital submission readiness is handled through a separate experience.",
+    inactiveNote: "Traditional MIPS is removed from the top-line customer workspace unless needed for transition context.",
     programs: {
       MVP: { status: "active", label: "MVP Submission", note: "MVP submission workflow visible" },
       APPPLUS: { status: "active", label: "Primary", note: "1 APM Entity" },
@@ -103,61 +103,48 @@ const customerProfiles = {
 const measureInventoryProfiles = {
   zmdi: {
     id: "zmdi",
-    siteName: "ZzMount Desert Island Hospital",
-    ownerType: "Mixed EC + EH",
+    customerName: "ZzMount Desert Island Hospital",
+    ownerType: "EC + APM-ready",
     period: "PY 2026",
     lastRefresh: "2026-07-15",
-    summary: "Enabled EC eCQMs support MVP and transition MIPS quality review. Hospital eCQMs are flagged for a separate hospital submission experience, while QRDA remains available for supported export workflows.",
+    summary: "One customer-level enabled measure inventory drives the in-app routing. EC measures support MVP, transition MIPS review, and QRDA export; some enabled measures remain analytics-only until the customer selects them for a submission.",
     measures: [
-      { id: "CMS153v14", name: "Chlamydia Screening in Women", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Women's Health", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
-      { id: "CMS349v8", name: "HIV Screening", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Infectious Disease", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
-      { id: "CMS2v15", name: "Preventive Care and Screening: Screening for Depression and Follow-Up Plan", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Mental Health", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
-      { id: "CMS130v14", name: "Colorectal Cancer Screening", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
-      { id: "ED-2", name: "Admit Decision Time to ED Departure Time", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Emergency Department", programs: ["QRDA"], status: "Out-of-app handoff" },
-      { id: "STK-2", name: "Discharged on Antithrombotic Therapy", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Stroke Care", programs: ["QRDA"], status: "Out-of-app handoff" },
+      { id: "CMS153v14", name: "Chlamydia Screening in Women", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Women's Health", programs: ["MVP", "MIPS", "QRDA"], status: "Submission selected" },
+      { id: "CMS349v8", name: "HIV Screening", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Infectious Disease", programs: ["MVP", "MIPS", "QRDA"], status: "Submission selected" },
+      { id: "CMS2v15", name: "Preventive Care and Screening: Screening for Depression and Follow-Up Plan", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Mental Health", programs: ["MVP", "MIPS", "QRDA"], status: "Submission selected" },
+      { id: "CMS130v14", name: "Colorectal Cancer Screening", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: ["MVP", "MIPS", "QRDA"], status: "Submission selected" },
+      { id: "CMS122v14", name: "Diabetes: Hemoglobin A1c Poor Control", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: [], status: "Enabled, not submission selected" },
     ],
   },
   ambulatory: {
     id: "ambulatory",
-    siteName: "Oracle-demo Ambulatory Group",
+    customerName: "Oracle-demo Ambulatory Group",
     ownerType: "EC only",
     period: "PY 2026",
     lastRefresh: "2026-07-15",
-    summary: "Only EC quality measures are enabled. MVP Submission is the recommended future path; Traditional MIPS is shown as transition context; hospital reporting is removed.",
+    summary: "This customer has one enabled clinician measure inventory. MVP Submission is the recommended future path; Traditional MIPS is shown only as transition context.",
     measures: [
-      { id: "CMS145v14", name: "CAD: Beta-Blocker Therapy", type: "CQM", owner: "EC", scope: "Eligible clinician", specialty: "Cardiology", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
-      { id: "CMS165v14", name: "Controlling High Blood Pressure", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
-      { id: "CMS125v14", name: "Breast Cancer Screening", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
-      { id: "CMS69v14", name: "BMI Screening and Follow-Up", type: "CQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
-    ],
-  },
-  hospital: {
-    id: "hospital",
-    siteName: "Northern Coast Medical Center",
-    ownerType: "EH only",
-    period: "CY 2026",
-    lastRefresh: "2026-07-15",
-    summary: "Only hospital-owned measures are enabled. This app should not expose a top-line clinician submission path; users see an out-of-app hospital submission handoff and QRDA export context.",
-    measures: [
-      { id: "ED-2", name: "Admit Decision Time to ED Departure Time", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Emergency Department", programs: ["QRDA"], status: "Out-of-app handoff" },
-      { id: "STK-2", name: "Discharged on Antithrombotic Therapy", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Stroke Care", programs: ["QRDA"], status: "Out-of-app handoff" },
-      { id: "PC-05", name: "Exclusive Breast Milk Feeding", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Maternal Care", programs: ["QRDA"], status: "Out-of-app handoff" },
-      { id: "VTE-1", name: "Venous Thromboembolism Prophylaxis", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Inpatient Quality", programs: ["QRDA"], status: "Out-of-app handoff" },
+      { id: "CMS145v14", name: "CAD: Beta-Blocker Therapy", type: "CQM", owner: "EC", scope: "Eligible clinician", specialty: "Cardiology", programs: ["MVP", "MIPS", "QRDA"], status: "Submission selected" },
+      { id: "CMS165v14", name: "Controlling High Blood Pressure", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: ["MVP", "MIPS", "QRDA"], status: "Submission selected" },
+      { id: "CMS125v14", name: "Breast Cancer Screening", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: ["MVP", "MIPS", "QRDA"], status: "Submission selected" },
+      { id: "CMS69v14", name: "BMI Screening and Follow-Up", type: "CQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: ["MIPS"], status: "Enabled for transition review" },
+      { id: "CMS138v14", name: "Preventive Care and Screening: Tobacco Use", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: [], status: "Enabled, not submission selected" },
     ],
   },
   appplus: {
     id: "appplus",
-    siteName: "CCPM Community Care Partnership of Maine",
+    customerName: "CCPM Community Care Partnership of Maine",
     ownerType: "APM Entity + EC",
     period: "PY 2026",
     lastRefresh: "2026-06-22",
-    summary: "APP Plus is the primary configured pathway because the measure inventory is tied to an APM entity. MVP Submission remains visible for specialty cohort planning and QRDA supports package generation.",
+    summary: "The customer-level inventory includes APM Entity CQMs and EC measures. APP Plus is primary, MVP remains visible for specialty cohort planning, and QRDA supports supported export packages.",
     measures: [
-      { id: "112", name: "Breast Cancer Screening", type: "CQM", owner: "APM", scope: "APM Entity", specialty: "Primary Care", programs: ["APPPLUS", "QRDA"], status: "Enabled" },
-      { id: "113", name: "Colorectal Cancer Screening", type: "CQM", owner: "APM", scope: "APM Entity", specialty: "Primary Care", programs: ["APPPLUS", "QRDA"], status: "Enabled" },
-      { id: "236", name: "Controlling High Blood Pressure", type: "CQM", owner: "APM", scope: "APM Entity", specialty: "Primary Care", programs: ["APPPLUS", "QRDA"], status: "Enabled" },
-      { id: "001", name: "Diabetes: Glycemic Status Assessment Greater Than 9%", type: "CQM", owner: "APM", scope: "APM Entity", specialty: "Endocrinology", programs: ["APPPLUS", "QRDA"], status: "Enabled" },
-      { id: "CMS2v15", name: "Screening for Depression and Follow-Up Plan", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Mental Health", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
+      { id: "112", name: "Breast Cancer Screening", type: "CQM", owner: "APM", scope: "APM Entity", specialty: "Primary Care", programs: ["APPPLUS", "QRDA"], status: "Submission selected" },
+      { id: "113", name: "Colorectal Cancer Screening", type: "CQM", owner: "APM", scope: "APM Entity", specialty: "Primary Care", programs: ["APPPLUS", "QRDA"], status: "Submission selected" },
+      { id: "236", name: "Controlling High Blood Pressure", type: "CQM", owner: "APM", scope: "APM Entity", specialty: "Primary Care", programs: ["APPPLUS", "QRDA"], status: "Submission selected" },
+      { id: "001", name: "Diabetes: Glycemic Status Assessment Greater Than 9%", type: "CQM", owner: "APM", scope: "APM Entity", specialty: "Endocrinology", programs: ["APPPLUS", "QRDA"], status: "Submission selected" },
+      { id: "CMS2v15", name: "Screening for Depression and Follow-Up Plan", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Mental Health", programs: ["MVP", "MIPS", "QRDA"], status: "Submission selected" },
+      { id: "CMS68v14", name: "Documentation of Current Medications", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: [], status: "Enabled, not submission selected" },
     ],
   },
 };
@@ -446,8 +433,8 @@ const customerPhaseSteps = [
   {
     phase: "Input",
     title: "Enabled Measures Loaded",
-    decision: "Use the site’s enabled measure inventory to classify EC, EH, APM, eCQM, and CQM coverage before showing submission paths.",
-    evidence: "Enabled measures, owner type, collection format, site scope, QPP applicability, hospital handoff",
+    decision: "Use the customer’s single enabled measure inventory to classify EC, APM, eCQM, CQM, and submission-selected coverage before showing in-app paths.",
+    evidence: "Enabled measures, submission selection, owner type, collection format, QPP applicability",
   },
   {
     phase: "Choose",
@@ -886,11 +873,13 @@ function measureCounts(profile) {
     counts.total += 1;
     counts[measure.owner] = (counts[measure.owner] || 0) + 1;
     counts[measure.type] = (counts[measure.type] || 0) + 1;
+    if (measure.programs.length) counts.submissionSelected += 1;
+    else counts.analyticsOnly += 1;
     measure.programs.forEach((program) => {
       counts.programs[program] = (counts.programs[program] || 0) + 1;
     });
     return counts;
-  }, { total: 0, EC: 0, EH: 0, APM: 0, eCQM: 0, CQM: 0, programs: {} });
+  }, { total: 0, EC: 0, APM: 0, eCQM: 0, CQM: 0, submissionSelected: 0, analyticsOnly: 0, programs: {} });
 }
 
 function enabledSpecialties(profile) {
@@ -900,35 +889,33 @@ function enabledSpecialties(profile) {
 function pathwayEligibility(profile = currentMeasureProfile()) {
   const counts = measureCounts(profile);
   const specialties = enabledSpecialties(profile);
+  const mvpMeasures = counts.programs.MVP || 0;
+  const appPlusMeasures = counts.programs.APPPLUS || 0;
+  const qrdaMeasures = counts.programs.QRDA || 0;
+  const mipsMeasures = counts.programs.MIPS || 0;
   return {
     MVP: {
-      status: counts.EC > 0 ? "recommended" : "hidden",
-      label: counts.EC > 0 ? "Recommended" : "No EC measures",
-      evidence: counts.EC > 0 ? `${counts.EC} EC measure${counts.EC === 1 ? "" : "s"} across ${specialties.length || 1} specialty focus area${specialties.length === 1 ? "" : "s"}` : "No eligible clinician quality measures enabled",
+      status: mvpMeasures > 0 ? "recommended" : "hidden",
+      label: mvpMeasures > 0 ? "Recommended" : "No MVP-selected measures",
+      evidence: mvpMeasures > 0 ? `${mvpMeasures} MVP-selected EC measure${mvpMeasures === 1 ? "" : "s"} across ${specialties.length || 1} specialty focus area${specialties.length === 1 ? "" : "s"}` : "No enabled measures are selected for MVP submission",
       next: "Filter MVP catalog by specialty and confirm group/subgroup/individual reporting level.",
     },
-    HQR: {
-      status: counts.EH > 0 ? "recommended" : "hidden",
-      label: counts.EH > 0 ? "Recommended" : "No EH measures",
-      evidence: counts.EH > 0 ? `${counts.EH} hospital eCQM measure${counts.EH === 1 ? "" : "s"} enabled` : "No hospital-owned measures enabled",
-      next: "Review hospital program readiness and package hospital eCQM submission.",
-    },
     APPPLUS: {
-      status: counts.APM > 0 ? "recommended" : counts.EC > 0 ? "applicable" : "hidden",
-      label: counts.APM > 0 ? "Primary" : counts.EC > 0 ? "Available if APM entity applies" : "Not applicable",
-      evidence: counts.APM > 0 ? `${counts.APM} APM Entity CQM measure${counts.APM === 1 ? "" : "s"} enabled` : counts.EC > 0 ? "EC measure set can be assessed for APM strategy when customer participates" : "No APM or EC measures enabled",
+      status: appPlusMeasures > 0 ? "recommended" : counts.EC > 0 ? "applicable" : "hidden",
+      label: appPlusMeasures > 0 ? "Primary" : counts.EC > 0 ? "Available if APM entity applies" : "Not applicable",
+      evidence: appPlusMeasures > 0 ? `${appPlusMeasures} APP Plus-selected APM measure${appPlusMeasures === 1 ? "" : "s"} enabled` : counts.EC > 0 ? "EC inventory can be assessed for APM strategy when the customer participates" : "No APM or EC measures enabled",
       next: "Confirm APM Entity participation and APP Plus measure package.",
     },
     QRDA: {
-      status: counts.eCQM + counts.CQM > 0 ? "applicable" : "hidden",
-      label: counts.eCQM + counts.CQM > 0 ? "Export path" : "No enabled measures",
-      evidence: `${counts.eCQM} eCQM and ${counts.CQM} CQM measure${counts.eCQM + counts.CQM === 1 ? "" : "s"} available`,
+      status: qrdaMeasures > 0 ? "applicable" : "hidden",
+      label: qrdaMeasures > 0 ? "Export path" : "No QRDA-selected measures",
+      evidence: qrdaMeasures > 0 ? `${qrdaMeasures} submission-selected measure${qrdaMeasures === 1 ? "" : "s"} can generate QRDA files` : "No enabled measures are selected for QRDA export",
       next: "Generate QRDA I/III files for the selected path and scope.",
     },
     MIPS: {
-      status: counts.EC > 0 ? "transition" : "hidden",
-      label: counts.EC > 0 ? "Transition only" : "No EC measures",
-      evidence: counts.EC > 0 ? "EC measures can still support legacy MIPS review while Traditional MIPS retires" : "No eligible clinician quality measures enabled",
+      status: mipsMeasures > 0 ? "transition" : "hidden",
+      label: mipsMeasures > 0 ? "Transition only" : "No MIPS-selected measures",
+      evidence: mipsMeasures > 0 ? `${mipsMeasures} EC measure${mipsMeasures === 1 ? "" : "s"} can support legacy MIPS review while Traditional MIPS retires` : "No enabled measures are selected for Traditional MIPS review",
       next: "Keep as legacy context; steer new submissions toward MVP where possible.",
     },
   };
@@ -1401,8 +1388,9 @@ function renderMeasureSummaryCards(profile) {
   return `
     <div class="measure-summary-grid">
       <div class="measure-summary-card"><span>Total Enabled</span><strong>${counts.total}</strong><em>quality measures</em></div>
-      <div class="measure-summary-card"><span>EC Measures</span><strong>${counts.EC}</strong><em>MIPS/MVP candidates</em></div>
-      <div class="measure-summary-card"><span>EH Measures</span><strong>${counts.EH}</strong><em>separate handoff</em></div>
+      <div class="measure-summary-card"><span>Submission Selected</span><strong>${counts.submissionSelected}</strong><em>path-driving measures</em></div>
+      <div class="measure-summary-card"><span>Enabled Only</span><strong>${counts.analyticsOnly}</strong><em>not in package yet</em></div>
+      <div class="measure-summary-card"><span>EC Measures</span><strong>${counts.EC}</strong><em>MVP/MIPS candidates</em></div>
       <div class="measure-summary-card"><span>APM Measures</span><strong>${counts.APM}</strong><em>APP Plus candidates</em></div>
       <div class="measure-summary-card"><span>Formats</span><strong>${counts.eCQM} / ${counts.CQM}</strong><em>eCQM / CQM</em></div>
     </div>
@@ -1433,21 +1421,6 @@ function renderMeasurePathwayMatrix(profile, options = {}) {
   `;
 }
 
-function renderHospitalQualityHandoff(profile) {
-  const counts = measureCounts(profile);
-  if (!counts.EH) return "";
-  return `
-    <div class="hospital-handoff">
-      <div>
-        <span class="status-pill warn">Separate experience</span>
-        <strong>Hospital quality reporting is not a top-line path in this app</strong>
-        <p>${counts.EH} hospital-owned eCQM measure${counts.EH === 1 ? "" : "s"} detected. Route these users to the separate hospital quality submission workflow while keeping QRDA export context visible here.</p>
-      </div>
-      <button class="btn small secondary" data-toast="Hospital quality workflow is handled outside this prototype">View handoff note</button>
-    </div>
-  `;
-}
-
 function renderEnabledMeasureTable(profile, options = {}) {
   const rows = options.compact ? profile.measures.slice(0, 5) : profile.measures;
   return `
@@ -1460,6 +1433,7 @@ function renderEnabledMeasureTable(profile, options = {}) {
             <th>Format</th>
             <th>Scope</th>
             <th>Clinical Focus</th>
+            <th>Submission Use</th>
             <th>Applicable Paths</th>
           </tr>
         </thead>
@@ -1471,7 +1445,8 @@ function renderEnabledMeasureTable(profile, options = {}) {
               <td>${measure.type}</td>
               <td>${measure.scope}</td>
               <td>${measure.specialty}</td>
-              <td>${measure.programs.map((program) => `<span class="path-mini">${programLabel(program)}</span>`).join("")}</td>
+              <td>${measure.status}</td>
+              <td>${measure.programs.length ? measure.programs.map((program) => `<span class="path-mini">${programLabel(program)}</span>`).join("") : `<span class="path-mini muted">Not selected</span>`}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -1493,9 +1468,9 @@ function renderMeasureIntake() {
         </div>
         <div class="intake-selector">
           <label>
-            Site / customer measure set
-            <select data-site-profile aria-label="Site measure profile">
-              ${Object.values(measureInventoryProfiles).map((item) => `<option value="${item.id}"${item.id === profile.id ? " selected" : ""}>${item.siteName}</option>`).join("")}
+            Customer measure inventory
+            <select data-site-profile aria-label="Customer measure inventory">
+              ${Object.values(measureInventoryProfiles).map((item) => `<option value="${item.id}"${item.id === profile.id ? " selected" : ""}>${item.customerName}</option>`).join("")}
             </select>
           </label>
           <dl>
@@ -1510,7 +1485,7 @@ function renderMeasureIntake() {
         <div class="section-heading-row">
           <div>
             <span class="eyebrow">Narrowed Submission Paths</span>
-            <h2>Recommended paths for this measure inventory</h2>
+            <h2>Recommended paths from submission-selected measures</h2>
           </div>
           <button class="btn" data-continue-pathways>Continue to Pathway Selection</button>
         </div>
@@ -1520,7 +1495,7 @@ function renderMeasureIntake() {
         <div class="section-heading-row">
           <div>
             <span class="eyebrow">Enabled Measures</span>
-            <h2>Measure signals used for routing</h2>
+            <h2>Single customer inventory used for routing</h2>
           </div>
           <button class="btn secondary" data-open-eligible-program="${primaryProgram}">Open ${programLabel(primaryProgram)}</button>
         </div>
@@ -1548,15 +1523,14 @@ function renderMeasurePathwayQualifier(options = {}) {
           <p>${profile.summary}</p>
         </div>
         <label>
-          Measure set
-          <select data-site-profile aria-label="Measure set">
-            ${Object.values(measureInventoryProfiles).map((item) => `<option value="${item.id}"${item.id === profile.id ? " selected" : ""}>${item.siteName}</option>`).join("")}
+          Customer inventory
+          <select data-site-profile aria-label="Customer measure inventory">
+            ${Object.values(measureInventoryProfiles).map((item) => `<option value="${item.id}"${item.id === profile.id ? " selected" : ""}>${item.customerName}</option>`).join("")}
           </select>
         </label>
       </div>
       ${renderMeasureSummaryCards(profile)}
       ${renderMeasurePathwayMatrix(profile, { compact: true })}
-      ${renderHospitalQualityHandoff(profile)}
     </section>
   `;
 }
@@ -2069,7 +2043,7 @@ function renderNewSubmission() {
         <div class="panel">
           <div class="filter-row">
             <div class="field"><label>Performance Period</label>${periodSelect()}</div>
-            <div class="field"><label>Submission Scope</label><select><option>Group</option><option>Individual</option><option>Subgroup</option><option>APM Entity</option><option>Hospital</option></select></div>
+            <div class="field"><label>Submission Scope</label><select><option>Group</option><option>Individual</option><option>Subgroup</option><option>APM Entity</option></select></div>
             <div class="field"><label>Submission Name</label><input value="${submissionTitle(state.program)} Draft" /></div>
           </div>
           <h2>Data Sources</h2>
@@ -2157,7 +2131,7 @@ function renderQrdaExport() {
         <div class="filter-row">
           <div class="field"><label>QRDA Category</label><select><option>QRDA I</option><option>QRDA III</option></select></div>
           <div class="field"><label>Program</label><select><option>MIPS</option><option>APP Plus</option><option>MVP</option></select></div>
-          <div class="field"><label>Submission Scope</label><select><option>Individual</option><option>Group</option><option>Subgroup</option><option>APM Entity</option><option>Hospital</option></select></div>
+          <div class="field"><label>Submission Scope</label><select><option>Individual</option><option>Group</option><option>Subgroup</option><option>APM Entity</option></select></div>
           <button class="btn" data-toast="QRDA export job started">Export QRDA</button>
         </div>
         <div class="table-wrap">
@@ -2209,7 +2183,7 @@ function renderFlowMap() {
         </article>
         <article class="flow-card">
           <h3>Submission Creation</h3>
-          <ol><li>Choose Group, Individual, Subgroup, APM Entity, or Hospital</li><li>Filter existing submissions</li><li>Create draft, freeze, review, and submit</li></ol>
+          <ol><li>Choose Group, Individual, Subgroup, or APM Entity</li><li>Filter existing submissions</li><li>Create draft, freeze, review, and submit</li></ol>
         </article>
         <article class="flow-card">
           <h3>Supplemental Data</h3>
@@ -2863,7 +2837,7 @@ function workflowSteps(scenario) {
       { title: "Register and Package", body: "Register the MVP or subgroup when needed, preserve the subgroup ID, freeze the submission-ready package, and queue the CMS submit or export action.", signal: "Submission intent is obvious and carries customer, MVP, level, subgroup, and performance period forward.", view: "score", actions: [terminal("Queue MVP package", "Queue"), terminal("Download details", "Download")] },
     ],
     "appplus-score": [
-      { title: "Confirm Submission Strategy", body: "Open a customer workspace where MVP Submission, APP Plus, and QRDA remain visible while retired Traditional MIPS is transition context and hospital quality reporting is handled separately.", signal: "Unused or out-of-app programs do not compete with the active submission strategy.", view: "scope", actions: [action("Open APP Plus"), terminal("View handoff note", "View")] },
+      { title: "Confirm Submission Strategy", body: "Open a customer workspace where MVP Submission, APP Plus, and QRDA remain visible while retired Traditional MIPS is transition context.", signal: "Unused programs do not compete with the active submission strategy.", view: "scope", actions: [action("Open APP Plus"), terminal("View transition note", "View")] },
       { title: "Open APM Entity", body: "Land on the APM Entity score context with the entity name, score, and reporting period already selected.", signal: "APP Plus feels like a peer pathway but keeps APM-specific language.", view: "score", actions: [action("Review CQM scores"), terminal("Open entity roster", "Open")] },
       { title: "Resolve Score Signals", body: "Surface high-volume measures, weak rates, selected eCQM/CQM mode, and missing supplemental inputs before export.", signal: "The screen tells users what needs attention instead of only listing numbers.", view: "score", actions: [action("Review outliers"), terminal("Assign follow-up", "Assign")] },
       { title: "Export APP Plus Package", body: "Prepare a package with program, entity, year, and file format already scoped from the customer strategy.", signal: "The export path carries context forward.", view: "qrda", actions: [terminal("Queue APP Plus export", "Queue"), terminal("Download score data", "Download")] },
@@ -2903,7 +2877,6 @@ function pathwayDescription(program) {
   const descriptions = {
     MIPS: "Traditional quality performance and submissions",
     MVP: "MVP submission and subgroup reporting",
-    HQR: "Hospital quality reporting and eCQM packages",
     APPPLUS: "APM entity reporting and APP Plus scores",
     QRDA: "File generation and package history",
   };
