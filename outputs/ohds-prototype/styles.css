@@ -3260,31 +3260,6 @@ tr:nth-child(even) td {
   line-height: 1.4;
 }
 
-.hospital-handoff {
-  border: 1px dashed #d7bb71;
-  border-radius: 8px;
-  background: #fffaf0;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
-}
-
-.hospital-handoff strong,
-.hospital-handoff span {
-  display: block;
-}
-
-.hospital-handoff strong {
-  margin: 6px 0 3px;
-}
-
-.hospital-handoff p {
-  color: var(--oracle-ink-soft);
-  margin: 0;
-}
-
 .assignment-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -3843,12 +3818,6 @@ body.oj-redwood {
   color: #1d5964;
 }
 
-.owner-chip.eh {
-  border-color: #b8a5d8;
-  background: #f8f5ff;
-  color: #51416e;
-}
-
 .owner-chip.apm {
   border-color: #d7bb71;
   background: #fffaf0;
@@ -3860,6 +3829,11 @@ body.oj-redwood {
   background: #f8fafb;
   color: var(--text);
   font-weight: 600;
+}
+
+.path-mini.muted {
+  color: var(--muted);
+  background: #f7f6f3;
 }
 
 .pathway-context-strip {
@@ -3971,7 +3945,6 @@ body.oj-redwood {
   .mvp-choice-controls,
   .forecast-controls,
   .composition-grid,
-  .hospital-handoff,
   .assignment-grid,
   .score-header,
   .score-controls,

@@ -1,5 +1,12 @@
 # Changelog
 
+## v26
+
+- Changed measure routing to use one customer-level enabled measure inventory.
+- Removed EH/hospital measures and handoff UI from app-facing prototype paths.
+- Distinguished enabled-only measures from submission-selected measures.
+- Updated routing cards to derive MVP, APP Plus, MIPS transition, and QRDA from submission-selected measures.
+
 ## v25
 
 - Added CMS-style subgroup composition inputs to MVP setup.
