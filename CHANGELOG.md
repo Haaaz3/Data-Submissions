@@ -1,5 +1,12 @@
 # Changelog
 
+## v22
+
+- Added a first-screen Enabled Measure Inventory intake flow.
+- Classifies EC, EH, APM, eCQM, and CQM measure coverage before showing submission paths.
+- Narrows the pathway selector by applicable programs for each customer/site measure profile.
+- Added the same measure-driven routing signal to Redwood/OJET lab variants.
+
 ## v21
 
 - Converted Provider Assignment Planner from large cards into a compact table.
@@ -17,4 +24,3 @@
 
 - Removed competing numeric step badges from experimental variants.
 - Clarified first action as reviewing pre-mapped specialty cohorts.
-
