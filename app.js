@@ -1,6 +1,6 @@
 const state = {
   program: "MIPS",
-  route: "measure-intake",
+  route: "performance",
   selectedOrg: null,
   selectedSubmission: null,
   scoreTab: "Summary",
@@ -676,7 +676,7 @@ programSelect.addEventListener("change", (event) => {
 });
 
 document.querySelector(".brand").addEventListener("click", () => {
-  state.route = "measure-intake";
+  state.route = "home";
   render();
 });
 
@@ -752,11 +752,10 @@ function render() {
     return renderDesignLab();
   }
   document.querySelector(".app-shell").classList.remove("design-lab-mode");
-  const isHome = state.route === "home" || state.route === "measure-intake";
+  const isHome = state.route === "home";
   document.querySelector(".body-grid").classList.toggle("home-mode", isHome);
   document.querySelector(".app-shell").classList.toggle("home-mode", isHome);
   renderSidebar();
-  if (state.route === "measure-intake") return renderMeasureIntake();
   if (state.route === "home") return renderHome();
   if (state.route === "performance") return renderPerformance();
   if (state.route === "performance-detail") return renderPerformanceDetail();
@@ -772,7 +771,7 @@ function render() {
 }
 
 function renderSidebar() {
-  if (state.route === "home" || state.route === "measure-intake") {
+  if (state.route === "home") {
     sidebar.innerHTML = "";
     return;
   }
@@ -1374,12 +1373,18 @@ function renderMeasureIntake() {
 
 function renderMeasurePathwayQualifier(options = {}) {
   const profile = currentMeasureProfile();
+  const titles = {
+    command: "Eligibility strip: measures narrow the workspace before action planning",
+    hub: "Pathway decision panel: show only paths supported by enabled measures",
+    smart: "Smart scan: measure inventory drives recommended next paths",
+  };
+  const label = options.mode === "smart" ? "Smart Measure Scan" : options.mode === "hub" ? "Pathway Filter" : "Measure-Driven Routing";
   return `
-    <section class="measure-qualifier ${options.compact ? "compact" : ""}">
+    <section class="measure-qualifier ${options.compact ? "compact" : ""} ${options.mode || ""}">
       <div class="section-heading-row">
         <div>
-          <span class="eyebrow">Measure-Driven Routing</span>
-          <h3>Enabled measures narrow the customer’s submission paths</h3>
+          <span class="eyebrow">${label}</span>
+          <h3>${titles[options.mode] || "Enabled measures narrow the customer’s submission paths"}</h3>
           <p>${profile.summary}</p>
         </div>
         <label>
@@ -1396,42 +1401,23 @@ function renderMeasurePathwayQualifier(options = {}) {
 }
 
 function renderHome() {
-  const profile = currentMeasureProfile();
-  const eligibility = pathwayEligibility(profile);
-  const cards = sortedEligiblePrograms(profile).map((program) => {
-    const card = pathwayCards.find((item) => item.buttons.some((button) => button.program === program));
-    return { ...card, program, eligibility: eligibility[program] };
-  }).filter((card) => card.title);
   content.innerHTML = `
     <section class="content-inner home-content">
       <div class="login-marker">LOGIN SCREEN!!</div>
       <h1>Select Oracle Health Data Submissions Pathways</h1>
-      <p class="intro">The enabled measure inventory for <strong>${profile.siteName}</strong> has narrowed the workspace to the submission paths below. Paths with no supporting EC/EH/APM measures are removed from this customer view.</p>
-      <div class="pathway-context-strip">
-        <button class="link" data-back-to-intake>Review enabled measures</button>
-        <span>${profile.ownerType}</span>
-        <span>${measureCounts(profile).total} enabled measures</span>
-        <span>Last refresh ${profile.lastRefresh}</span>
-      </div>
+      <p class="intro">The Quality Payment Program is changing how clinicians receive reimbursement from Medicare patients. This prototype maps the existing submission shell and leaves room for new paths as traditional MIPS evolves.</p>
+      <p class="intro">The application operates as a Qualified Registry for reporting quality category data, previewing measure scores, creating submission-ready data, and sending information directly to CMS workflows.</p>
       <div class="pathway-grid">
-        ${cards.map((card) => `
-          <article class="pathway-card ${card.eligibility.status}">
+        ${pathwayCards.map((card) => `
+          <article class="pathway-card">
             <h2>${card.title}</h2>
             <p>${card.text}</p>
-            <div class="pathway-card-signal">
-              <span class="status-pill ${pathwayEligibilityClass(card.eligibility.status)}">${statusLabel(card.eligibility.status)}</span>
-              <em>${card.eligibility.evidence}</em>
-            </div>
             <div class="button-row">${card.buttons.map((button) => `<button class="btn" data-program="${button.program}">${button.label}</button>`).join("")}</div>
           </article>
         `).join("")}
       </div>
     </section>
   `;
-  content.querySelector("[data-back-to-intake]").addEventListener("click", () => {
-    state.route = "measure-intake";
-    render();
-  });
   content.querySelectorAll("[data-program]").forEach((button) => {
     button.addEventListener("click", () => setProgram(button.dataset.program, button.dataset.program === "QRDA" ? "export-qrda" : "performance"));
   });
@@ -2302,7 +2288,7 @@ function renderCommandCenterSnapshot(scenario, compact) {
         <strong>${profile.strategy}</strong>
         <span>${profile.inactiveNote}</span>
       </div>
-      ${renderMeasurePathwayQualifier({ compact })}
+      ${renderMeasurePathwayQualifier({ compact, mode: "command" })}
       ${renderCustomerPhaseGuide(scenario, { compact })}
       ${renderProviderAssignmentPlanner(scenario, { compact })}
       ${renderMvpSelectionWorkbench(scenario, { compact })}
@@ -2353,7 +2339,7 @@ function renderPathwayHub(scenario) {
           <span class="eyebrow">Guided Workflow</span>
           <h2>${scenario.label}</h2>
         </div>
-        ${renderMeasurePathwayQualifier()}
+        ${renderMeasurePathwayQualifier({ mode: "hub" })}
         ${renderCustomerPhaseGuide(scenario)}
         ${renderProviderAssignmentPlanner(scenario)}
         ${renderMvpSelectionWorkbench(scenario)}
@@ -2406,7 +2392,7 @@ function renderSmartGuidedSubmission(scenario) {
           `;
         }).join("")}
       </div>
-      ${renderMeasurePathwayQualifier({ compact: true })}
+      ${renderMeasurePathwayQualifier({ compact: true, mode: "smart" })}
       ${renderCustomerPhaseGuide(scenario)}
       ${renderProviderAssignmentPlanner(scenario, { compact: scenario.program !== "MVP" })}
       ${renderMvpSelectionWorkbench(scenario, { compact: scenario.program !== "MVP" })}
