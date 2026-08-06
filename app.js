@@ -1,6 +1,6 @@
 const state = {
   program: "MIPS",
-  route: "performance",
+  route: "measure-intake",
   selectedOrg: null,
   selectedSubmission: null,
   scoreTab: "Summary",
@@ -8,6 +8,7 @@ const state = {
   scenario: "mvp-zmvp4",
   labStep: 0,
   mvpSpecialty: null,
+  siteProfile: "zmdi",
 };
 
 const defaultScenarioByProgram = {
@@ -107,6 +108,68 @@ const customerProfiles = {
       QRDA: { status: "active", label: "Active", note: "QRDA III package support" },
       MIPS: { status: "hidden", label: "Retired", note: "Hidden from this customer experience" },
     },
+  },
+};
+
+const measureInventoryProfiles = {
+  zmdi: {
+    id: "zmdi",
+    siteName: "ZzMount Desert Island Hospital",
+    ownerType: "Mixed EC + EH",
+    period: "PY 2026",
+    lastRefresh: "2026-07-15",
+    summary: "Enabled EC eCQMs support MVP and transition MIPS quality review; enabled hospital eCQMs support Hospital Quality Reporting; QRDA is available as the export path for both.",
+    measures: [
+      { id: "CMS153v14", name: "Chlamydia Screening in Women", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Women's Health", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
+      { id: "CMS349v8", name: "HIV Screening", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Infectious Disease", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
+      { id: "CMS2v15", name: "Preventive Care and Screening: Screening for Depression and Follow-Up Plan", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Mental Health", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
+      { id: "CMS130v14", name: "Colorectal Cancer Screening", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
+      { id: "ED-2", name: "Admit Decision Time to ED Departure Time", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Emergency Department", programs: ["HQR", "QRDA"], status: "Enabled" },
+      { id: "STK-2", name: "Discharged on Antithrombotic Therapy", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Stroke Care", programs: ["HQR", "QRDA"], status: "Enabled" },
+    ],
+  },
+  ambulatory: {
+    id: "ambulatory",
+    siteName: "Oracle-demo Ambulatory Group",
+    ownerType: "EC only",
+    period: "PY 2026",
+    lastRefresh: "2026-07-15",
+    summary: "Only EC quality measures are enabled. MVP Submission is the recommended future path; Traditional MIPS is shown as transition context; hospital reporting is removed.",
+    measures: [
+      { id: "CMS145v14", name: "CAD: Beta-Blocker Therapy", type: "CQM", owner: "EC", scope: "Eligible clinician", specialty: "Cardiology", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
+      { id: "CMS165v14", name: "Controlling High Blood Pressure", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
+      { id: "CMS125v14", name: "Breast Cancer Screening", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
+      { id: "CMS69v14", name: "BMI Screening and Follow-Up", type: "CQM", owner: "EC", scope: "Eligible clinician", specialty: "Primary Care", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
+    ],
+  },
+  hospital: {
+    id: "hospital",
+    siteName: "Northern Coast Medical Center",
+    ownerType: "EH only",
+    period: "CY 2026",
+    lastRefresh: "2026-07-15",
+    summary: "Only hospital-owned measures are enabled. Hospital Quality Reporting and QRDA export are applicable; clinician MIPS/MVP paths are hidden unless EC measures are later enabled.",
+    measures: [
+      { id: "ED-2", name: "Admit Decision Time to ED Departure Time", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Emergency Department", programs: ["HQR", "QRDA"], status: "Enabled" },
+      { id: "STK-2", name: "Discharged on Antithrombotic Therapy", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Stroke Care", programs: ["HQR", "QRDA"], status: "Enabled" },
+      { id: "PC-05", name: "Exclusive Breast Milk Feeding", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Maternal Care", programs: ["HQR", "QRDA"], status: "Enabled" },
+      { id: "VTE-1", name: "Venous Thromboembolism Prophylaxis", type: "eCQM", owner: "EH", scope: "Hospital", specialty: "Inpatient Quality", programs: ["HQR", "QRDA"], status: "Enabled" },
+    ],
+  },
+  appplus: {
+    id: "appplus",
+    siteName: "CCPM Community Care Partnership of Maine",
+    ownerType: "APM Entity + EC",
+    period: "PY 2026",
+    lastRefresh: "2026-06-22",
+    summary: "APP Plus is the primary configured pathway because the measure inventory is tied to an APM entity. MVP Submission remains visible for specialty cohort planning and QRDA supports package generation.",
+    measures: [
+      { id: "112", name: "Breast Cancer Screening", type: "CQM", owner: "APM", scope: "APM Entity", specialty: "Primary Care", programs: ["APPPLUS", "QRDA"], status: "Enabled" },
+      { id: "113", name: "Colorectal Cancer Screening", type: "CQM", owner: "APM", scope: "APM Entity", specialty: "Primary Care", programs: ["APPPLUS", "QRDA"], status: "Enabled" },
+      { id: "236", name: "Controlling High Blood Pressure", type: "CQM", owner: "APM", scope: "APM Entity", specialty: "Primary Care", programs: ["APPPLUS", "QRDA"], status: "Enabled" },
+      { id: "001", name: "Diabetes: Glycemic Status Assessment Greater Than 9%", type: "CQM", owner: "APM", scope: "APM Entity", specialty: "Endocrinology", programs: ["APPPLUS", "QRDA"], status: "Enabled" },
+      { id: "CMS2v15", name: "Screening for Depression and Follow-Up Plan", type: "eCQM", owner: "EC", scope: "Eligible clinician", specialty: "Mental Health", programs: ["MVP", "MIPS", "QRDA"], status: "Enabled" },
+    ],
   },
 };
 
@@ -356,9 +419,9 @@ const providerAssignmentRows = [
 const customerPhaseSteps = [
   {
     phase: "Input",
-    title: "Specialty Cohorts Loaded",
-    decision: "Use the already-mapped TIN/NPI roster, specialty, eligibility, and specialty cohort data as the starting point.",
-    evidence: "Provider specialty, practice/TIN, QPP eligibility, specialty cohort already available",
+    title: "Enabled Measures Loaded",
+    decision: "Use the site’s enabled measure inventory to classify EC, EH, APM, eCQM, and CQM coverage before showing submission paths.",
+    evidence: "Enabled measures, owner type, collection format, site scope, QPP/HQR applicability",
   },
   {
     phase: "Choose",
@@ -613,7 +676,7 @@ programSelect.addEventListener("change", (event) => {
 });
 
 document.querySelector(".brand").addEventListener("click", () => {
-  state.route = "home";
+  state.route = "measure-intake";
   render();
 });
 
@@ -684,14 +747,16 @@ function showToast(message) {
 function render() {
   labModeSelect.value = state.labMode;
   scenarioSelect.value = state.scenario;
+  content.classList.remove("flush");
   if (state.labMode !== "production") {
     return renderDesignLab();
   }
   document.querySelector(".app-shell").classList.remove("design-lab-mode");
-  const isHome = state.route === "home";
+  const isHome = state.route === "home" || state.route === "measure-intake";
   document.querySelector(".body-grid").classList.toggle("home-mode", isHome);
   document.querySelector(".app-shell").classList.toggle("home-mode", isHome);
   renderSidebar();
+  if (state.route === "measure-intake") return renderMeasureIntake();
   if (state.route === "home") return renderHome();
   if (state.route === "performance") return renderPerformance();
   if (state.route === "performance-detail") return renderPerformanceDetail();
@@ -707,7 +772,7 @@ function render() {
 }
 
 function renderSidebar() {
-  if (state.route === "home") {
+  if (state.route === "home" || state.route === "measure-intake") {
     sidebar.innerHTML = "";
     return;
   }
@@ -792,12 +857,98 @@ function programStatus(profile, program) {
   return profile.programs[program] || { status: "disabled", label: "Not configured", note: "This pathway is not part of the customer strategy." };
 }
 
+function currentMeasureProfile() {
+  return measureInventoryProfiles[state.siteProfile] || measureInventoryProfiles.zmdi;
+}
+
+function measureCounts(profile) {
+  return profile.measures.reduce((counts, measure) => {
+    counts.total += 1;
+    counts[measure.owner] = (counts[measure.owner] || 0) + 1;
+    counts[measure.type] = (counts[measure.type] || 0) + 1;
+    measure.programs.forEach((program) => {
+      counts.programs[program] = (counts.programs[program] || 0) + 1;
+    });
+    return counts;
+  }, { total: 0, EC: 0, EH: 0, APM: 0, eCQM: 0, CQM: 0, programs: {} });
+}
+
+function enabledSpecialties(profile) {
+  return [...new Set(profile.measures.filter((measure) => measure.owner === "EC").map((measure) => measure.specialty))];
+}
+
+function pathwayEligibility(profile = currentMeasureProfile()) {
+  const counts = measureCounts(profile);
+  const specialties = enabledSpecialties(profile);
+  return {
+    MVP: {
+      status: counts.EC > 0 ? "recommended" : "hidden",
+      label: counts.EC > 0 ? "Recommended" : "No EC measures",
+      evidence: counts.EC > 0 ? `${counts.EC} EC measure${counts.EC === 1 ? "" : "s"} across ${specialties.length || 1} specialty focus area${specialties.length === 1 ? "" : "s"}` : "No eligible clinician quality measures enabled",
+      next: "Filter MVP catalog by specialty and confirm group/subgroup/individual reporting level.",
+    },
+    HQR: {
+      status: counts.EH > 0 ? "recommended" : "hidden",
+      label: counts.EH > 0 ? "Recommended" : "No EH measures",
+      evidence: counts.EH > 0 ? `${counts.EH} hospital eCQM measure${counts.EH === 1 ? "" : "s"} enabled` : "No hospital-owned measures enabled",
+      next: "Review hospital program readiness and package hospital eCQM submission.",
+    },
+    APPPLUS: {
+      status: counts.APM > 0 ? "recommended" : counts.EC > 0 ? "applicable" : "hidden",
+      label: counts.APM > 0 ? "Primary" : counts.EC > 0 ? "Available if APM entity applies" : "Not applicable",
+      evidence: counts.APM > 0 ? `${counts.APM} APM Entity CQM measure${counts.APM === 1 ? "" : "s"} enabled` : counts.EC > 0 ? "EC measure set can be assessed for APM strategy when customer participates" : "No APM or EC measures enabled",
+      next: "Confirm APM Entity participation and APP Plus measure package.",
+    },
+    QRDA: {
+      status: counts.eCQM + counts.CQM > 0 ? "applicable" : "hidden",
+      label: counts.eCQM + counts.CQM > 0 ? "Export path" : "No enabled measures",
+      evidence: `${counts.eCQM} eCQM and ${counts.CQM} CQM measure${counts.eCQM + counts.CQM === 1 ? "" : "s"} available`,
+      next: "Generate QRDA I/III files for the selected path and scope.",
+    },
+    MIPS: {
+      status: counts.EC > 0 ? "transition" : "hidden",
+      label: counts.EC > 0 ? "Transition only" : "No EC measures",
+      evidence: counts.EC > 0 ? "EC measures can still support legacy MIPS review while Traditional MIPS retires" : "No eligible clinician quality measures enabled",
+      next: "Keep as legacy context; steer new submissions toward MVP where possible.",
+    },
+  };
+}
+
+function availableProgramsFromMeasures(profile = currentMeasureProfile()) {
+  const eligibility = pathwayEligibility(profile);
+  return programOrder.filter((program) => eligibility[program]?.status !== "hidden");
+}
+
+function eligibilityRank(status) {
+  const order = { recommended: 0, applicable: 1, transition: 2, hidden: 3 };
+  return order[status] ?? 4;
+}
+
+function sortedEligiblePrograms(profile = currentMeasureProfile()) {
+  const eligibility = pathwayEligibility(profile);
+  return availableProgramsFromMeasures(profile).sort((a, b) => eligibilityRank(eligibility[a].status) - eligibilityRank(eligibility[b].status));
+}
+
+function pathwayEligibilityClass(status) {
+  if (status === "recommended") return "ok";
+  if (status === "applicable") return "";
+  if (status === "transition") return "warn";
+  return "disabled";
+}
+
+function firstEligibleProgram(profile = currentMeasureProfile()) {
+  return sortedEligiblePrograms(profile)[0] || "MVP";
+}
+
 function statusLabel(status) {
   const labels = {
     active: "Active",
     legacy: "Transition",
     disabled: "Unavailable",
     hidden: "Hidden",
+    recommended: "Recommended",
+    applicable: "Applicable",
+    transition: "Transition",
   };
   return labels[status] || status;
 }
@@ -1101,26 +1252,210 @@ function qualityMeasureRows(measureList) {
   `;
 }
 
+function renderMeasureSummaryCards(profile) {
+  const counts = measureCounts(profile);
+  return `
+    <div class="measure-summary-grid">
+      <div class="measure-summary-card"><span>Total Enabled</span><strong>${counts.total}</strong><em>quality measures</em></div>
+      <div class="measure-summary-card"><span>EC Measures</span><strong>${counts.EC}</strong><em>MIPS/MVP candidates</em></div>
+      <div class="measure-summary-card"><span>EH Measures</span><strong>${counts.EH}</strong><em>hospital quality candidates</em></div>
+      <div class="measure-summary-card"><span>APM Measures</span><strong>${counts.APM}</strong><em>APP Plus candidates</em></div>
+      <div class="measure-summary-card"><span>Formats</span><strong>${counts.eCQM} / ${counts.CQM}</strong><em>eCQM / CQM</em></div>
+    </div>
+  `;
+}
+
+function renderMeasurePathwayMatrix(profile, options = {}) {
+  const eligibility = pathwayEligibility(profile);
+  const programs = options.showHidden ? programOrder : sortedEligiblePrograms(profile);
+  return `
+    <div class="measure-pathway-matrix ${options.compact ? "compact" : ""}">
+      ${programs.map((program) => {
+        const rule = eligibility[program];
+        const visible = rule.status !== "hidden";
+        return `
+          <article class="measure-pathway ${rule.status} ${visible ? "" : "hidden-path"}">
+            <div>
+              <span class="status-pill ${pathwayEligibilityClass(rule.status)}">${statusLabel(rule.status)}</span>
+              <h3>${programLabel(program)}</h3>
+              <p>${rule.evidence}</p>
+            </div>
+            <em>${rule.next}</em>
+            ${visible ? `<button class="btn small" data-open-eligible-program="${program}">Open Path</button>` : `<button class="btn small secondary" disabled>Not shown</button>`}
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderEnabledMeasureTable(profile, options = {}) {
+  const rows = options.compact ? profile.measures.slice(0, 5) : profile.measures;
+  return `
+    <div class="table-wrap measure-inventory-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Measure</th>
+            <th>Owner</th>
+            <th>Format</th>
+            <th>Scope</th>
+            <th>Clinical Focus</th>
+            <th>Applicable Paths</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((measure) => `
+            <tr>
+              <td><strong>${measure.id}</strong><span class="subline">${measure.name}</span></td>
+              <td><span class="owner-chip ${measure.owner.toLowerCase()}">${measure.owner}</span></td>
+              <td>${measure.type}</td>
+              <td>${measure.scope}</td>
+              <td>${measure.specialty}</td>
+              <td>${measure.programs.map((program) => `<span class="path-mini">${programLabel(program)}</span>`).join("")}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderMeasureIntake() {
+  const profile = currentMeasureProfile();
+  const primaryProgram = firstEligibleProgram(profile);
+  content.innerHTML = `
+    <section class="content-inner measure-intake">
+      <div class="intake-hero">
+        <div>
+          <span class="eyebrow">Step 0: Measure Inventory</span>
+          <h1>Start with enabled measures, then show the right submission paths</h1>
+          <p>${profile.summary}</p>
+        </div>
+        <div class="intake-selector">
+          <label>
+            Site / customer measure set
+            <select data-site-profile aria-label="Site measure profile">
+              ${Object.values(measureInventoryProfiles).map((item) => `<option value="${item.id}"${item.id === profile.id ? " selected" : ""}>${item.siteName}</option>`).join("")}
+            </select>
+          </label>
+          <dl>
+            <div><dt>Measure owner mix</dt><dd>${profile.ownerType}</dd></div>
+            <div><dt>Period</dt><dd>${profile.period}</dd></div>
+            <div><dt>Last refresh</dt><dd>${profile.lastRefresh}</dd></div>
+          </dl>
+        </div>
+      </div>
+      ${renderMeasureSummaryCards(profile)}
+      <section class="intake-section">
+        <div class="section-heading-row">
+          <div>
+            <span class="eyebrow">Narrowed Submission Paths</span>
+            <h2>Recommended paths for this measure inventory</h2>
+          </div>
+          <button class="btn" data-continue-pathways>Continue to Pathway Selection</button>
+        </div>
+        ${renderMeasurePathwayMatrix(profile)}
+      </section>
+      <section class="intake-section">
+        <div class="section-heading-row">
+          <div>
+            <span class="eyebrow">Enabled Measures</span>
+            <h2>Measure signals used for routing</h2>
+          </div>
+          <button class="btn secondary" data-open-eligible-program="${primaryProgram}">Open ${programLabel(primaryProgram)}</button>
+        </div>
+        ${renderEnabledMeasureTable(profile)}
+      </section>
+    </section>
+  `;
+  bindMeasureIntakeControls();
+}
+
+function renderMeasurePathwayQualifier(options = {}) {
+  const profile = currentMeasureProfile();
+  return `
+    <section class="measure-qualifier ${options.compact ? "compact" : ""}">
+      <div class="section-heading-row">
+        <div>
+          <span class="eyebrow">Measure-Driven Routing</span>
+          <h3>Enabled measures narrow the customer’s submission paths</h3>
+          <p>${profile.summary}</p>
+        </div>
+        <label>
+          Measure set
+          <select data-site-profile aria-label="Measure set">
+            ${Object.values(measureInventoryProfiles).map((item) => `<option value="${item.id}"${item.id === profile.id ? " selected" : ""}>${item.siteName}</option>`).join("")}
+          </select>
+        </label>
+      </div>
+      ${renderMeasureSummaryCards(profile)}
+      ${renderMeasurePathwayMatrix(profile, { compact: true })}
+    </section>
+  `;
+}
+
 function renderHome() {
+  const profile = currentMeasureProfile();
+  const eligibility = pathwayEligibility(profile);
+  const cards = sortedEligiblePrograms(profile).map((program) => {
+    const card = pathwayCards.find((item) => item.buttons.some((button) => button.program === program));
+    return { ...card, program, eligibility: eligibility[program] };
+  }).filter((card) => card.title);
   content.innerHTML = `
     <section class="content-inner home-content">
       <div class="login-marker">LOGIN SCREEN!!</div>
       <h1>Select Oracle Health Data Submissions Pathways</h1>
-      <p class="intro">The Quality Payment Program is changing how clinicians receive reimbursement from Medicare patients. This prototype maps the existing submission shell and leaves room for new paths as traditional MIPS evolves.</p>
-      <p class="intro">The application operates as a Qualified Registry for reporting quality category data, previewing measure scores, creating submission-ready data, and sending information directly to CMS workflows.</p>
+      <p class="intro">The enabled measure inventory for <strong>${profile.siteName}</strong> has narrowed the workspace to the submission paths below. Paths with no supporting EC/EH/APM measures are removed from this customer view.</p>
+      <div class="pathway-context-strip">
+        <button class="link" data-back-to-intake>Review enabled measures</button>
+        <span>${profile.ownerType}</span>
+        <span>${measureCounts(profile).total} enabled measures</span>
+        <span>Last refresh ${profile.lastRefresh}</span>
+      </div>
       <div class="pathway-grid">
-        ${pathwayCards.map((card) => `
-          <article class="pathway-card">
+        ${cards.map((card) => `
+          <article class="pathway-card ${card.eligibility.status}">
             <h2>${card.title}</h2>
             <p>${card.text}</p>
+            <div class="pathway-card-signal">
+              <span class="status-pill ${pathwayEligibilityClass(card.eligibility.status)}">${statusLabel(card.eligibility.status)}</span>
+              <em>${card.eligibility.evidence}</em>
+            </div>
             <div class="button-row">${card.buttons.map((button) => `<button class="btn" data-program="${button.program}">${button.label}</button>`).join("")}</div>
           </article>
         `).join("")}
       </div>
     </section>
   `;
+  content.querySelector("[data-back-to-intake]").addEventListener("click", () => {
+    state.route = "measure-intake";
+    render();
+  });
   content.querySelectorAll("[data-program]").forEach((button) => {
     button.addEventListener("click", () => setProgram(button.dataset.program, button.dataset.program === "QRDA" ? "export-qrda" : "performance"));
+  });
+}
+
+function bindMeasureIntakeControls(root = content) {
+  root.querySelectorAll("[data-site-profile]").forEach((select) => {
+    select.addEventListener("change", () => {
+      state.siteProfile = select.value;
+      state.mvpSpecialty = null;
+      render();
+    });
+  });
+  root.querySelectorAll("[data-continue-pathways]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.route = "home";
+      render();
+    });
+  });
+  root.querySelectorAll("[data-open-eligible-program]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const program = button.dataset.openEligibleProgram;
+      setProgram(program, program === "QRDA" ? "export-qrda" : "performance");
+    });
   });
 }
 
@@ -1817,6 +2152,23 @@ function renderDesignLab() {
       render();
     });
   });
+  content.querySelectorAll("[data-site-profile]").forEach((select) => {
+    select.addEventListener("change", () => {
+      state.siteProfile = select.value;
+      state.mvpSpecialty = null;
+      render();
+    });
+  });
+  content.querySelectorAll("[data-open-eligible-program]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const nextScenario = defaultScenarioByProgram[button.dataset.openEligibleProgram];
+      if (!nextScenario) return;
+      state.scenario = nextScenario;
+      state.labStep = 0;
+      scenarioSelect.value = nextScenario;
+      render();
+    });
+  });
   content.querySelectorAll("[data-mvp-specialty]").forEach((select) => {
     select.addEventListener("change", () => {
       state.mvpSpecialty = select.value;
@@ -1950,6 +2302,7 @@ function renderCommandCenterSnapshot(scenario, compact) {
         <strong>${profile.strategy}</strong>
         <span>${profile.inactiveNote}</span>
       </div>
+      ${renderMeasurePathwayQualifier({ compact })}
       ${renderCustomerPhaseGuide(scenario, { compact })}
       ${renderProviderAssignmentPlanner(scenario, { compact })}
       ${renderMvpSelectionWorkbench(scenario, { compact })}
@@ -2000,6 +2353,7 @@ function renderPathwayHub(scenario) {
           <span class="eyebrow">Guided Workflow</span>
           <h2>${scenario.label}</h2>
         </div>
+        ${renderMeasurePathwayQualifier()}
         ${renderCustomerPhaseGuide(scenario)}
         ${renderProviderAssignmentPlanner(scenario)}
         ${renderMvpSelectionWorkbench(scenario)}
@@ -2052,6 +2406,7 @@ function renderSmartGuidedSubmission(scenario) {
           `;
         }).join("")}
       </div>
+      ${renderMeasurePathwayQualifier({ compact: true })}
       ${renderCustomerPhaseGuide(scenario)}
       ${renderProviderAssignmentPlanner(scenario, { compact: scenario.program !== "MVP" })}
       ${renderMvpSelectionWorkbench(scenario, { compact: scenario.program !== "MVP" })}
