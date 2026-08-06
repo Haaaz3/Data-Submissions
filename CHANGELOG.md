@@ -1,5 +1,11 @@
 # Changelog
 
+## v23
+
+- Restored Production Today so the measure inventory is not the first production screen.
+- Restored the production pathway selector to the original broad card behavior.
+- Kept measure-driven routing inside the design lab variants with distinct command-center, pathway-hub, and smart-scan treatments.
+
 ## v22
 
 - Added a first-screen Enabled Measure Inventory intake flow.
