@@ -1,5 +1,12 @@
 # Changelog
 
+## v25
+
+- Added CMS-style subgroup composition inputs to MVP setup.
+- Captures single-specialty vs multispecialty subgroup composition.
+- Adds subgroup composition narrative and rationale before registration/assignment.
+- Threads subgroup narrative requirements into MVP reporting-level decision copy.
+
 ## v24
 
 - Removed Hospital Quality Reporting as a top-line in-app submission path.

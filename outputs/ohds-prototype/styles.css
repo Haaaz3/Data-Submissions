@@ -2829,6 +2829,7 @@ tr:nth-child(even) td {
 .provider-assignment-planner,
 .mvp-reporting-rules,
 .provider-mvp-forecast,
+.subgroup-composition,
 .scenario-progress-note {
   border: 1px solid var(--oracle-border-soft);
   border-radius: 8px;
@@ -2843,7 +2844,8 @@ tr:nth-child(even) td {
 }
 
 .mvp-reporting-rules,
-.provider-mvp-forecast {
+.provider-mvp-forecast,
+.subgroup-composition {
   margin: 12px 0;
 }
 
@@ -3199,6 +3201,63 @@ tr:nth-child(even) td {
 
 .forecast-table td strong {
   color: var(--oracle-ink);
+}
+
+.composition-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(220px, 1fr) minmax(260px, 1.2fr);
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.composition-grid label,
+.composition-narrative {
+  color: var(--oracle-ink-muted);
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.composition-grid input,
+.composition-grid select,
+.composition-narrative textarea {
+  border: 1px solid #b9b2ab;
+  border-radius: 4px;
+  background: #fff;
+  color: var(--oracle-ink);
+  padding: 8px;
+}
+
+.composition-grid input,
+.composition-grid select {
+  min-height: 36px;
+}
+
+.composition-narrative span {
+  color: var(--oracle-ink-muted);
+  font-weight: 400;
+}
+
+.composition-narrative textarea {
+  min-height: 92px;
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.composition-example {
+  border: 1px solid var(--oracle-border-soft);
+  border-radius: 8px;
+  background: #fbfaf8;
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+.composition-example span {
+  color: var(--oracle-ink-soft);
+  line-height: 1.4;
 }
 
 .hospital-handoff {
@@ -3911,6 +3970,7 @@ body.oj-redwood {
   .mvp-selector-heading,
   .mvp-choice-controls,
   .forecast-controls,
+  .composition-grid,
   .hospital-handoff,
   .assignment-grid,
   .score-header,

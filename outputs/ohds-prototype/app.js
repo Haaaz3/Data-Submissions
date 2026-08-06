@@ -422,7 +422,7 @@ const mvpReportingLevelRules = [
     level: "Subgroup",
     status: "Registration required",
     rule: "Subgroup reporting is MVP-only, tied to a single TIN, and requires advance registration with included clinicians.",
-    userDecision: "Collect subgroup roster, selected MVP, subgroup identifier, and whole-TIN PI context.",
+    userDecision: "Collect subgroup roster, composition type, narrative rationale, selected MVP, subgroup identifier, and whole-TIN PI context.",
   },
   {
     level: "Individual / APM Entity",
@@ -452,8 +452,8 @@ const customerPhaseSteps = [
   {
     phase: "Choose",
     title: "Choose Specialty and MVP",
-    decision: "Have the facility select specialty focus, review matching MVPs, and choose the MVP and reporting level they intend to register.",
-    evidence: "Facility-selected specialty, MVP ID, practice structure, small-practice status, measure fit",
+    decision: "Have the facility select specialty focus, review matching MVPs, choose reporting level, and document subgroup composition when subgroup reporting is selected.",
+    evidence: "Facility-selected specialty, MVP ID, practice structure, subgroup composition, narrative rationale, measure fit",
   },
   {
     phase: "Validate",
@@ -1168,6 +1168,46 @@ function renderMvpReportingLevelRules(options = {}) {
   `;
 }
 
+function renderSubgroupCompositionForm(options = {}) {
+  return `
+    <section class="subgroup-composition ${options.compact ? "compact" : ""}">
+      <div class="phase-guide-title">
+        <div>
+          <span class="eyebrow">CMS Registration Input</span>
+          <h3>Subgroup composition and rationale</h3>
+          <p>Capture why these clinicians belong together before registration or provider assignment is locked.</p>
+        </div>
+        <span>Informational narrative</span>
+      </div>
+      <div class="composition-grid">
+        <label>
+          Subgroup composition
+          <select aria-label="Subgroup composition">
+            <option>Single-specialty subgroup</option>
+            <option selected>Multispecialty subgroup</option>
+          </select>
+        </label>
+        <label>
+          Registration name
+          <input value="West Side Musculoskeletal Care Subgroup" aria-label="Subgroup registration name" />
+        </label>
+        <label>
+          Clinicians included
+          <input value="Orthopedic surgeons, physical therapists, NPs, associated clinicians" aria-label="Clinicians included" />
+        </label>
+      </div>
+      <label class="composition-narrative">
+        Subgroup Composition Narrative <span>(for informational purposes only)</span>
+        <textarea aria-label="Subgroup composition narrative">This subgroup represents our west side practice, which uses one EHR platform and collaborates on patient care across orthopedic surgeons, physical therapists, nurse practitioners (NPs), and other associated clinicians.</textarea>
+      </label>
+      <div class="composition-example">
+        <strong>CMS-style example</strong>
+        <span>Describe and provide rationale for how the facility chose which clinicians to include in the subgroup, such as shared practice location, EHR platform, patient population, care team, or specialty focus.</span>
+      </div>
+    </section>
+  `;
+}
+
 function mvpForecastRowsForSpecialty(specialty) {
   const rows = specialty === "All Specialties" ? providerMvpForecastRows : providerMvpForecastRows.filter((row) => row.selectedSpecialty === specialty);
   return rows.length ? rows : providerMvpForecastRows.slice(0, 4);
@@ -1243,6 +1283,7 @@ function renderMvpSelectionWorkbench(scenario, options = {}) {
         <button class="btn small" data-toast="MVP specialty fit recalculated">Recalculate Fit</button>
       </div>
       ${renderMvpReportingLevelRules({ compact: options.compact })}
+      ${renderSubgroupCompositionForm({ compact: options.compact })}
       <div class="mvp-filter-summary">
         <strong>Recommended MVPs</strong>
         <span>${visibleRows.length} match${visibleRows.length === 1 ? "" : "es"} for ${specialty}</span>
@@ -2817,7 +2858,7 @@ function workflowSteps(scenario) {
   const map = {
     "mvp-zmvp4": [
       { title: "Load Roster and Measures", body: "Start from enabled measures, provider roster, TIN/NPI eligibility, and historical measure performance. Specialty is not inferred from the TIN/NPI combination.", signal: "The first action is confirming loaded data and asking the facility to choose the specialty focus.", view: "scope", actions: [action("Choose specialty"), terminal("Explain legacy MIPS", "Note")] },
-      { title: "Choose Specialty, MVP, and Level", body: "Have the facility choose specialty focus, compare candidate MVP IDs, then choose subgroup, individual, APM Entity, or group only when CMS group rules allow it.", signal: "Group MVP is blocked for multispecialty practices that are not small; subgroup/individual/APM Entity stay available.", view: "submissions", actions: [action("Select MVP candidate"), terminal("Compare levels", "Compare")] },
+      { title: "Choose Specialty, MVP, and Level", body: "Have the facility choose specialty focus, compare candidate MVP IDs, then choose subgroup, individual, APM Entity, or group only when CMS group rules allow it. For subgroup, capture single-specialty/multispecialty composition and narrative rationale.", signal: "Group MVP is blocked for multispecialty practices that are not small; subgroup composition is documented before registration.", view: "submissions", actions: [action("Select MVP candidate"), terminal("Compare levels", "Compare")] },
       { title: "Forecast Provider Fit", body: "Forecast each provider’s score against the selected MVP measures before assigning the provider to the MVP cohort.", signal: "Measure performance drives assignment decisions instead of a static specialty/TIN assumption.", view: "score", actions: [action("Review provider forecast"), terminal("Flag low confidence", "Flag")] },
       { title: "Register and Package", body: "Register the MVP or subgroup when needed, preserve the subgroup ID, freeze the submission-ready package, and queue the CMS submit or export action.", signal: "Submission intent is obvious and carries customer, MVP, level, subgroup, and performance period forward.", view: "score", actions: [terminal("Queue MVP package", "Queue"), terminal("Download details", "Download")] },
     ],
