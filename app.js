@@ -13,7 +13,6 @@ const state = {
   mvpSpecialty: null,
   mvpSpecialties: null,
   practiceComposition: "multi",
-  siteProfile: "zmdi",
 };
 
 const defaultScenarioByProgram = {
@@ -340,6 +339,22 @@ const mvpCatalogRows = [
   },
 ];
 
+const mvpMeasureRequirements = {
+  G0055: ["CMS145v14", "CMS165v14"],
+  G0057: [],
+  M0001: [],
+  G0053: [],
+  M1366: ["CMS153v14"],
+  M1368: ["CMS349v8", "CMS2v15"],
+  M1369: ["CMS2v15"],
+  M1422: ["CMS130v14"],
+  M0002: [],
+  M0005: ["CMS130v14", "CMS122v14", "CMS2v15"],
+  M1425: [],
+  M1503: [],
+  G0054: [],
+};
+
 const providerAssignmentRows = [
   {
     specialty: "Cardiology",
@@ -460,22 +475,22 @@ const mvpIndividualClinicians = {
 
 const customerPhaseSteps = [
   {
-    phase: "Input",
-    title: "Enabled Measures Loaded",
-    decision: "Use the customer’s single enabled measure inventory to classify EC, APM, eCQM, CQM, and submission-selected coverage before showing in-app paths.",
-    evidence: "Enabled measures, submission selection, owner type, collection format, QPP applicability",
+    phase: "Start",
+    title: "Customer Context Loaded",
+    decision: "Use the customer’s fixed enabled measures, roster, TIN/NPI eligibility, and participation context to infer which in-app submission paths are available.",
+    evidence: "Enabled clinician measures, roster, TIN/NPI eligibility, QPP/APM participation",
   },
   {
-    phase: "Choose",
-    title: "Choose Composition, Specialties, and MVP",
-    decision: "Have the facility identify single-specialty or multi-specialty practice composition, select the applicable specialties, review matching MVPs, choose reporting level, and document subgroup composition when subgroup reporting is selected.",
-    evidence: "Practice composition, selected specialties, MVP ID, practice structure, subgroup composition, narrative rationale, measure fit",
+    phase: "Path",
+    title: "Pick the Recommended Path",
+    decision: "Show only the submission paths supported by the known customer setup, with future-state paths prioritized over retiring Traditional MIPS.",
+    evidence: "MVP, APP Plus, QRDA availability and transition context",
   },
   {
-    phase: "Validate",
-    title: "Forecast Provider Fit",
-    decision: "Forecast each provider’s performance against the selected MVP measures before assigning them to an individual, subgroup, group, or APM Entity path.",
-    evidence: "Provider-level rates, case minimum, data completeness, projected MVP score, confidence",
+    phase: "Configure",
+    title: "Configure the Path",
+    decision: "For MVPs, ask only the necessary follow-up questions: practice composition, specialties, MVP, reporting level, subgroup rationale, and provider forecast.",
+    evidence: "Composition, specialty, MVP fit, reporting level, subgroup narrative, forecast score",
   },
   {
     phase: "Submit",
@@ -907,7 +922,7 @@ function programStatus(profile, program) {
 }
 
 function currentMeasureProfile() {
-  return measureInventoryProfiles[state.siteProfile] || measureInventoryProfiles.zmdi;
+  return state.program === "APPPLUS" || state.scenario === "appplus-score" ? measureInventoryProfiles.appplus : measureInventoryProfiles.zmdi;
 }
 
 function measureCounts(profile) {
@@ -928,9 +943,28 @@ function enabledSpecialties(profile) {
   return [...new Set(profile.measures.filter((measure) => measure.owner === "EC").map((measure) => measure.specialty))];
 }
 
+function enabledMeasureIds(profile = currentMeasureProfile()) {
+  return new Set(profile.measures.map((measure) => measure.id));
+}
+
+function mvpMeasureFit(row, profile = currentMeasureProfile()) {
+  const required = mvpMeasureRequirements[row.id] || [];
+  const enabled = enabledMeasureIds(profile);
+  if (!required.length) {
+    return { status: "review", label: "Needs measure review", reason: "Measure fit must be confirmed before this MVP can be selected." };
+  }
+  const matched = required.filter((id) => enabled.has(id));
+  if (matched.length === required.length) {
+    return { status: "ready", label: "Recommended", reason: "Enabled measure coverage supports this MVP." };
+  }
+  if (matched.length > 0) {
+    return { status: "partial", label: "Partial fit", reason: "Some supporting measures are enabled; review gaps before selecting." };
+  }
+  return { status: "blocked", label: "Not available", reason: "This MVP is not supported by the customer’s enabled measure set." };
+}
+
 function pathwayEligibility(profile = currentMeasureProfile()) {
   const counts = measureCounts(profile);
-  const specialties = enabledSpecialties(profile);
   const mvpMeasures = counts.programs.MVP || 0;
   const appPlusMeasures = counts.programs.APPPLUS || 0;
   const qrdaMeasures = counts.programs.QRDA || 0;
@@ -939,26 +973,26 @@ function pathwayEligibility(profile = currentMeasureProfile()) {
     MVP: {
       status: mvpMeasures > 0 ? "recommended" : "hidden",
       label: mvpMeasures > 0 ? "Recommended" : "No MVP-selected measures",
-      evidence: mvpMeasures > 0 ? `${mvpMeasures} MVP-selected EC measure${mvpMeasures === 1 ? "" : "s"} across ${specialties.length || 1} specialty focus area${specialties.length === 1 ? "" : "s"}` : "No enabled measures are selected for MVP submission",
-      next: "Filter MVP catalog by specialty and confirm group/subgroup/individual reporting level.",
+      evidence: mvpMeasures > 0 ? "Best fit based on enabled clinician quality measures and specialty coverage." : "No supported MVP path found from this customer setup.",
+      next: "Confirm practice composition, choose specialty focus, then pick a supported MVP.",
     },
     APPPLUS: {
       status: appPlusMeasures > 0 ? "recommended" : counts.EC > 0 ? "applicable" : "hidden",
       label: appPlusMeasures > 0 ? "Primary" : counts.EC > 0 ? "Available if APM entity applies" : "Not applicable",
-      evidence: appPlusMeasures > 0 ? `${appPlusMeasures} APP Plus-selected APM measure${appPlusMeasures === 1 ? "" : "s"} enabled` : counts.EC > 0 ? "EC inventory can be assessed for APM strategy when the customer participates" : "No APM or EC measures enabled",
+      evidence: appPlusMeasures > 0 ? "Customer has APM Entity reporting signals." : counts.EC > 0 ? "Available only if APM Entity participation applies." : "Not supported by this customer setup.",
       next: "Confirm APM Entity participation and APP Plus measure package.",
     },
     QRDA: {
       status: qrdaMeasures > 0 ? "applicable" : "hidden",
       label: qrdaMeasures > 0 ? "Export path" : "No QRDA-selected measures",
-      evidence: qrdaMeasures > 0 ? `${qrdaMeasures} submission-selected measure${qrdaMeasures === 1 ? "" : "s"} can generate QRDA files` : "No enabled measures are selected for QRDA export",
+      evidence: qrdaMeasures > 0 ? "Export is available for supported clinician/APM submission packages." : "No supported QRDA export path found.",
       next: "Generate QRDA I/III files for the selected path and scope.",
     },
     MIPS: {
       status: mipsMeasures > 0 ? "transition" : "hidden",
       label: mipsMeasures > 0 ? "Transition only" : "No MIPS-selected measures",
-      evidence: mipsMeasures > 0 ? `${mipsMeasures} EC measure${mipsMeasures === 1 ? "" : "s"} can support legacy MIPS review while Traditional MIPS retires` : "No enabled measures are selected for Traditional MIPS review",
-      next: "Keep as legacy context; steer new submissions toward MVP where possible.",
+      evidence: mipsMeasures > 0 ? "Legacy context only while Traditional MIPS retires." : "No legacy MIPS context needed.",
+      next: "Keep as reference; steer new decisions toward MVP where possible.",
     },
   };
 }
@@ -1154,6 +1188,9 @@ function recommendedMvpRows(scenario) {
     const aMatch = matchesAnySpecialty(a, specialties) ? 0 : 1;
     const bMatch = matchesAnySpecialty(b, specialties) ? 0 : 1;
     if (aMatch !== bMatch) return aMatch - bMatch;
+    const fitOrder = { ready: 0, partial: 1, review: 2, blocked: 3 };
+    const fitDelta = (fitOrder[mvpMeasureFit(a).status] ?? 4) - (fitOrder[mvpMeasureFit(b).status] ?? 4);
+    if (fitDelta !== 0) return fitDelta;
     const order = { Recommended: 0, Candidate: 1, "Needs review": 2 };
     return (order[a.status] ?? 3) - (order[b.status] ?? 3);
   });
@@ -1391,6 +1428,8 @@ function renderMvpSelectionWorkbench(scenario, options = {}) {
   const specialtySummary = selectedSpecialtySummary(scenario);
   const filteredRows = recommendedMvpRows(scenario);
   const visibleRows = options.compact ? filteredRows.slice(0, 3) : filteredRows;
+  const supportedCount = visibleRows.filter((row) => ["ready", "partial"].includes(mvpMeasureFit(row).status)).length;
+  const unavailableCount = visibleRows.filter((row) => mvpMeasureFit(row).status === "blocked").length;
   return `
     <section class="mvp-selection-workbench ${active ? "active" : ""} ${options.compact ? "compact" : ""}">
       <div class="mvp-selector-heading">
@@ -1415,11 +1454,15 @@ function renderMvpSelectionWorkbench(scenario, options = {}) {
       ${renderSubgroupCompositionForm({ compact: options.compact })}
       <div class="mvp-filter-summary">
         <strong>Recommended MVPs</strong>
-        <span>${visibleRows.length} match${visibleRows.length === 1 ? "" : "es"} for ${specialtySummary}</span>
+        <span>${supportedCount} supported for ${specialtySummary}${unavailableCount ? `; ${unavailableCount} unavailable because of enabled-measure coverage` : ""}</span>
       </div>
       <div class="mvp-catalog-grid">
-        ${visibleRows.map((row) => `
-          <article class="mvp-candidate ${matchesAnySpecialty(row, specialties) ? "recommended" : ""} ${row.status === "Needs review" ? "review" : ""}">
+        ${visibleRows.map((row) => {
+          const fit = mvpMeasureFit(row);
+          const specialtyMatch = matchesAnySpecialty(row, specialties);
+          const disabled = fit.status === "blocked";
+          return `
+          <article class="mvp-candidate ${specialtyMatch && !disabled ? "recommended" : ""} ${fit.status} ${row.status === "Needs review" ? "review" : ""}">
             <div>
               <span>${row.id}</span>
               <strong>${row.name}</strong>
@@ -1428,14 +1471,15 @@ function renderMvpSelectionWorkbench(scenario, options = {}) {
             <dl>
               <div><dt>Fit</dt><dd>${row.currentFit}</dd></div>
               <div><dt>Providers</dt><dd>${row.providers}</dd></div>
-              <div><dt>Measures</dt><dd>${row.measures}</dd></div>
+              <div><dt>Readiness</dt><dd>${fit.reason}</dd></div>
             </dl>
             <div class="mvp-candidate-footer">
-              <span class="status-chip ${matchesAnySpecialty(row, specialties) ? "ready" : "warn"}">${matchesAnySpecialty(row, specialties) ? "Recommended" : row.status}</span>
-              <button class="link" data-toast="${row.id} selected for MVP submission planning">${row.action}</button>
+              <span class="status-chip ${fit.status === "ready" ? "ready" : fit.status === "blocked" ? "disabled" : "warn"}">${fit.label}</span>
+              <button class="link" ${disabled ? "disabled" : `data-toast="${row.id} selected for MVP submission planning"`}>${disabled ? "Unavailable" : row.action}</button>
             </div>
           </article>
-        `).join("")}
+        `;
+        }).join("")}
       </div>
       ${renderProviderMvpForecast(scenario, { compact: options.compact })}
     </section>
@@ -1525,20 +1569,6 @@ function qualityMeasureRows(measureList) {
   `;
 }
 
-function renderMeasureSummaryCards(profile) {
-  const counts = measureCounts(profile);
-  return `
-    <div class="measure-summary-grid">
-      <div class="measure-summary-card"><span>Total Enabled</span><strong>${counts.total}</strong><em>quality measures</em></div>
-      <div class="measure-summary-card"><span>Submission Selected</span><strong>${counts.submissionSelected}</strong><em>path-driving measures</em></div>
-      <div class="measure-summary-card"><span>Enabled Only</span><strong>${counts.analyticsOnly}</strong><em>not in package yet</em></div>
-      <div class="measure-summary-card"><span>EC Measures</span><strong>${counts.EC}</strong><em>MVP/MIPS candidates</em></div>
-      <div class="measure-summary-card"><span>APM Measures</span><strong>${counts.APM}</strong><em>APP Plus candidates</em></div>
-      <div class="measure-summary-card"><span>Formats</span><strong>${counts.eCQM} / ${counts.CQM}</strong><em>eCQM / CQM</em></div>
-    </div>
-  `;
-}
-
 function renderMeasurePathwayMatrix(profile, options = {}) {
   const eligibility = pathwayEligibility(profile);
   const programs = options.showHidden ? programOrder : sortedEligiblePrograms(profile);
@@ -1563,40 +1593,6 @@ function renderMeasurePathwayMatrix(profile, options = {}) {
   `;
 }
 
-function renderEnabledMeasureTable(profile, options = {}) {
-  const rows = options.compact ? profile.measures.slice(0, 5) : profile.measures;
-  return `
-    <div class="table-wrap measure-inventory-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Measure</th>
-            <th>Owner</th>
-            <th>Format</th>
-            <th>Scope</th>
-            <th>Clinical Focus</th>
-            <th>Submission Use</th>
-            <th>Applicable Paths</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows.map((measure) => `
-            <tr>
-              <td><strong>${measure.id}</strong><span class="subline">${measure.name}</span></td>
-              <td><span class="owner-chip ${measure.owner.toLowerCase()}">${measure.owner}</span></td>
-              <td>${measure.type}</td>
-              <td>${measure.scope}</td>
-              <td>${measure.specialty}</td>
-              <td>${measure.status}</td>
-              <td>${measure.programs.length ? measure.programs.map((program) => `<span class="path-mini">${programLabel(program)}</span>`).join("") : `<span class="path-mini muted">Not selected</span>`}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
-  `;
-}
-
 function renderMeasureIntake() {
   const profile = currentMeasureProfile();
   const primaryProgram = firstEligibleProgram(profile);
@@ -1604,74 +1600,82 @@ function renderMeasureIntake() {
     <section class="content-inner measure-intake">
       <div class="intake-hero">
         <div>
-          <span class="eyebrow">Step 0: Measure Inventory</span>
-          <h1>Start with enabled measures, then show the right submission paths</h1>
-          <p>${profile.summary}</p>
+          <span class="eyebrow">Path Finder</span>
+          <h1>Find the customer’s submission path</h1>
+          <p>The customer’s enabled measures, roster, TIN/NPI eligibility, and participation context are already loaded. The customer should only see the inferred path choices and the next decision.</p>
         </div>
         <div class="intake-selector">
-          <label>
-            Customer measure inventory
-            <select data-site-profile aria-label="Customer measure inventory">
-              ${Object.values(measureInventoryProfiles).map((item) => `<option value="${item.id}"${item.id === profile.id ? " selected" : ""}>${item.customerName}</option>`).join("")}
-            </select>
-          </label>
           <dl>
+            <div><dt>Customer</dt><dd>${profile.customerName}</dd></div>
             <div><dt>Measure owner mix</dt><dd>${profile.ownerType}</dd></div>
             <div><dt>Period</dt><dd>${profile.period}</dd></div>
             <div><dt>Last refresh</dt><dd>${profile.lastRefresh}</dd></div>
           </dl>
         </div>
       </div>
-      ${renderMeasureSummaryCards(profile)}
+      ${renderSubmissionPathChecklist(profile)}
       <section class="intake-section">
         <div class="section-heading-row">
           <div>
-            <span class="eyebrow">Narrowed Submission Paths</span>
-            <h2>Recommended paths from submission-selected measures</h2>
+            <span class="eyebrow">Recommended Paths</span>
+            <h2>Paths inferred from the fixed customer setup</h2>
           </div>
           <button class="btn" data-continue-pathways>Continue to Pathway Selection</button>
         </div>
         ${renderMeasurePathwayMatrix(profile)}
       </section>
-      <section class="intake-section">
-        <div class="section-heading-row">
-          <div>
-            <span class="eyebrow">Enabled Measures</span>
-            <h2>Single customer inventory used for routing</h2>
-          </div>
-          <button class="btn secondary" data-open-eligible-program="${primaryProgram}">Open ${programLabel(primaryProgram)}</button>
-        </div>
-        ${renderEnabledMeasureTable(profile)}
-      </section>
+      <button class="btn secondary" data-open-eligible-program="${primaryProgram}">Open ${programLabel(primaryProgram)}</button>
     </section>
   `;
   bindMeasureIntakeControls();
 }
 
+function renderSubmissionPathChecklist(profile) {
+  const primary = firstEligibleProgram(profile);
+  return `
+    <section class="path-finder-checklist" aria-label="Submission path checklist">
+      <article class="complete">
+        <span>Step 1</span>
+        <strong>Customer setup loaded</strong>
+        <p>Enabled measures, roster, TIN/NPI eligibility, and participation context are already known for this customer.</p>
+      </article>
+      <article class="active">
+        <span>Step 2</span>
+        <strong>Recommended path: ${programLabel(primary)}</strong>
+        <p>The system narrows available paths from the customer’s fixed configuration. Unsupported paths are hidden or disabled.</p>
+      </article>
+      <article class="locked">
+        <span>Step 3</span>
+        <strong>Configure the selected path</strong>
+        <p>For MVP, confirm practice composition, specialties, reporting level, subgroup rationale, and provider forecast.</p>
+      </article>
+      <article class="locked">
+        <span>Step 4</span>
+        <strong>Validate and submit</strong>
+        <p>Freeze the package, confirm CMS QPP session, submit or export, and track receipt status.</p>
+      </article>
+    </section>
+  `;
+}
+
 function renderMeasurePathwayQualifier(options = {}) {
   const profile = currentMeasureProfile();
   const titles = {
-    command: "Eligibility strip: measures narrow the workspace before action planning",
-    hub: "Pathway decision panel: show only paths supported by enabled measures",
-    smart: "Smart scan: measure inventory drives recommended next paths",
+    command: "Path finder: start from what the customer already has enabled",
+    hub: "Path finder: show only submission paths this customer can use",
+    smart: "Smart path finder: infer the next best submission path",
   };
-  const label = options.mode === "smart" ? "Smart Measure Scan" : options.mode === "hub" ? "Pathway Filter" : "Measure-Driven Routing";
+  const label = options.mode === "smart" ? "Smart Path Finder" : options.mode === "hub" ? "Submission Path Finder" : "Submission Path Finder";
   return `
     <section class="measure-qualifier ${options.compact ? "compact" : ""} ${options.mode || ""}">
       <div class="section-heading-row">
         <div>
           <span class="eyebrow">${label}</span>
-          <h3>${titles[options.mode] || "Enabled measures narrow the customer’s submission paths"}</h3>
-          <p>${profile.summary}</p>
+          <h3>${titles[options.mode] || "Infer the customer’s submission path from known setup"}</h3>
+          <p>Measures stay behind the scenes. The customer sees the recommended paths and the next decision they need to make.</p>
         </div>
-        <label>
-          Customer inventory
-          <select data-site-profile aria-label="Customer measure inventory">
-            ${Object.values(measureInventoryProfiles).map((item) => `<option value="${item.id}"${item.id === profile.id ? " selected" : ""}>${item.customerName}</option>`).join("")}
-          </select>
-        </label>
       </div>
-      ${renderMeasureSummaryCards(profile)}
+      ${renderSubmissionPathChecklist(profile)}
       ${renderMeasurePathwayMatrix(profile, { compact: true })}
     </section>
   `;
@@ -1701,13 +1705,6 @@ function renderHome() {
 }
 
 function bindMeasureIntakeControls(root = content) {
-  root.querySelectorAll("[data-site-profile]").forEach((select) => {
-    select.addEventListener("change", () => {
-      state.siteProfile = select.value;
-      state.mvpSpecialty = null;
-      render();
-    });
-  });
   root.querySelectorAll("[data-continue-pathways]").forEach((button) => {
     button.addEventListener("click", () => {
       state.route = "home";
@@ -2500,13 +2497,6 @@ function renderDesignLab() {
       render();
     });
   });
-  content.querySelectorAll("[data-site-profile]").forEach((select) => {
-    select.addEventListener("change", () => {
-      state.siteProfile = select.value;
-      resetMvpSpecialtySelection();
-      render();
-    });
-  });
   content.querySelectorAll("[data-open-eligible-program]").forEach((button) => {
     button.addEventListener("click", () => {
       const nextScenario = defaultScenarioByProgram[button.dataset.openEligibleProgram];
@@ -3094,9 +3084,9 @@ function workflowSteps(scenario) {
   const terminal = (label, verb = "Done") => ({ label, verb, next: false, toast: `${label} queued` });
   const map = {
     "mvp-zmvp4": [
-      { title: "Load Roster and Measures", body: "Start from enabled measures, provider roster, TIN/NPI eligibility, and historical measure performance. Specialty is not inferred from the TIN/NPI combination.", signal: "The first action is confirming loaded data and asking the facility to choose the specialty focus.", view: "scope", actions: [action("Choose specialty"), terminal("Explain legacy MIPS", "Note")] },
-      { title: "Choose Composition, Specialties, MVP, and Level", body: "Have the facility first choose single-specialty or multi-specialty composition. Single-specialty practices pick one specialty; multi-specialty practices pick all applicable specialties, then compare the narrowed MVP list and choose subgroup, individual, APM Entity, or group only when CMS group rules allow it.", signal: "The MVP list is narrowed by customer-selected specialty mix before reporting level or subgroup registration decisions.", view: "submissions", actions: [action("Select MVP candidate"), terminal("Compare levels", "Compare")] },
-      { title: "Forecast Provider Fit", body: "Forecast each provider’s score against the selected MVP measures before assigning the provider to the MVP cohort.", signal: "Measure performance drives assignment decisions instead of a static specialty/TIN assumption.", view: "score", actions: [action("Review provider forecast"), terminal("Flag low confidence", "Flag")] },
+      { title: "Infer Available Paths", body: "Start from the customer’s fixed enabled measures, roster, TIN/NPI eligibility, and participation context. Do not ask the user to choose a measure inventory.", signal: "The first visible customer action is choosing a supported submission path, not reviewing raw measure setup.", view: "scope", actions: [action("Open recommended path"), terminal("Explain legacy MIPS", "Note")] },
+      { title: "Configure MVP Path", body: "Ask whether the practice is single-specialty or multi-specialty, then collect only the relevant specialties. The MVP list is narrowed by specialty and disabled when the customer does not have supporting measures enabled.", signal: "The customer sees a short viable MVP list with clear unavailable reasons.", view: "submissions", actions: [action("Select MVP candidate"), terminal("Compare levels", "Compare")] },
+      { title: "Forecast Provider Fit", body: "Forecast each provider’s performance against the selected MVP before assigning the provider to an individual, subgroup, group, or APM Entity path.", signal: "Provider assignment is based on predicted performance and readiness, not a static TIN/NPI specialty inference.", view: "score", actions: [action("Review provider forecast"), terminal("Flag low confidence", "Flag")] },
       { title: "Register and Package", body: "Register the MVP or subgroup when needed, preserve the subgroup ID, freeze the submission-ready package, and queue the CMS submit or export action.", signal: "Submission intent is obvious and carries customer, MVP, level, subgroup, and performance period forward.", view: "score", actions: [terminal("Queue MVP package", "Queue"), terminal("Download details", "Download")] },
     ],
     "appplus-score": [
