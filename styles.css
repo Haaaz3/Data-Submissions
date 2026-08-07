@@ -3947,6 +3947,53 @@ body.oj-redwood {
   margin: 14px 0 18px;
 }
 
+.individual-flow-actions {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fafb;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+  padding: 12px;
+}
+
+.individual-flow-actions span {
+  color: var(--oracle-ink-soft);
+}
+
+.individual-draft-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fafb;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+  padding: 12px;
+}
+
+.draft-kpi {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+}
+
+.draft-kpi span {
+  color: var(--oracle-ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.draft-kpi em {
+  color: var(--oracle-ink-soft);
+  font-style: normal;
+}
+
 .pathway-card-signal {
   border-top: 1px solid #eceff1;
   display: grid;
@@ -4043,6 +4090,7 @@ body.oj-redwood {
   .mvp-choice-controls,
   .composition-toggle,
   .specialty-check-grid,
+  .individual-draft-panel,
   .forecast-controls,
   .composition-grid,
   .assignment-grid,
