@@ -1,5 +1,12 @@
 # Changelog
 
+## v28
+
+- Fixed MVP Individual Submissions so subgroup selection enables eligible clinicians.
+- Added clinician-driven forecast rows and a Create Individual Draft progression.
+- Made + New from Individual scope open a pre-scoped individual MVP draft.
+- Carried subgroup, MVP, NPI, clinician, and forecast context into the draft detail screen.
+
 ## v27
 
 - Made MVP practice composition the first selection: single-specialty vs multi-specialty.

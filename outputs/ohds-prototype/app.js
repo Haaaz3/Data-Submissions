@@ -3,6 +3,9 @@ const state = {
   route: "performance",
   selectedOrg: null,
   selectedSubmission: null,
+  selectedSubmissionScope: null,
+  selectedIndividualGroup: "",
+  selectedIndividualClinician: "",
   scoreTab: "Summary",
   labMode: "production",
   scenario: "mvp-zmvp4",
@@ -431,6 +434,30 @@ const providerMvpForecastRows = [
   { provider: "Thomas Riley, MD", npi: "1942000006", selectedSpecialty: "Family Medicine", mvpId: "M0005", mvpName: "Value in Primary Care", current: "72.5", forecast: "81.3", delta: "+8.8", confidence: "High", gaps: "Colorectal screening and blood pressure control" },
 ];
 
+const mvpIndividualGroups = [
+  { id: "ZzMVP2", name: "Heart disease clinicians", specialty: "Cardiology", mvpId: "G0055", mvpName: "Advancing Care for Heart Disease" },
+  { id: "ZzMVP3", name: "Women's health clinicians", specialty: "Gynecology", mvpId: "M1366", mvpName: "Focusing on Women's Health" },
+  { id: "ZzMVP4", name: "Infectious disease and immunology subgroup", specialty: "Infectious Disease", mvpId: "M1368", mvpName: "Prevention and Treatment of Infectious Disorders Including Hepatitis C and HIV" },
+  { id: "ZzMVP5", name: "Behavioral health and psychiatry clinicians", specialty: "Mental Health", mvpId: "M1369", mvpName: "Quality Care in Mental Health and Substance Use Disorders" },
+];
+
+const mvpIndividualClinicians = {
+  ZzMVP2: [
+    { name: "Nadia Singh, MD", npi: "1942000002", forecast: "79.1", current: "67.4", confidence: "High" },
+    { name: "Robert Kane, PA", npi: "1942000003", forecast: "55.9", current: "48.2", confidence: "Low" },
+  ],
+  ZzMVP3: [
+    { name: "Priya Shah, CNM", npi: "1942000005", forecast: "77.0", current: "63.8", confidence: "Medium" },
+  ],
+  ZzMVP4: [
+    { name: "Jane Coleman, MD", npi: "1942000000", forecast: "74.8", current: "61.2", confidence: "High" },
+    { name: "Marcus Bell, NP", npi: "1942000001", forecast: "70.4", current: "58.9", confidence: "Medium" },
+  ],
+  ZzMVP5: [
+    { name: "Elena Morales, MD", npi: "1942000004", forecast: "82.6", current: "69.1", confidence: "High" },
+  ],
+};
+
 const customerPhaseSteps = [
   {
     phase: "Input",
@@ -716,6 +743,9 @@ function setProgram(program, route = "performance") {
   state.route = route;
   state.selectedOrg = null;
   state.selectedSubmission = null;
+  state.selectedSubmissionScope = null;
+  state.selectedIndividualGroup = "";
+  state.selectedIndividualClinician = "";
   state.scoreTab = "Summary";
   programSelect.value = program;
   render();
@@ -725,6 +755,7 @@ function setRoute(route) {
   state.route = route;
   state.selectedOrg = null;
   state.selectedSubmission = null;
+  state.selectedSubmissionScope = route.startsWith("submissions-") ? route.replace("submissions-", "") : null;
   state.scoreTab = "Summary";
   render();
 }
@@ -748,6 +779,9 @@ function applyScenario(scenarioKey, mutateProductionRoute) {
     state.route = scenario.route;
     state.selectedOrg = scenario.selectedOrg;
     state.selectedSubmission = null;
+    state.selectedSubmissionScope = scenario.route.startsWith("submissions-") ? scenario.route.replace("submissions-", "") : null;
+    state.selectedIndividualGroup = scenarioKey === "mvp-individual" ? "" : state.selectedIndividualGroup;
+    state.selectedIndividualClinician = "";
     state.scoreTab = "Summary";
     programSelect.value = scenario.program;
   }
@@ -953,6 +987,23 @@ function pathwayEligibilityClass(status) {
 
 function firstEligibleProgram(profile = currentMeasureProfile()) {
   return sortedEligiblePrograms(profile)[0] || "MVP";
+}
+
+function selectedIndividualGroup() {
+  return mvpIndividualGroups.find((group) => group.id === state.selectedIndividualGroup) || null;
+}
+
+function cliniciansForSelectedGroup() {
+  return state.selectedIndividualGroup ? (mvpIndividualClinicians[state.selectedIndividualGroup] || []) : [];
+}
+
+function selectedIndividualClinician() {
+  return cliniciansForSelectedGroup().find((clinician) => clinician.npi === state.selectedIndividualClinician) || null;
+}
+
+function individualDraftName() {
+  const clinician = selectedIndividualClinician();
+  return clinician ? `Individual MVP Draft - ${clinician.name}` : "Individual MVP Draft";
 }
 
 function statusLabel(status) {
@@ -1996,6 +2047,7 @@ function renderSubmissionsOverview() {
     </section>
   `;
   content.querySelector("[data-new]")?.addEventListener("click", () => {
+    state.selectedSubmissionScope = "Group";
     state.route = "new-submission";
     render();
   });
@@ -2005,6 +2057,7 @@ function renderSubmissionsOverview() {
   content.querySelectorAll("[data-submission]").forEach((button) => {
     button.addEventListener("click", () => {
       state.selectedSubmission = button.dataset.submission;
+      state.selectedSubmissionScope = scope;
       state.route = "submission-detail";
       render();
     });
@@ -2014,6 +2067,15 @@ function renderSubmissionsOverview() {
 function renderSubmissions(scope) {
   const scopeRows = ((submissions[state.program] || {})[scope]) || [];
   const isMvpIndividual = state.program === "MVP" && scope === "Individual";
+  const selectedGroup = selectedIndividualGroup();
+  const availableClinicians = cliniciansForSelectedGroup();
+  const selectedClinician = selectedIndividualClinician();
+  const individualRows = isMvpIndividual
+    ? selectedClinician
+      ? [{ name: individualDraftName(), clinician: selectedClinician.name, practice: selectedGroup.id, mvp: selectedGroup.mvpName, composite: "draft", quality: selectedClinician.forecast, pi: "pending", ia: "pending", npi: selectedClinician.npi, confidence: selectedClinician.confidence }]
+      : availableClinicians.map((clinician) => ({ name: `Candidate - ${clinician.name}`, clinician: clinician.name, practice: selectedGroup?.id || "", mvp: selectedGroup?.mvpName || "", composite: "review", quality: clinician.forecast, pi: "pending", ia: "pending", npi: clinician.npi, confidence: clinician.confidence }))
+    : scopeRows;
+  const displayRows = isMvpIndividual ? individualRows : scopeRows;
   content.innerHTML = `
     <section class="content-inner flush">
       <div class="toolbar">
@@ -2023,8 +2085,8 @@ function renderSubmissions(scope) {
       <div class="filter-row ${isMvpIndividual ? "wide-filters" : ""}">
         <div class="field"><label>Performance Period</label>${periodSelect()}</div>
         ${isMvpIndividual ? `
-          <div class="field"><label>MVP Group/Subgroup</label><select><option>-- Select Group/Subgroup --</option><option>ZzMVP2</option><option>ZzMVP3</option></select></div>
-          <div class="field"><label><span class="required">*</span> Eligible Clinician</label><select disabled><option>-- Select Clinician --</option></select></div>
+          <div class="field"><label>MVP Group/Subgroup</label><select data-individual-group aria-label="MVP Group/Subgroup"><option value="">-- Select Group/Subgroup --</option>${mvpIndividualGroups.map((group) => `<option value="${group.id}"${group.id === state.selectedIndividualGroup ? " selected" : ""}>${group.id} - ${group.name}</option>`).join("")}</select></div>
+          <div class="field"><label><span class="required">*</span> Eligible Clinician</label><select data-individual-clinician aria-label="Eligible Clinician" ${state.selectedIndividualGroup ? "" : "disabled"}><option value="">${state.selectedIndividualGroup ? "-- Select Clinician --" : "Select subgroup first"}</option>${availableClinicians.map((clinician) => `<option value="${clinician.npi}"${clinician.npi === state.selectedIndividualClinician ? " selected" : ""}>${clinician.name} - NPI ${clinician.npi}</option>`).join("")}</select></div>
         ` : `
           <div class="field"><label>${scope === "APM Entity" ? "APM Entity" : state.program === "MVP" ? "MVP Group/Subgroup" : scope + " Practice"}</label><select><option></option><option>ZzMount Desert Island Hospital</option><option>ZzMVP2</option><option>MIPS Org View Test</option><option>TIN 1: CernerDemo</option></select></div>
         `}
@@ -2038,10 +2100,10 @@ function renderSubmissions(scope) {
               : `<tr><th>Submission Name</th><th>${scope === "APM Entity" ? "APM Entity" : state.program === "MVP" ? "MVP Group/Subgroup" : scope + " Practice"}</th><th class="numeric">Composite Score</th><th class="numeric">Quality Score</th><th class="numeric">PI Score</th><th class="numeric">IA Score</th></tr>`}
           </thead>
           <tbody>
-            ${scopeRows.length ? scopeRows.map((row) => isMvpIndividual ? `
+            ${displayRows.length ? displayRows.map((row) => isMvpIndividual ? `
               <tr>
                 <td><button class="link" data-submission="${row.name}">${row.name}</button></td>
-                <td>${row.clinician || "Eligible Clinician"}</td>
+                <td>${row.clinician || "Eligible Clinician"}<span class="subline">NPI ${row.npi || "pending"}</span></td>
                 <td>${row.practice}</td>
                 <td>${row.mvp || "Heart Disease"}</td>
                 <td class="numeric">${scoreCell(row.composite)}</td>
@@ -2058,15 +2120,42 @@ function renderSubmissions(scope) {
                 <td class="numeric">${scoreCell(row.pi)}</td>
                 <td class="numeric">${scoreCell(row.ia)}</td>
               </tr>
-            `).join("") : `<tr><td colspan="${isMvpIndividual ? 8 : 6}"><div class="empty-state">No Submissions found</div></td></tr>`}
+            `).join("") : `<tr><td colspan="${isMvpIndividual ? 8 : 6}"><div class="empty-state">${isMvpIndividual ? "Select an MVP subgroup to view eligible clinicians and forecast individual drafts." : "No Submissions found"}</div></td></tr>`}
           </tbody>
         </table>
       </div>
+      ${isMvpIndividual ? `
+        <div class="individual-flow-actions">
+          <span>${selectedClinician ? `${selectedClinician.name} selected for ${selectedGroup.mvpId}` : state.selectedIndividualGroup ? "Select an eligible clinician to create or open an individual draft." : "Start by selecting an MVP group/subgroup."}</span>
+          <button class="btn" data-create-individual-draft ${selectedClinician ? "" : "disabled"}>Create Individual Draft</button>
+        </div>
+      ` : ""}
       <div class="pager"><span>First</span><span>Previous</span><strong>1</strong><span>Next</span><span>Last</span></div>
     </section>
   `;
   content.querySelector("[data-new]").addEventListener("click", () => {
+    state.selectedSubmissionScope = scope;
     state.route = "new-submission";
+    render();
+  });
+  content.querySelector("[data-individual-group]")?.addEventListener("change", (event) => {
+    state.selectedIndividualGroup = event.target.value;
+    state.selectedIndividualClinician = "";
+    const group = selectedIndividualGroup();
+    if (group) {
+      state.practiceComposition = "single";
+      state.mvpSpecialty = group.specialty;
+      state.mvpSpecialties = [group.specialty];
+    }
+    render();
+  });
+  content.querySelector("[data-individual-clinician]")?.addEventListener("change", (event) => {
+    state.selectedIndividualClinician = event.target.value;
+    render();
+  });
+  content.querySelector("[data-create-individual-draft]")?.addEventListener("click", () => {
+    state.selectedSubmission = individualDraftName();
+    state.route = "submission-detail";
     render();
   });
   content.querySelectorAll("[data-submission]").forEach((button) => {
@@ -2080,9 +2169,12 @@ function renderSubmissions(scope) {
 
 function renderSubmissionDetail() {
   const name = state.selectedSubmission || "MIPS Org View Test";
+  const selectedGroup = selectedIndividualGroup();
+  const selectedClinician = selectedIndividualClinician();
+  const isIndividualDetail = state.program === "MVP" && (state.selectedSubmissionScope === "Individual" || name.includes("Individual"));
   content.innerHTML = `
     <section class="content-inner">
-      <button class="btn ghost" data-back="submissions-Group">Back to Submissions</button>
+      <button class="btn ghost" data-back="submissions-${isIndividualDetail ? "Individual" : "Group"}">Back to Submissions</button>
       <div class="toolbar">
         <h1>${name}</h1>
         <div class="button-row">
@@ -2093,11 +2185,18 @@ function renderSubmissionDetail() {
       <div class="detail-layout">
         <div>
           <div class="summary-grid">
-            <div class="metric"><span>Workflow Status</span><strong>Frozen</strong></div>
-            <div class="metric"><span>Composite Score</span><strong>0.0</strong></div>
-            <div class="metric"><span>Quality Score</span><strong>0.0</strong></div>
+            <div class="metric"><span>Workflow Status</span><strong>${isIndividualDetail ? "Draft Review" : "Frozen"}</strong></div>
+            <div class="metric"><span>${isIndividualDetail ? "Clinician" : "Composite Score"}</span><strong>${isIndividualDetail ? selectedClinician?.name || "Selected clinician" : "0.0"}</strong></div>
+            <div class="metric"><span>${isIndividualDetail ? "Forecast Score" : "Quality Score"}</span><strong>${isIndividualDetail ? selectedClinician?.forecast || "Pending" : "0.0"}</strong></div>
             <div class="metric"><span>CMS QPP OAuth</span><strong>Active</strong></div>
           </div>
+          ${isIndividualDetail ? `
+            <div class="pathway-context-strip">
+              <div><span>MVP Group/Subgroup</span><strong>${selectedGroup?.id || "Selected subgroup"}</strong></div>
+              <div><span>MVP</span><strong>${selectedGroup?.mvpId || "MVP"}</strong><em>${selectedGroup?.mvpName || "Selected MVP"}</em></div>
+              <div><span>NPI</span><strong>${selectedClinician?.npi || "Selected NPI"}</strong></div>
+            </div>
+          ` : ""}
           ${renderUnifiedQualityPanel()}
         </div>
         <aside>
@@ -2126,17 +2225,29 @@ function renderSubmissionDetail() {
 }
 
 function renderNewSubmission() {
+  const isIndividualDraft = state.program === "MVP" && state.selectedSubmissionScope === "Individual";
+  const selectedGroup = selectedIndividualGroup();
+  const availableClinicians = cliniciansForSelectedGroup();
+  const selectedClinician = selectedIndividualClinician();
   content.innerHTML = `
     <section class="content-inner">
-      <button class="btn ghost" data-back="submissions-Group">Back to Submissions</button>
-      <h1>New ${submissionTitle(state.program)}</h1>
+      <button class="btn ghost" data-back="submissions-${state.selectedSubmissionScope || "Group"}">Back to Submissions</button>
+      <h1>${isIndividualDraft ? "New Individual MVP Submission" : `New ${submissionTitle(state.program)}`}</h1>
       <div class="detail-layout">
         <div class="panel">
           <div class="filter-row">
             <div class="field"><label>Performance Period</label>${periodSelect()}</div>
-            <div class="field"><label>Submission Scope</label><select><option>Group</option><option>Individual</option><option>Subgroup</option><option>APM Entity</option></select></div>
-            <div class="field"><label>Submission Name</label><input value="${submissionTitle(state.program)} Draft" /></div>
+            <div class="field"><label>Submission Scope</label><select data-draft-scope aria-label="Submission Scope"><option${state.selectedSubmissionScope === "Group" ? " selected" : ""}>Group</option><option${state.selectedSubmissionScope === "Individual" ? " selected" : ""}>Individual</option><option${state.selectedSubmissionScope === "Subgroup" ? " selected" : ""}>Subgroup</option><option${state.selectedSubmissionScope === "APM Entity" ? " selected" : ""}>APM Entity</option></select></div>
+            <div class="field"><label>Submission Name</label><input value="${isIndividualDraft ? individualDraftName() : `${submissionTitle(state.program)} Draft`}" /></div>
           </div>
+          ${isIndividualDraft ? `
+            <div class="individual-draft-panel">
+              <div class="field"><label>MVP Group/Subgroup</label><select data-individual-group aria-label="Draft MVP Group/Subgroup"><option value="">-- Select Group/Subgroup --</option>${mvpIndividualGroups.map((group) => `<option value="${group.id}"${group.id === state.selectedIndividualGroup ? " selected" : ""}>${group.id} - ${group.name}</option>`).join("")}</select></div>
+              <div class="field"><label>Eligible Clinician</label><select data-individual-clinician aria-label="Draft Eligible Clinician" ${state.selectedIndividualGroup ? "" : "disabled"}><option value="">${state.selectedIndividualGroup ? "-- Select Clinician --" : "Select subgroup first"}</option>${availableClinicians.map((clinician) => `<option value="${clinician.npi}"${clinician.npi === state.selectedIndividualClinician ? " selected" : ""}>${clinician.name} - NPI ${clinician.npi}</option>`).join("")}</select></div>
+              <div class="draft-kpi"><span>MVP</span><strong>${selectedGroup?.mvpId || "Select subgroup"}</strong><em>${selectedGroup?.mvpName || "MVP will populate after subgroup selection"}</em></div>
+              <div class="draft-kpi"><span>Forecast</span><strong>${selectedClinician?.forecast || "--"}</strong><em>${selectedClinician ? `${selectedClinician.confidence} confidence` : "Select clinician"}</em></div>
+            </div>
+          ` : ""}
           <h2>Data Sources</h2>
           <div class="table-wrap">
             <table>
@@ -2150,8 +2261,8 @@ function renderNewSubmission() {
             </table>
           </div>
           <div class="split-actions">
-            <span class="muted">Prototype creates a draft and routes to review.</span>
-            <button class="btn" data-toast="Draft submission created">Create Draft</button>
+            <span class="muted">${isIndividualDraft ? "Individual draft carries subgroup, clinician, MVP, and forecast context forward." : "Prototype creates a draft and routes to review."}</span>
+            <button class="btn" data-create-draft ${isIndividualDraft && !selectedClinician ? "disabled" : ""}>Create Draft</button>
           </div>
         </div>
         <aside class="panel">
@@ -2167,6 +2278,30 @@ function renderNewSubmission() {
       </div>
     </section>
   `;
+  content.querySelector("[data-draft-scope]")?.addEventListener("change", (event) => {
+    state.selectedSubmissionScope = event.target.value;
+    render();
+  });
+  content.querySelector("[data-individual-group]")?.addEventListener("change", (event) => {
+    state.selectedIndividualGroup = event.target.value;
+    state.selectedIndividualClinician = "";
+    const group = selectedIndividualGroup();
+    if (group) {
+      state.practiceComposition = "single";
+      state.mvpSpecialty = group.specialty;
+      state.mvpSpecialties = [group.specialty];
+    }
+    render();
+  });
+  content.querySelector("[data-individual-clinician]")?.addEventListener("change", (event) => {
+    state.selectedIndividualClinician = event.target.value;
+    render();
+  });
+  content.querySelector("[data-create-draft]")?.addEventListener("click", () => {
+    state.selectedSubmission = isIndividualDraft ? individualDraftName() : `${submissionTitle(state.program)} Draft`;
+    state.route = "submission-detail";
+    render();
+  });
   bindBackButtons();
   bindToastButtons();
 }
