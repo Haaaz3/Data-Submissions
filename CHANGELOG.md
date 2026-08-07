@@ -1,5 +1,12 @@
 # Changelog
 
+## v27
+
+- Made MVP practice composition the first selection: single-specialty vs multi-specialty.
+- Added multi-specialty specialty selection before MVP catalog narrowing.
+- Updated MVP recommendations, provider assignment, and forecasting to use the selected specialty mix.
+- Reworded the guided MVP flow so composition and specialties precede MVP/reporting-level selection.
+
 ## v26
 
 - Changed measure routing to use one customer-level enabled measure inventory.
