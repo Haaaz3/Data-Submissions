@@ -1,5 +1,12 @@
 # Changelog
 
+## v29
+
+- Simplified path finding so customer setup is loaded first and the first visible customer action is choosing a supported submission path.
+- Removed the customer inventory selector and raw enabled-measure table from the primary flow.
+- Updated MVP recommendations to disable unavailable MVPs when the customer’s enabled measures do not support them.
+- Reworked guided step language around Start, Path, Configure, and Submit.
+
 ## v28
 
 - Fixed MVP Individual Submissions so subgroup selection enables eligible clinicians.
