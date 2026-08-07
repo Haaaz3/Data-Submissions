@@ -8,6 +8,8 @@ const state = {
   scenario: "mvp-zmvp4",
   labStep: 0,
   mvpSpecialty: null,
+  mvpSpecialties: null,
+  practiceComposition: "multi",
   siteProfile: "zmdi",
 };
 
@@ -438,9 +440,9 @@ const customerPhaseSteps = [
   },
   {
     phase: "Choose",
-    title: "Choose Specialty and MVP",
-    decision: "Have the facility select specialty focus, review matching MVPs, choose reporting level, and document subgroup composition when subgroup reporting is selected.",
-    evidence: "Facility-selected specialty, MVP ID, practice structure, subgroup composition, narrative rationale, measure fit",
+    title: "Choose Composition, Specialties, and MVP",
+    decision: "Have the facility identify single-specialty or multi-specialty practice composition, select the applicable specialties, review matching MVPs, choose reporting level, and document subgroup composition when subgroup reporting is selected.",
+    evidence: "Practice composition, selected specialties, MVP ID, practice structure, subgroup composition, narrative rationale, measure fit",
   },
   {
     phase: "Validate",
@@ -697,7 +699,7 @@ labModeSelect.addEventListener("change", (event) => {
 scenarioSelect.addEventListener("change", (event) => {
   state.scenario = event.target.value;
   state.labStep = 0;
-  state.mvpSpecialty = null;
+  resetMvpSpecialtySelection();
   if (state.labMode === "production") {
     applyScenario(state.scenario, true);
   } else {
@@ -727,12 +729,18 @@ function setRoute(route) {
   render();
 }
 
+function resetMvpSpecialtySelection() {
+  state.mvpSpecialty = null;
+  state.mvpSpecialties = null;
+  state.practiceComposition = "multi";
+}
+
 function applyScenario(scenarioKey, mutateProductionRoute) {
   const scenario = scenarioDefinitions[scenarioKey];
   if (!scenario) return;
   state.scenario = scenarioKey;
   state.labStep = 0;
-  state.mvpSpecialty = null;
+  resetMvpSpecialtySelection();
   scenarioSelect.value = scenarioKey;
   labModeSelect.value = state.labMode;
   if (mutateProductionRoute) {
@@ -1048,8 +1056,25 @@ function scenarioDefaultSpecialty(scenario) {
   return "All Specialties";
 }
 
+function scenarioDefaultSpecialties(scenario) {
+  if (state.scenario === "mvp-zmvp4") return ["Infectious Disease", "Mental Health", "Cardiology"];
+  if (state.scenario === "new-submission") return ["Infectious Disease", "Mental Health"];
+  const specialty = scenarioDefaultSpecialty(scenario);
+  return specialty === "All Specialties" ? ["Primary Care"] : [specialty];
+}
+
+function selectedPracticeComposition() {
+  return state.practiceComposition || "multi";
+}
+
 function selectedMvpSpecialty(scenario) {
-  return state.mvpSpecialty || scenarioDefaultSpecialty(scenario);
+  return selectedMvpSpecialties(scenario)[0] || scenarioDefaultSpecialty(scenario);
+}
+
+function selectedMvpSpecialties(scenario) {
+  if (Array.isArray(state.mvpSpecialties) && state.mvpSpecialties.length) return state.mvpSpecialties;
+  if (state.mvpSpecialty) return [state.mvpSpecialty];
+  return selectedPracticeComposition() === "multi" ? scenarioDefaultSpecialties(scenario) : [scenarioDefaultSpecialty(scenario)];
 }
 
 function mvpSpecialtyOptions() {
@@ -1058,17 +1083,25 @@ function mvpSpecialtyOptions() {
   return [...options].sort((a, b) => a === "All Specialties" ? -1 : b === "All Specialties" ? 1 : a.localeCompare(b));
 }
 
+function mvpClinicalSpecialtyOptions() {
+  return mvpSpecialtyOptions().filter((option) => option !== "All Specialties");
+}
+
 function matchesSpecialty(row, specialty) {
   return specialty === "All Specialties" || row.specialties.includes(specialty);
 }
 
+function matchesAnySpecialty(row, specialties) {
+  return !specialties.length || specialties.includes("All Specialties") || specialties.some((specialty) => row.specialties.includes(specialty));
+}
+
 function recommendedMvpRows(scenario) {
-  const specialty = selectedMvpSpecialty(scenario);
-  const exact = mvpCatalogRows.filter((row) => matchesSpecialty(row, specialty));
+  const specialties = selectedMvpSpecialties(scenario);
+  const exact = mvpCatalogRows.filter((row) => matchesAnySpecialty(row, specialties));
   const source = exact.length ? exact : mvpCatalogRows;
   return source.slice().sort((a, b) => {
-    const aMatch = matchesSpecialty(a, specialty) ? 0 : 1;
-    const bMatch = matchesSpecialty(b, specialty) ? 0 : 1;
+    const aMatch = matchesAnySpecialty(a, specialties) ? 0 : 1;
+    const bMatch = matchesAnySpecialty(b, specialties) ? 0 : 1;
     if (aMatch !== bMatch) return aMatch - bMatch;
     const order = { Recommended: 0, Candidate: 1, "Needs review": 2 };
     return (order[a.status] ?? 3) - (order[b.status] ?? 3);
@@ -1076,8 +1109,8 @@ function recommendedMvpRows(scenario) {
 }
 
 function renderProviderAssignmentPlanner(scenario, options = {}) {
-  const specialty = selectedMvpSpecialty(scenario);
-  const rows = providerAssignmentRows.filter((row) => specialty === "All Specialties" || row.specialty === specialty);
+  const specialties = selectedMvpSpecialties(scenario);
+  const rows = providerAssignmentRows.filter((row) => specialties.includes("All Specialties") || specialties.includes(row.specialty));
   const visibleRows = (rows.length ? rows : providerAssignmentRows).slice(0, options.compact ? 3 : 6);
   return `
     <section class="provider-assignment-planner ${options.compact ? "compact" : ""}">
@@ -1119,6 +1152,63 @@ function renderProviderAssignmentPlanner(scenario, options = {}) {
           </tbody>
         </table>
       </div>
+    </section>
+  `;
+}
+
+function selectedSpecialtySummary(scenario) {
+  const specialties = selectedMvpSpecialties(scenario);
+  return specialties.length > 2 ? `${specialties.slice(0, 2).join(", ")} +${specialties.length - 2}` : specialties.join(", ");
+}
+
+function renderPracticeSpecialtyGate(scenario, options = {}) {
+  const composition = selectedPracticeComposition();
+  const specialties = selectedMvpSpecialties(scenario);
+  const specialtyOptions = mvpClinicalSpecialtyOptions();
+  const singleSpecialty = selectedMvpSpecialty(scenario);
+  return `
+    <section class="practice-specialty-gate ${composition} ${options.compact ? "compact" : ""}">
+      <div class="phase-guide-title">
+        <div>
+          <span class="eyebrow">Step 1: Practice Composition</span>
+          <h3>Is the practice single-specialty or multi-specialty?</h3>
+          <p>This is the first MVP routing decision. It determines whether the customer selects one specialty or several specialties before the MVP submission list is narrowed.</p>
+        </div>
+        <span>${composition === "single" ? "Single-specialty" : "Multi-specialty"} basis</span>
+      </div>
+      <div class="composition-toggle" role="radiogroup" aria-label="Practice composition">
+        <label class="${composition === "single" ? "selected" : ""}">
+          <input type="radio" name="practice-composition" value="single" data-practice-composition${composition === "single" ? " checked" : ""} />
+          <strong>Single-specialty</strong>
+          <span>Choose one specialty and show matching MVPs.</span>
+        </label>
+        <label class="${composition === "multi" ? "selected" : ""}">
+          <input type="radio" name="practice-composition" value="multi" data-practice-composition${composition === "multi" ? " checked" : ""} />
+          <strong>Multi-specialty</strong>
+          <span>Choose all applicable specialties and show MVPs that fit any selected specialty.</span>
+        </label>
+      </div>
+      ${composition === "single" ? `
+        <label class="single-specialty-select">
+          Step 2: Specialty
+          <select data-mvp-specialty aria-label="Single specialty">
+            ${specialtyOptions.map((option) => `<option value="${option}"${option === singleSpecialty ? " selected" : ""}>${option}</option>`).join("")}
+          </select>
+        </label>
+      ` : `
+        <div class="specialty-check-grid" aria-label="Selected specialties">
+          <div>
+            <span>Step 2: Specialties</span>
+            <strong>${specialties.length} selected</strong>
+          </div>
+          ${specialtyOptions.map((option) => `
+            <label class="${specialties.includes(option) ? "checked" : ""}">
+              <input type="checkbox" value="${option}" data-mvp-specialty-option${specialties.includes(option) ? " checked" : ""} />
+              <span>${option}</span>
+            </label>
+          `).join("")}
+        </div>
+      `}
     </section>
   `;
 }
@@ -1195,14 +1285,14 @@ function renderSubgroupCompositionForm(options = {}) {
   `;
 }
 
-function mvpForecastRowsForSpecialty(specialty) {
-  const rows = specialty === "All Specialties" ? providerMvpForecastRows : providerMvpForecastRows.filter((row) => row.selectedSpecialty === specialty);
+function mvpForecastRowsForSpecialties(specialties) {
+  const rows = specialties.includes("All Specialties") ? providerMvpForecastRows : providerMvpForecastRows.filter((row) => specialties.includes(row.selectedSpecialty));
   return rows.length ? rows : providerMvpForecastRows.slice(0, 4);
 }
 
 function renderProviderMvpForecast(scenario, options = {}) {
-  const specialty = selectedMvpSpecialty(scenario);
-  const rows = mvpForecastRowsForSpecialty(specialty).slice(0, options.compact ? 3 : 7);
+  const specialties = selectedMvpSpecialties(scenario);
+  const rows = mvpForecastRowsForSpecialties(specialties).slice(0, options.compact ? 3 : 7);
   const avgForecast = rows.length ? Math.round(rows.reduce((sum, row) => sum + Number(row.forecast), 0) / rows.length) : 0;
   return `
     <section class="provider-mvp-forecast ${options.compact ? "compact" : ""}">
@@ -1210,13 +1300,13 @@ function renderProviderMvpForecast(scenario, options = {}) {
         <div>
           <span class="eyebrow">Provider Performance Forecast</span>
           <h3>Forecast performance as providers are assigned to the selected MVP</h3>
-          <p>Projected score uses the provider’s historical measure performance against the measures included in the selected MVP. Specialty is selected by the facility.</p>
+          <p>Projected score uses the provider’s historical measure performance against the measures included in the selected MVP. Practice composition and specialties are selected by the facility.</p>
         </div>
         <span>${avgForecast}% projected avg</span>
       </div>
       <div class="forecast-controls">
-        <label>Facility-selected specialty<select data-mvp-specialty aria-label="Forecast specialty">${mvpSpecialtyOptions().map((option) => `<option value="${option}"${option === specialty ? " selected" : ""}>${option}</option>`).join("")}</select></label>
-        <label>Practice structure<select aria-label="Practice structure"><option>Multispecialty, not small</option><option>Single specialty</option><option>Multispecialty small practice</option></select></label>
+        <label>Practice composition<select data-practice-composition-select aria-label="Forecast practice composition"><option value="single"${selectedPracticeComposition() === "single" ? " selected" : ""}>Single-specialty</option><option value="multi"${selectedPracticeComposition() === "multi" ? " selected" : ""}>Multi-specialty</option></select></label>
+        <label>Selected specialties<input value="${selectedSpecialtySummary(scenario)}" aria-label="Selected specialty summary" readonly /></label>
         <label>Assignment mode<select aria-label="Assignment mode"><option>Subgroup recommended</option><option>Individual review</option><option>APM Entity if applicable</option><option>Group if allowed</option></select></label>
       </div>
       <div class="assignment-table-wrap">
@@ -1246,7 +1336,8 @@ function renderProviderMvpForecast(scenario, options = {}) {
 
 function renderMvpSelectionWorkbench(scenario, options = {}) {
   const active = scenario.program === "MVP" || state.scenario.startsWith("mvp") || state.scenario === "new-submission";
-  const specialty = selectedMvpSpecialty(scenario);
+  const specialties = selectedMvpSpecialties(scenario);
+  const specialtySummary = selectedSpecialtySummary(scenario);
   const filteredRows = recommendedMvpRows(scenario);
   const visibleRows = options.compact ? filteredRows.slice(0, 3) : filteredRows;
   return `
@@ -1254,30 +1345,30 @@ function renderMvpSelectionWorkbench(scenario, options = {}) {
       <div class="mvp-selector-heading">
         <div>
           <span class="eyebrow">MVP Submission Decision</span>
-          <h3>Facility chooses specialty, MVP, measures, and reporting level</h3>
-          <p>The prototype does not infer specialty from TIN/NPI. The facility selects a specialty focus, reviews the associated MVP measures, and forecasts provider performance before assignment.</p>
+          <h3>Facility chooses composition, specialties, MVP, measures, and reporting level</h3>
+          <p>The prototype does not infer specialty from TIN/NPI. The facility first declares whether the practice is single-specialty or multi-specialty, then selects the applicable specialties to narrow the MVP submission list.</p>
         </div>
         <div class="mvp-rule-card">
           <span>Rule of thumb</span>
-          <strong>Specialty is customer-selected.</strong>
+          <strong>Composition comes first.</strong>
           <em>TIN/NPI supports roster and eligibility; it does not choose the MVP. Group reporting depends on specialty mix and small-practice status.</em>
         </div>
       </div>
+      ${renderPracticeSpecialtyGate(scenario, { compact: options.compact })}
       <div class="mvp-choice-controls">
-        <label>Facility-selected specialty<select data-mvp-specialty aria-label="Specialty filter">${mvpSpecialtyOptions().map((option) => `<option value="${option}"${option === specialty ? " selected" : ""}>${option}</option>`).join("")}</select></label>
-        <label>MVP reporting level<select><option>Subgroup</option><option>Individual</option><option>APM Entity</option><option>Group if allowed</option></select></label>
-        <label>Measure mode<select><option>eCQM & CQM</option><option>eCQM</option><option>CQM</option></select></label>
+        <label>Step 3: MVP reporting level<select><option>Subgroup</option><option>Individual</option><option>APM Entity</option><option>Group if allowed</option></select></label>
+        <label>Step 4: Measure mode<select><option>eCQM & CQM</option><option>eCQM</option><option>CQM</option></select></label>
         <button class="btn small" data-toast="MVP specialty fit recalculated">Recalculate Fit</button>
       </div>
       ${renderMvpReportingLevelRules({ compact: options.compact })}
       ${renderSubgroupCompositionForm({ compact: options.compact })}
       <div class="mvp-filter-summary">
         <strong>Recommended MVPs</strong>
-        <span>${visibleRows.length} match${visibleRows.length === 1 ? "" : "es"} for ${specialty}</span>
+        <span>${visibleRows.length} match${visibleRows.length === 1 ? "" : "es"} for ${specialtySummary}</span>
       </div>
       <div class="mvp-catalog-grid">
         ${visibleRows.map((row) => `
-          <article class="mvp-candidate ${matchesSpecialty(row, specialty) ? "recommended" : ""} ${row.status === "Needs review" ? "review" : ""}">
+          <article class="mvp-candidate ${matchesAnySpecialty(row, specialties) ? "recommended" : ""} ${row.status === "Needs review" ? "review" : ""}">
             <div>
               <span>${row.id}</span>
               <strong>${row.name}</strong>
@@ -1289,7 +1380,7 @@ function renderMvpSelectionWorkbench(scenario, options = {}) {
               <div><dt>Measures</dt><dd>${row.measures}</dd></div>
             </dl>
             <div class="mvp-candidate-footer">
-              <span class="status-chip ${matchesSpecialty(row, specialty) ? "ready" : "warn"}">${matchesSpecialty(row, specialty) ? "Recommended" : row.status}</span>
+              <span class="status-chip ${matchesAnySpecialty(row, specialties) ? "ready" : "warn"}">${matchesAnySpecialty(row, specialties) ? "Recommended" : row.status}</span>
               <button class="link" data-toast="${row.id} selected for MVP submission planning">${row.action}</button>
             </div>
           </article>
@@ -2269,6 +2360,7 @@ function renderDesignLab() {
       if (!nextScenario) return;
       state.scenario = nextScenario;
       state.labStep = 0;
+      resetMvpSpecialtySelection();
       scenarioSelect.value = nextScenario;
       render();
     });
@@ -2276,7 +2368,7 @@ function renderDesignLab() {
   content.querySelectorAll("[data-site-profile]").forEach((select) => {
     select.addEventListener("change", () => {
       state.siteProfile = select.value;
-      state.mvpSpecialty = null;
+      resetMvpSpecialtySelection();
       render();
     });
   });
@@ -2286,6 +2378,7 @@ function renderDesignLab() {
       if (!nextScenario) return;
       state.scenario = nextScenario;
       state.labStep = 0;
+      resetMvpSpecialtySelection();
       scenarioSelect.value = nextScenario;
       render();
     });
@@ -2293,6 +2386,41 @@ function renderDesignLab() {
   content.querySelectorAll("[data-mvp-specialty]").forEach((select) => {
     select.addEventListener("change", () => {
       state.mvpSpecialty = select.value;
+      state.mvpSpecialties = [select.value];
+      state.practiceComposition = "single";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-practice-composition]").forEach((input) => {
+    input.addEventListener("change", () => {
+      state.practiceComposition = input.value;
+      const current = selectedMvpSpecialties(scenario);
+      if (state.practiceComposition === "single") {
+        const selected = current[0] || scenarioDefaultSpecialty(scenario);
+        state.mvpSpecialty = selected;
+        state.mvpSpecialties = [selected];
+      } else {
+        state.mvpSpecialties = current.length ? current : scenarioDefaultSpecialties(scenario);
+        state.mvpSpecialty = state.mvpSpecialties[0] || null;
+      }
+      render();
+    });
+  });
+  content.querySelectorAll("[data-practice-composition-select]").forEach((select) => {
+    select.addEventListener("change", () => {
+      state.practiceComposition = select.value;
+      const current = selectedMvpSpecialties(scenario);
+      state.mvpSpecialties = state.practiceComposition === "single" ? [current[0] || scenarioDefaultSpecialty(scenario)] : current;
+      state.mvpSpecialty = state.mvpSpecialties[0] || null;
+      render();
+    });
+  });
+  content.querySelectorAll("[data-mvp-specialty-option]").forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      const selected = [...content.querySelectorAll("[data-mvp-specialty-option]:checked")].map((item) => item.value);
+      state.practiceComposition = "multi";
+      state.mvpSpecialties = selected.length ? selected : scenarioDefaultSpecialties(scenario);
+      state.mvpSpecialty = state.mvpSpecialties[0] || null;
       render();
     });
   });
@@ -2832,7 +2960,7 @@ function workflowSteps(scenario) {
   const map = {
     "mvp-zmvp4": [
       { title: "Load Roster and Measures", body: "Start from enabled measures, provider roster, TIN/NPI eligibility, and historical measure performance. Specialty is not inferred from the TIN/NPI combination.", signal: "The first action is confirming loaded data and asking the facility to choose the specialty focus.", view: "scope", actions: [action("Choose specialty"), terminal("Explain legacy MIPS", "Note")] },
-      { title: "Choose Specialty, MVP, and Level", body: "Have the facility choose specialty focus, compare candidate MVP IDs, then choose subgroup, individual, APM Entity, or group only when CMS group rules allow it. For subgroup, capture single-specialty/multispecialty composition and narrative rationale.", signal: "Group MVP is blocked for multispecialty practices that are not small; subgroup composition is documented before registration.", view: "submissions", actions: [action("Select MVP candidate"), terminal("Compare levels", "Compare")] },
+      { title: "Choose Composition, Specialties, MVP, and Level", body: "Have the facility first choose single-specialty or multi-specialty composition. Single-specialty practices pick one specialty; multi-specialty practices pick all applicable specialties, then compare the narrowed MVP list and choose subgroup, individual, APM Entity, or group only when CMS group rules allow it.", signal: "The MVP list is narrowed by customer-selected specialty mix before reporting level or subgroup registration decisions.", view: "submissions", actions: [action("Select MVP candidate"), terminal("Compare levels", "Compare")] },
       { title: "Forecast Provider Fit", body: "Forecast each provider’s score against the selected MVP measures before assigning the provider to the MVP cohort.", signal: "Measure performance drives assignment decisions instead of a static specialty/TIN assumption.", view: "score", actions: [action("Review provider forecast"), terminal("Flag low confidence", "Flag")] },
       { title: "Register and Package", body: "Register the MVP or subgroup when needed, preserve the subgroup ID, freeze the submission-ready package, and queue the CMS submit or export action.", signal: "Submission intent is obvious and carries customer, MVP, level, subgroup, and performance period forward.", view: "score", actions: [terminal("Queue MVP package", "Queue"), terminal("Download details", "Download")] },
     ],
@@ -2849,7 +2977,7 @@ function workflowSteps(scenario) {
     ],
     "mvp-individual": [
       { title: "Review Eligible Clinicians", body: "Keep the user inside MVP Submission and start from clinician roster, TIN/NPI eligibility, and historical measure performance. Specialty is a facility-selected filter.", signal: "The dependent filters make sense because selected specialty and pathway context are explicit.", view: "scope", actions: [action("Choose Individual scope"), terminal("Review subgroup scope", "Review")] },
-      { title: "Choose Specialty and MVP", body: "Choose the individual clinician, select the facility-confirmed specialty, then filter available MVPs by patient population and measure fit.", signal: "Disabled fields explain what must be selected before an eligible clinician or MVP can be chosen.", view: "submissions", actions: [action("Select clinician"), terminal("Clear filters", "Clear")] },
+      { title: "Choose Composition, Specialty, and MVP", body: "Choose the individual clinician, confirm whether the practice context is single-specialty or multi-specialty, select the facility-confirmed specialty set, then filter available MVPs by patient population and measure fit.", signal: "Disabled fields explain what must be selected before an eligible clinician or MVP can be chosen.", view: "submissions", actions: [action("Select clinician"), terminal("Clear filters", "Clear")] },
       { title: "Forecast Individual Draft", body: "Show clinician, chosen MVP, TIN/NPI, quality measures, forecast score, QPP OAuth status, and missing supplemental data before draft creation.", signal: "The user can see whether the individual MVP submission is viable before registering or packaging.", view: "draft", actions: [terminal("Create individual draft", "Create"), terminal("Save filter set", "Save")] },
     ],
     "qrda-export": [
@@ -2860,7 +2988,7 @@ function workflowSteps(scenario) {
     ],
     "new-submission": [
       { title: "Choose Draft Pathway", body: "Create a draft from the customer’s active pathway list, then choose MVP Submission, APP Plus, or QRDA based on the customer’s submission strategy.", signal: "Draft creation respects each customer’s configured submission mix.", view: "scope", actions: [action("Create MVP draft"), terminal("Use APP Plus instead", "Switch")] },
-      { title: "Choose MVP and Measures", body: "For MVP drafts, filter by provider specialty, pick the MVP, choose the reporting level, then confirm 4 quality measures and collection type.", signal: "MVP setup is visible before the user commits to the draft.", view: "draft", actions: [action("Resolve missing inputs"), terminal("Create anyway", "Create")] },
+      { title: "Choose Composition, MVP, and Measures", body: "For MVP drafts, start with single-specialty vs multi-specialty composition, choose the applicable specialties, pick the MVP, choose the reporting level, then confirm 4 quality measures and collection type.", signal: "MVP setup is visible before the user commits to the draft.", view: "draft", actions: [action("Resolve missing inputs"), terminal("Create anyway", "Create")] },
       { title: "Save for Review", body: "Persist the draft with owner, due date, selected MVP, subgroup or clinician roster, CMS QPP OAuth state, and submission path.", signal: "The draft has operational context, not just form fields.", view: "draft", actions: [terminal("Save draft", "Save"), terminal("Assign reviewer", "Assign")] },
     ],
   };
