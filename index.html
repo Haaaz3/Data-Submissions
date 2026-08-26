@@ -4,13 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Oracle Health Data Submissions Prototype</title>
-    <link rel="stylesheet" href="styles.css?v=36" />
+    <link rel="stylesheet" href="styles.css?v=37" />
   </head>
   <body class="oj-web-applayout-body oj-redwood">
     <section class="lab-bar" aria-label="HDIDS Design Lab controls">
       <div class="lab-title">
         <strong>HDIDS Design Lab</strong>
-        <span>Oracle Health Data Submissions prototypes · v36</span>
+        <span>Oracle Health Data Submissions prototypes · v37</span>
       </div>
       <label>
         View
@@ -34,6 +34,23 @@
           <option value="new-submission">Create Submission Draft</option>
         </select>
       </label>
+      <details class="prototype-faq-menu" id="prototypeFaqMenu">
+        <summary>FAQ</summary>
+        <div class="prototype-faq-panel">
+          <button type="button" data-global-faq="current">
+            <strong>Current Phase FAQ</strong>
+            <span>Inputs, rules, rationale, and assumptions.</span>
+          </button>
+          <button type="button" data-global-faq="strategy">
+            <strong>Strategy Inputs</strong>
+            <span>How recommendations use enabled measures, specialty mix, and performance.</span>
+          </button>
+          <button type="button" data-global-faq="submit">
+            <strong>Submission Rules</strong>
+            <span>CMS QPP OAuth, validation, export, and receipt context.</span>
+          </button>
+        </div>
+      </details>
       <button class="lab-btn" id="runScenarioButton">Run Scenario</button>
     </section>
     <div class="app-shell">
@@ -59,7 +76,7 @@
 
       <footer class="footer">
         <div class="oracle-wordmark">ORACLE</div>
-        <div class="footer-copy">Copyright © 2013, 2026, Oracle and/or its affiliates. Prototype v36.</div>
+        <div class="footer-copy">Copyright © 2013, 2026, Oracle and/or its affiliates. Prototype v37.</div>
         <div class="footer-powered">
           <span>Powered by</span>
           <strong>Oracle Health Data Intelligence</strong>
@@ -68,6 +85,6 @@
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=36"></script>
+    <script src="app.js?v=37"></script>
   </body>
 </html>
