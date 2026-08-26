@@ -13,7 +13,11 @@ const state = {
   mvpSpecialty: null,
   mvpSpecialties: null,
   practiceComposition: "multi",
-  visionRoute: "workflow",
+  visionRoute: "home",
+  visionStrategyTab: "recommended",
+  visionPerformanceTab: "summary",
+  visionSubmissionTab: "cms",
+  visionEvidenceTab: "evaluation",
   visionStrategyLocked: false,
   visionStrategyEditMode: false,
   visionSubgroupSelections: {
@@ -88,7 +92,7 @@ const scenarioDefinitions = {
 
 const customerProfiles = {
   zmdi: {
-    name: "ZzMount Desert Island Hospital",
+    name: "Hyperion Health System",
     reportingYear: "PY 2026",
     strategy: "Show legacy as disabled",
     activeSummary: "MVP Submission + APP Plus + QRDA",
@@ -118,7 +122,7 @@ const customerProfiles = {
 const measureInventoryProfiles = {
   zmdi: {
     id: "zmdi",
-    customerName: "ZzMount Desert Island Hospital",
+    customerName: "Hyperion Health System",
     ownerType: "EC + APM-ready",
     period: "PY 2026",
     lastRefresh: "2026-07-15",
@@ -596,6 +600,18 @@ const visionStages = [
   },
 ];
 
+const visionScreens = [
+  { id: "home", label: "Home", stage: "strategy", detail: "Score, strategy, blockers" },
+  { id: "strategy", label: "Strategy", stage: "strategy", detail: "Forecast and choose" },
+  { id: "performance", label: "Performance", stage: "improve", detail: "Improve scores" },
+  { id: "measure-detail", label: "Measure Detail", stage: "improve", detail: "Explain one measure" },
+  { id: "patient-evidence", label: "Patient Evidence", stage: "validate", detail: "Why the result counts" },
+  { id: "readiness", label: "Readiness", stage: "validate", detail: "Resolve blockers" },
+  { id: "submissions", label: "Submissions", stage: "submit", detail: "Approve and submit" },
+  { id: "qrda", label: "QRDA Export", stage: "submit", detail: "Generate file package" },
+  { id: "audit", label: "Audit", stage: "submit", detail: "Approvals and traceability" },
+];
+
 const visionStrategyInputs = [
   { label: "Enabled measure signal", source: "Customer measure configuration", value: "eCQM + CQM measures available", detail: "Supports infectious disease, mental health, women’s health, APP Plus, and QRDA; cardiology MVP is unavailable until supporting measures are enabled.", impact: "3 MVP subgroups supported; cardiology blocked" },
   { label: "Specialty signal", source: "Roster + customer-confirmed specialty", value: "4 specialty cohorts", detail: "Cardiology 45, infectious disease 45, women’s health 45, mental health 53.", impact: "Cohorts are customer-confirmed, not inferred from TIN/NPI" },
@@ -885,7 +901,7 @@ const periods = {
 
 const performanceRows = {
   MIPS: [
-    { name: "ZzMount Desert Island Hospital", period: "eCQM 2026 Analytics Calendar 2026", quality: "59% (17.6 out of 30)", providers: 61 },
+    { name: "Hyperion Health System", period: "eCQM 2026 Analytics Calendar 2026", quality: "59% (17.6 out of 30)", providers: 61 },
   ],
   MVP: [
     { participation: "Subgroup", name: "ZzMVP2", mvp: "Heart Disease", period: "eCQM 2026 Analytics Calendar 2026", quality: "40% (11.9 out of 30)", providers: 45 },
@@ -901,7 +917,7 @@ const performanceRows = {
     { name: "CCPM Community Care Partnership of Maine", period: "eCQM 2026 Analytics Calendar 2026", quality: "30% (15.1 out of 50)", tins: 0 },
   ],
   HQR: [
-    { name: "ZzMount Desert Island Hospital", period: "Hospital Quality Reporting CY2026 Preview", quality: "86% readiness", providers: 0 },
+    { name: "Hyperion Health System", period: "Hospital Quality Reporting CY2026 Preview", quality: "86% readiness", providers: 0 },
     { name: "Northern Coast Medical Center", period: "Hospital IQR CY2025 Submission", quality: "74% readiness", providers: 0 },
   ],
 };
@@ -909,7 +925,7 @@ const performanceRows = {
 const submissions = {
   MIPS: {
     Group: [
-      { name: "ZzMount Desert Island Hospital", practice: "ZzMount Desert Island Hospital", tin: "3130ccdb", composite: "72.4", quality: "72.4", pi: "pending", ia: "pending" },
+      { name: "Hyperion Health System", practice: "Hyperion Health System", tin: "3130ccdb", composite: "72.4", quality: "72.4", pi: "pending", ia: "pending" },
       { name: "MIPS Org View Test", practice: "MIPS Org View Test", tin: "000011111", composite: "loading", quality: "FROZEN", pi: "loading", ia: "loading" },
       { name: "TIN 1: CernerDemo", practice: "TIN 1: CernerDemo", tin: "000000011", composite: "loading", quality: "loading", pi: "loading", ia: "loading" },
       { name: "TIN 3: CernerDemo", practice: "TIN 3: CernerDemo", tin: "000988985", composite: "loading", quality: "loading", pi: "loading", ia: "loading" },
@@ -943,7 +959,7 @@ const submissions = {
   },
   HQR: {
     Hospital: [
-      { name: "Hospital Quality eCQM Package", practice: "ZzMount Desert Island Hospital", tin: "CCN 200001", composite: "draft", quality: "86% readiness", pi: "not applicable", ia: "not applicable" },
+      { name: "Hospital Quality eCQM Package", practice: "Hyperion Health System", tin: "CCN 200001", composite: "draft", quality: "86% readiness", pi: "not applicable", ia: "not applicable" },
       { name: "Hospital IQR Submission", practice: "Northern Coast Medical Center", tin: "CCN 200114", composite: "review", quality: "74% readiness", pi: "not applicable", ia: "not applicable" },
     ],
   },
@@ -1013,9 +1029,9 @@ const mvpScorecards = {
 
 const scorecardsByProgram = {
   MIPS: {
-    "ZzMount Desert Island Hospital": {
+    "Hyperion Health System": {
       measures,
-      entities: ["ZzMount Desert Island Hospital"],
+      entities: ["Hyperion Health System"],
     },
   },
   APPPLUS: {
@@ -1029,13 +1045,13 @@ const scorecardsByProgram = {
     },
   },
   HQR: {
-    "ZzMount Desert Island Hospital": {
+    "Hyperion Health System": {
       measures: [
         measures[1],
         measures[3],
         measures[6],
       ],
-      entities: ["ZzMount Desert Island Hospital", "Northern Coast Medical Center"],
+      entities: ["Hyperion Health System", "Northern Coast Medical Center"],
     },
   },
 };
@@ -1093,7 +1109,7 @@ document.querySelector(".brand").addEventListener("click", () => {
 labModeSelect.addEventListener("change", (event) => {
   state.labMode = event.target.value;
   state.labStep = 0;
-  state.visionRoute = "workflow";
+  state.visionRoute = "home";
   state.visionStrategyLocked = false;
   applyScenario(state.scenario, state.labMode === "production");
 });
@@ -1101,7 +1117,7 @@ labModeSelect.addEventListener("change", (event) => {
 scenarioSelect.addEventListener("change", (event) => {
   state.scenario = event.target.value;
   state.labStep = 0;
-  state.visionRoute = "workflow";
+  state.visionRoute = "home";
   state.visionStrategyLocked = false;
   resetMvpSpecialtySelection();
   if (state.labMode === "production") {
@@ -1161,7 +1177,7 @@ function applyScenario(scenarioKey, mutateProductionRoute) {
   if (!scenario) return;
   state.scenario = scenarioKey;
   state.labStep = 0;
-  state.visionRoute = "workflow";
+  state.visionRoute = "home";
   state.visionStrategyLocked = false;
   resetMvpSpecialtySelection();
   scenarioSelect.value = scenarioKey;
@@ -2463,7 +2479,7 @@ function renderSubmissions(scope) {
           <div class="field"><label>MVP Group/Subgroup</label><select data-individual-group aria-label="MVP Group/Subgroup"><option value="">-- Select Group/Subgroup --</option>${mvpIndividualGroups.map((group) => `<option value="${group.id}"${group.id === state.selectedIndividualGroup ? " selected" : ""}>${group.id} - ${group.name}</option>`).join("")}</select></div>
           <div class="field"><label><span class="required">*</span> Eligible Clinician</label><select data-individual-clinician aria-label="Eligible Clinician" ${state.selectedIndividualGroup ? "" : "disabled"}><option value="">${state.selectedIndividualGroup ? "-- Select Clinician --" : "Select subgroup first"}</option>${availableClinicians.map((clinician) => `<option value="${clinician.npi}"${clinician.npi === state.selectedIndividualClinician ? " selected" : ""}>${clinician.name} - NPI ${clinician.npi}</option>`).join("")}</select></div>
         ` : `
-          <div class="field"><label>${scope === "APM Entity" ? "APM Entity" : state.program === "MVP" ? "MVP Group/Subgroup" : scope + " Practice"}</label><select><option></option><option>ZzMount Desert Island Hospital</option><option>ZzMVP2</option><option>MIPS Org View Test</option><option>TIN 1: CernerDemo</option></select></div>
+          <div class="field"><label>${scope === "APM Entity" ? "APM Entity" : state.program === "MVP" ? "MVP Group/Subgroup" : scope + " Practice"}</label><select><option></option><option>Hyperion Health System</option><option>ZzMVP2</option><option>MIPS Org View Test</option><option>TIN 1: CernerDemo</option></select></div>
         `}
         <div class="field"><label>Submission Name</label><div class="search-control"><input placeholder="Submission Name" /><button aria-label="Search">⌕</button></div></div>
       </div>
@@ -2808,57 +2824,103 @@ function currentVisionStage() {
   return { index, stage: visionStages[index], percent: Math.round(((index + 1) / visionStages.length) * 100) };
 }
 
-function renderVisionPlatform() {
-  const workflow = currentVisionStage();
-  const inFaq = state.visionRoute === "phase-faq";
-  const continueDisabled = workflow.stage.id === "strategy" && !state.visionStrategyLocked;
-  const continueLabel = workflow.stage.id === "strategy" ? "Continue to Improve" : "Continue";
+function visionStageIdForScreen(screenId) {
+  return visionScreens.find((screen) => screen.id === screenId)?.stage || "strategy";
+}
+
+function visionScreenForStage(stageId) {
+  if (stageId === "improve") return "performance";
+  if (stageId === "validate") return "readiness";
+  if (stageId === "submit") return "submissions";
+  return "strategy";
+}
+
+function activeVisionScreenId() {
+  if (state.visionRoute === "phase-faq") return "phase-faq";
+  if (visionScreens.some((screen) => screen.id === state.visionRoute)) return state.visionRoute;
+  return visionScreenForStage(currentVisionStage().stage.id);
+}
+
+function visionStageForActiveScreen() {
+  const stageId = visionStageIdForScreen(activeVisionScreenId());
+  return visionStages.find((stage) => stage.id === stageId) || visionStages[0];
+}
+
+function visionBadge(label, tone = "info") {
+  return `<span class="vision-badge ${tone}">${label}</span>`;
+}
+
+function renderVisionTabs(tabs, stateKey) {
+  const activeValue = state[stateKey] || tabs[0]?.id;
   return `
-    <div class="vision-app-shell">
-      ${renderVisionNavigation(workflow)}
-      <main class="vision-workspace">
-        <header class="vision-workspace-header">
-          <div>
-            <span class="eyebrow">${inFaq ? `${workflow.stage.label} reference` : workflow.stage.label}</span>
-            <h1>${inFaq ? `${workflow.stage.label} FAQ` : workflow.stage.title}</h1>
-            <p>${inFaq ? "Inputs, rules, rationale, and supporting context for this phase." : workflow.stage.promise}</p>
-          </div>
-          <div class="vision-panel-actions">
-            ${inFaq ? `
-              <button class="btn" data-vision-workflow>Back to ${workflow.stage.label}</button>
-            ` : `
-              <button class="btn ghost" data-vision-next="-1" ${workflow.index === 0 ? "disabled" : ""}>Back</button>
-              ${workflow.stage.id !== "strategy" ? `<button class="btn secondary" data-toast="${workflow.stage.primaryAction} opened">${workflow.stage.primaryAction}</button>` : ""}
-              <button class="btn" data-vision-next="1" ${workflow.index === visionStages.length - 1 || continueDisabled ? "disabled" : ""}>${continueLabel}</button>
+    <div class="vision-tabs" role="tablist">
+      ${tabs.map((tab) => `
+        <button class="vision-tab ${activeValue === tab.id ? "active" : ""}" data-vision-tab="${stateKey}:${tab.id}" type="button">${tab.label}</button>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderVisionScreenFrame({ id, crumb, title, subtitle, filters = "", actions = "", body }) {
+  return `
+    <section class="vision-screen-card" id="vision-${id}">
+      <header class="vision-screen-topbar">
+        <div>
+          <div class="vision-crumb">${crumb}</div>
+          <h1>${title}</h1>
+          <p>${subtitle}</p>
+        </div>
+        <div class="vision-topbar-right">
+          <div class="vision-filters">
+            ${filters || `
+              <span>Performance Year: 2026</span>
+              <span>Customer: Hyperion Health System</span>
             `}
           </div>
-        </header>
-        <section class="vision-panel vision-focus ${inFaq ? "phase-faq-focus" : ""}">
-          ${inFaq ? renderVisionFaqScreen(workflow.stage) : renderVisionStageContent(workflow.stage)}
-        </section>
+          ${actions ? `<div class="vision-top-actions">${actions}</div>` : ""}
+        </div>
+      </header>
+      <div class="vision-screen-content">
+        ${body}
+      </div>
+    </section>
+  `;
+}
+
+function renderVisionPlatform() {
+  const activeScreen = activeVisionScreenId();
+  return `
+    <div class="vision-app-shell vision-v2-shell">
+      ${renderVisionNavigation()}
+      <main class="vision-workspace vision-v2-main">
+        ${renderVisionActiveScreen(activeScreen)}
       </main>
     </div>
   `;
 }
 
-function renderVisionNavigation(workflow) {
+function renderVisionNavigation() {
+  const active = activeVisionScreenId();
+  const activeStage = visionStageForActiveScreen();
   return `
     <aside class="vision-nav-pane" aria-label="Quality operating system navigation">
       <div class="vision-nav-brand">
-        <span>Oracle Health Data Submissions</span>
-        <strong>Quality Operating System</strong>
+        <div class="vision-logo">OH</div>
+        <div>
+          <span>Oracle Health Data Submissions</span>
+          <strong>Quality Operating System</strong>
+        </div>
       </div>
       <div class="vision-nav-customer">
         <span>Customer</span>
-        <strong>ZzMount Desert Island Hospital</strong>
+        <strong>Hyperion Health System</strong>
         <em>PY 2026 strategy workspace</em>
       </div>
       <nav class="vision-left-nav" aria-label="Workflow areas">
-        ${visionStages.map((stage, index) => `
-          <button class="${state.visionRoute !== "phase-faq" && index === workflow.index ? "active" : index < workflow.index ? "complete" : "future"}" data-lab-step="${index}">
-            <strong>${stage.label}</strong>
-            <span>${index < workflow.index ? "Complete" : index === workflow.index ? "Current" : "Ready when reached"}</span>
-            <em>${stage.promise}</em>
+        ${visionScreens.map((screen) => `
+          <button class="${active === screen.id ? "active" : ""}" data-vision-screen="${screen.id}" type="button" aria-label="${screen.label}">
+            <strong>${screen.label}</strong>
+            <span>${screen.detail}</span>
           </button>
         `).join("")}
       </nav>
@@ -2867,15 +2929,15 @@ function renderVisionNavigation(workflow) {
         <details class="vision-reference-menu" ${state.visionRoute === "phase-faq" ? "open" : ""}>
           <summary>FAQ and reference</summary>
           <div>
-            <button class="${state.visionRoute === "phase-faq" ? "active" : ""}" data-vision-faq-stage="${workflow.stage.id}">
-              <strong>${workflow.stage.label} FAQ</strong>
+            <button class="${state.visionRoute === "phase-faq" ? "active" : ""}" data-vision-faq-stage="${activeStage.id}" type="button">
+              <strong>${activeStage.label} FAQ</strong>
               <span>Inputs, rules, rationale</span>
             </button>
-            <button data-vision-faq-stage="strategy">
+            <button data-vision-faq-stage="strategy" type="button">
               <strong>Recommendation inputs</strong>
               <span>Enabled measures, specialty mix, performance forecast</span>
             </button>
-            <button data-vision-faq-stage="submit">
+            <button data-vision-faq-stage="submit" type="button">
               <strong>Submission rules</strong>
               <span>QPP OAuth, validation, export, receipt tracking</span>
             </button>
@@ -2883,13 +2945,635 @@ function renderVisionNavigation(workflow) {
         </details>
       </div>
       <div class="vision-nav-footer">
-        <span>Workflow progress</span>
-        <strong>${workflow.percent}% complete</strong>
-        <em>${workflow.stage.artifact}</em>
+        <span>Active package</span>
+        <strong>${state.visionStrategyLocked ? "Strategy locked" : "Draft strategy"}</strong>
+        <em>${selectedVisionStrategy().path}</em>
         <button class="lab-btn" data-open-production="mvp-zmvp4">Open Production Control</button>
       </div>
     </aside>
   `;
+}
+
+function renderVisionActiveScreen(activeScreen) {
+  if (activeScreen === "phase-faq") {
+    const stage = currentVisionStage().stage;
+    return renderVisionScreenFrame({
+      id: "faq",
+      crumb: `${stage.label} / FAQ`,
+      title: `${stage.label} FAQ and Reference`,
+      subtitle: "Supporting context lives here so the primary workflow can stay focused on the customer decision.",
+      actions: `<button class="vision-btn" data-vision-workflow type="button">Back to ${stage.label}</button>`,
+      body: renderVisionFaqScreen(stage),
+    });
+  }
+  if (activeScreen === "strategy") return renderVisionStrategyScreen();
+  if (activeScreen === "performance") return renderVisionPerformanceScreen();
+  if (activeScreen === "measure-detail") return renderVisionMeasureDetailScreen();
+  if (activeScreen === "patient-evidence") return renderVisionPatientEvidenceScreen();
+  if (activeScreen === "readiness") return renderVisionReadinessScreen();
+  if (activeScreen === "submissions") return renderVisionSubmissionScreen();
+  if (activeScreen === "qrda") return renderVisionQrdaScreen();
+  if (activeScreen === "audit") return renderVisionAuditScreen();
+  return renderVisionHomeScreen();
+}
+
+function renderVisionHomeScreen() {
+  const selected = selectedVisionStrategy();
+  const summary = visionStrategyDraftSummary();
+  return renderVisionScreenFrame({
+    id: "home",
+    crumb: "Home",
+    title: "Regulatory Performance Copilot",
+    subtitle: "Projected score, recommended strategy, top risks, and submission status for Hyperion Health System.",
+    actions: `<button class="vision-btn secondary" data-vision-screen="strategy" type="button">Review strategy</button>`,
+    body: `
+      <div class="vision-grid-2">
+        <article class="vision-card vision-score-card">
+          <h2>Projected to submit at 88.3</h2>
+          <p><strong>With the recommended MVP subgroup strategy: 93.8</strong> ${visionBadge("+5.5 pts modeled lift", "good")}</p>
+          <div class="vision-mini-grid three">
+            <div><span>Current</span><strong>84.9</strong></div>
+            <div><span>Projected</span><strong>88.3</strong></div>
+            <div><span>Optimized</span><strong>93.8</strong></div>
+          </div>
+          <div class="vision-projection-bar">
+            <span class="current" style="width:84.9%"></span>
+            <span class="projected" style="width:88.3%"></span>
+            <span class="optimized" style="width:93.8%"></span>
+          </div>
+          <div class="vision-scale"><span>0</span><span>50</span><span>100</span></div>
+          <p class="vision-note">Forecast uses enabled clinician measures, customer-confirmed specialty cohorts, provider-level performance, and program eligibility signals.</p>
+        </article>
+        <article class="vision-soft-card">
+          <span class="vision-kicker">Recommended Strategy</span>
+          <h2>${selected.path}</h2>
+          <p>${selected.strategy}</p>
+          <div class="vision-status-row"><strong>Included mix</strong><span>${summary.subgroups} MVP subgroups / ${summary.providers} providers</span></div>
+          <div class="vision-status-row"><strong>Projected score</strong><strong>${selected.performance}</strong></div>
+          <div class="vision-status-row"><strong>Confidence</strong>${visionBadge(selected.fit, "good")}</div>
+          <div class="vision-status-row"><strong>Modeled impact</strong><strong>+$185K reimbursement opportunity</strong></div>
+          <button class="vision-btn" data-vision-screen="strategy" type="button">Choose strategy</button>
+        </article>
+      </div>
+      <div class="vision-grid-3 spaced">
+        <article class="vision-card">
+          <h2>Top Actions</h2>
+          <ul class="vision-list">
+            <li><span class="vision-dot good"></span><span><strong>Choose MVP specialty subgroups</strong><em>Highest modeled fit from enabled measures and specialty cohorts.</em></span></li>
+            <li><span class="vision-dot warn"></span><span><strong>Review medium-confidence cohorts</strong><em>Mental health and women's health need customer confirmation.</em></span></li>
+            <li><span class="vision-dot good"></span><span><strong>Open evidence work queue</strong><em>428 patients likely have supporting evidence available.</em></span></li>
+          </ul>
+          <button class="vision-btn secondary" data-vision-screen="performance" type="button">Open opportunities</button>
+        </article>
+        <article class="vision-card">
+          <h2>Critical Blockers</h2>
+          <ul class="vision-list">
+            <li><span class="vision-dot bad"></span><span>Cardiology MVP blocked because required measures are not enabled.</span></li>
+            <li><span class="vision-dot warn"></span><span>37 validation records need human judgment before approval.</span></li>
+            <li><span class="vision-dot warn"></span><span>3 data feeds have mapping issues that could move forecast confidence.</span></li>
+          </ul>
+          <button class="vision-btn secondary" data-vision-screen="readiness" type="button">Review blockers</button>
+        </article>
+        <article class="vision-card">
+          <h2>Submission Status</h2>
+          <div class="vision-status-row"><strong>MVP Submission</strong>${visionBadge("Ready to plan", "good")}</div>
+          <div class="vision-status-row"><strong>APP Plus</strong>${visionBadge("Available", "info")}</div>
+          <div class="vision-status-row"><strong>QRDA Export</strong>${visionBadge("Supporting path", "info")}</div>
+          <div class="vision-status-row"><strong>Traditional MIPS</strong>${visionBadge("Transition only", "warn")}</div>
+          <button class="vision-btn secondary" data-vision-screen="submissions" type="button">Prepare submission</button>
+        </article>
+      </div>
+    `,
+  });
+}
+
+function renderVisionStrategyScreen() {
+  const tabs = [
+    { id: "recommended", label: "Recommended Path" },
+    { id: "compare", label: "Compare Options" },
+    { id: "simulate", label: "Simulate" },
+    { id: "assumptions", label: "Assumptions" },
+  ];
+  const activeTab = state.visionStrategyTab || "recommended";
+  const body = `
+    ${renderVisionTabs(tabs, "visionStrategyTab")}
+    ${activeTab === "compare" ? renderVisionStrategyCompareTab() : activeTab === "simulate" ? renderVisionStrategySimulateTab() : activeTab === "assumptions" ? renderVisionStrategyAssumptionsTab() : renderVisionStrategyRecommendedTab()}
+  `;
+  return renderVisionScreenFrame({
+    id: "strategy",
+    crumb: "Strategy",
+    title: "Choose the Best Reporting Path",
+    subtitle: "Compare last year's baseline against forecasted paths, then choose the strategy Hyperion wants to operationalize.",
+    filters: `<span>Scope: Hyperion Health System</span><span>Performance Year: 2026</span>`,
+    body,
+  });
+}
+
+function renderVisionStrategyRecommendedTab() {
+  const selected = selectedVisionStrategy();
+  const summary = visionStrategyDraftSummary();
+  return `
+    <div class="vision-grid-2 strategy-decision-grid">
+      <article class="vision-card">
+        <div class="vision-section-title">
+          <span class="vision-kicker">Choose strategy</span>
+          <h3>Candidate submission strategies</h3>
+          <p>Previous year is shown as a baseline. Active candidates are ranked by modeled score, measure coverage, specialty fit, and effort.</p>
+        </div>
+        <div class="vision-table-wrap">
+          <table class="vision-table vision-strategy-table">
+            <thead><tr><th>Path</th><th>Forecast</th><th>Effort</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr class="baseline-row">
+                <td><strong>${previousSubmissionBaseline.path}</strong><span class="subline">${previousSubmissionBaseline.year} / ${previousSubmissionBaseline.measures}</span></td>
+                <td>${previousSubmissionBaseline.score}</td>
+                <td>Known</td>
+                <td>${visionBadge("Baseline", "info")}</td>
+                <td></td>
+              </tr>
+              ${visionStrategyRows.map((row) => `
+                <tr class="${row.id === selected.id ? "selected" : ""} ${row.recommendation === "Transition only" ? "disabled" : ""}">
+                  <td><strong>${row.path}</strong><span class="subline">${row.strategy}</span></td>
+                  <td><strong>${row.performance}</strong><span class="subline">${row.lift}</span></td>
+                  <td>${row.effort}<span class="subline">${row.scope}</span></td>
+                  <td>${visionBadge(row.recommendation, strategyTone(row))}</td>
+                  <td><button class="vision-row-button" data-vision-strategy="${row.id}" type="button">${row.id === selected.id ? "Viewing" : "View"}</button></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      </article>
+      <article class="vision-soft-card selected-vision-strategy">
+        <span class="vision-kicker">${selected.recommendation}</span>
+        <h2>${selected.path}</h2>
+        <p>${selected.strategy}</p>
+        <div class="vision-mini-grid four">
+          <div><span>Score</span><strong>${selected.performance.replace(" projected", "")}</strong></div>
+          <div><span>Lift</span><strong>${selected.lift.replace(" pts", "")}</strong></div>
+          <div><span>Fit</span><strong>${selected.fit}</strong></div>
+          <div><span>Effort</span><strong>${selected.effort}</strong></div>
+        </div>
+        <div class="vision-status-row"><strong>Previous baseline</strong><span>${previousSubmissionBaseline.path} / ${previousSubmissionBaseline.score}</span></div>
+        <div class="vision-status-row"><strong>Current mix</strong><span>${summary.subgroups} subgroups, ${summary.providers} providers, ${summary.reviewCount} cohorts need review</span></div>
+        <div class="vision-status-row"><strong>Decision</strong><span>${strategyContextFor(selected).primaryDecision}</span></div>
+        <div class="vision-action-row">
+          <button class="vision-btn secondary" data-customize-vision-strategy type="button" ${selected.id !== "mvp-specialty-subgroups" ? "disabled" : ""}>Edit provider mix</button>
+          <button class="vision-btn" data-lock-vision-strategy="${selected.id}" type="button" ${selected.recommendation === "Transition only" ? "disabled" : ""}>Use this strategy</button>
+        </div>
+      </article>
+    </div>
+    ${selected.id === "mvp-specialty-subgroups" ? renderVisionMvpSubgroupMixer() : renderStrategyOperationalPanel(selected)}
+  `;
+}
+
+function renderVisionStrategyCompareTab() {
+  return `
+    <div class="vision-card">
+      <div class="vision-section-title">
+        <span class="vision-kicker">Compare options</span>
+        <h3>Forecasted strategy options</h3>
+        <p>This view keeps every candidate visible, including unavailable paths, so customers can understand why a path was recommended or blocked.</p>
+      </div>
+      <table class="vision-table">
+        <thead><tr><th>Option</th><th>Modeled score</th><th>Provider scope</th><th>Measure signal</th><th>Customer decision</th></tr></thead>
+        <tbody>
+          <tr><td><strong>${previousSubmissionBaseline.path}</strong><span class="subline">${previousSubmissionBaseline.status} last year</span></td><td>${previousSubmissionBaseline.score}</td><td>${previousSubmissionBaseline.providers}</td><td>${previousSubmissionBaseline.measures}</td><td>Baseline only</td></tr>
+          ${visionStrategyRows.map((row) => {
+            const context = strategyContextFor(row);
+            return `
+              <tr class="${row.recommendation === "Transition only" ? "disabled" : ""}">
+                <td><strong>${row.path}</strong><span class="subline">${row.recommendation}</span></td>
+                <td>${row.performance}<span class="subline">${row.lift}</span></td>
+                <td>${row.scope}</td>
+                <td>${row.measureCoverage}</td>
+                <td>${context.customerDecisions[0]}</td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderVisionStrategySimulateTab() {
+  return `
+    <div class="vision-grid-2 strategy-sim-grid">
+      <article class="vision-card">
+        <h2>What-if simulator</h2>
+        <div class="vision-form-row"><strong>Program path</strong>
+          <label><input type="radio" name="vision-sim-program" checked /> MVP specialty subgroups</label>
+          <label><input type="radio" name="vision-sim-program" /> MVP mixed subgroup + individual</label>
+          <label><input type="radio" name="vision-sim-program" /> APP Plus APM Entity</label>
+        </div>
+        <div class="vision-form-row"><strong>Measure improvement focus</strong>
+          <span class="vision-select">HIV Screening / CMS349v8</span>
+          <p>Assumed improvement: close 18% of missing evidence and documentation gaps.</p>
+          <div class="vision-slider"></div>
+        </div>
+        <div class="vision-form-row"><strong>Provider mix</strong>
+          <label><input type="checkbox" checked /> Include infectious disease subgroup</label>
+          <label><input type="checkbox" checked /> Include mental health subgroup</label>
+          <label><input type="checkbox" checked /> Include women's health subgroup</label>
+          <label><input type="checkbox" disabled /> Cardiology remains blocked until measures are enabled</label>
+        </div>
+      </article>
+      <div class="vision-grid-2 compact-grid">
+        <article class="vision-card">
+          <h2>Impact Summary</h2>
+          <table class="vision-table">
+            <thead><tr><th>Scenario</th><th>Score</th><th>Impact</th></tr></thead>
+            <tbody>
+              <tr><td>Current forecast</td><td>88.3</td><td>$0</td></tr>
+              <tr><td>Recommended strategy</td><td>93.8</td><td><strong>+$185K</strong></td></tr>
+              <tr><td>With HIV evidence closure</td><td>95.1</td><td><strong>+$226K</strong></td></tr>
+            </tbody>
+          </table>
+          <button class="vision-btn" data-lock-vision-strategy="mvp-specialty-subgroups" type="button">Use recommended scenario</button>
+        </article>
+        <article class="vision-card">
+          <h2>Projected Trend</h2>
+          <div class="vision-linechart">
+            <svg viewBox="0 0 300 130" aria-hidden="true">
+              <path d="M0 98 C62 70, 105 64, 145 49 S229 30,300 21" fill="none" stroke="#07142f" stroke-dasharray="4 4" stroke-width="3"/>
+              <path d="M0 98 C60 76, 110 72, 151 59 S230 43,300 35" fill="none" stroke="#075bff" stroke-width="3"/>
+              <path d="M0 98 C80 86, 165 82, 300 77" fill="none" stroke="#a7b1c2" stroke-width="3"/>
+            </svg>
+          </div>
+        </article>
+      </div>
+    </div>
+  `;
+}
+
+function renderVisionStrategyAssumptionsTab() {
+  return `
+    <div class="vision-card">
+      <div class="vision-section-title">
+        <span class="vision-kicker">Assumptions</span>
+        <h3>Inputs used to generate recommendations</h3>
+        <p>These are reference details for the quality manager, not the first task in the workflow.</p>
+      </div>
+      <div class="vision-grid-4">
+        ${visionStrategyInputs.map((item) => `
+          <article class="vision-mini-card">
+            <span>${item.label}</span>
+            <strong>${item.value}</strong>
+            <em>${item.source}</em>
+            <p>${item.detail}</p>
+          </article>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderVisionPerformanceScreen() {
+  const tabs = [
+    { id: "summary", label: "Summary" },
+    { id: "measures", label: "Measures" },
+    { id: "opportunities", label: "Opportunities" },
+    { id: "data-gaps", label: "Data Gaps" },
+    { id: "patients", label: "Patients" },
+  ];
+  return renderVisionScreenFrame({
+    id: "performance",
+    crumb: "Performance",
+    title: "Improve Score and Validate Performance",
+    subtitle: "Turn the selected strategy into routed quality work while there is still time to act.",
+    filters: `<span>Program: MVP specialty subgroups</span><span>Score refresh: Today 6:10 AM</span>`,
+    body: `
+      ${renderVisionTabs(tabs, "visionPerformanceTab")}
+      <div class="vision-grid-4">
+        <article class="vision-card"><span class="vision-kicker">Projected score</span><strong class="vision-metric">88.3</strong><p>Current forecast</p></article>
+        <article class="vision-card"><span class="vision-kicker">Potential lift</span><strong class="vision-metric">+5.5</strong><p>Top actions applied</p></article>
+        <article class="vision-card"><span class="vision-kicker">Evidence found</span><strong class="vision-metric">428</strong><p>Patients queued for review</p></article>
+        <article class="vision-card"><span class="vision-kicker">Data issues</span><strong class="vision-metric">3</strong><p>Feeds or mappings</p></article>
+      </div>
+      <div class="vision-grid-2 spaced">
+        <article class="vision-card">
+          <h2>Measure Opportunities</h2>
+          <table class="vision-table">
+            <thead><tr><th>Measure</th><th>Current</th><th>Opportunity</th><th>Likely issue</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><strong>HIV Screening</strong><span class="subline">CMS349v8 / M1368</span></td><td>0.0%</td><td>${visionBadge("+3.4 pts", "bad")}</td><td>Evidence and mapping gap</td><td><button class="vision-row-button" data-vision-screen="measure-detail" type="button">Open</button></td></tr>
+              <tr><td><strong>Screening for Depression and Follow-Up Plan</strong><span class="subline">CMS2v15 / M1368, M1369</span></td><td>86.47%</td><td>${visionBadge("+1.2 pts", "good")}</td><td>Documentation closure</td><td><button class="vision-row-button" data-vision-screen="measure-detail" type="button">Open</button></td></tr>
+              <tr><td><strong>Chlamydia Screening in Women</strong><span class="subline">CMS153v14 / M1366</span></td><td>9.64%</td><td>${visionBadge("+0.9 pts", "warn")}</td><td>Small stratum volumes</td><td><button class="vision-row-button" data-vision-screen="measure-detail" type="button">Open</button></td></tr>
+            </tbody>
+          </table>
+        </article>
+        <article class="vision-soft-card">
+          <h2>Recommended Next Work</h2>
+          <p><strong>Prioritize HIV Screening evidence review for the infectious disease subgroup.</strong></p>
+          <div class="vision-status-row"><strong>Potential score improvement</strong><strong>+3.4 points</strong></div>
+          <div class="vision-status-row"><strong>Estimated impact</strong><strong>+$116K</strong></div>
+          <div class="vision-status-row"><strong>Owner</strong><span>Interface + chart chase work queue</span></div>
+          <div class="vision-action-row">
+            <button class="vision-btn" data-vision-screen="measure-detail" type="button">Open measure detail</button>
+            <button class="vision-btn secondary" data-vision-screen="patient-evidence" type="button">View patient evidence</button>
+          </div>
+        </article>
+      </div>
+    `,
+  });
+}
+
+function renderVisionMeasureDetailScreen() {
+  return renderVisionScreenFrame({
+    id: "measure-detail",
+    crumb: "Performance / Measure Detail",
+    title: "HIV Screening",
+    subtitle: "Explain why the measure is underperforming and which work will improve the MVP forecast.",
+    filters: `<span>Measure: CMS349v8</span><span>MVP: M1368</span><span>Period: PY 2026</span>`,
+    body: `
+      <div class="vision-grid-5">
+        <article class="vision-card"><span class="vision-kicker">IPP</span><strong class="vision-metric">4,366</strong><p>Initial population</p></article>
+        <article class="vision-card"><span class="vision-kicker">Denominator</span><strong class="vision-metric">4,366</strong><p>Performance denominator</p></article>
+        <article class="vision-card"><span class="vision-kicker">Numerator</span><strong class="vision-metric danger">0</strong><p>No satisfied evidence</p></article>
+        <article class="vision-card"><span class="vision-kicker">Not met</span><strong class="vision-metric danger">4,360</strong><p>Requires review</p></article>
+        <article class="vision-card"><span class="vision-kicker">Rate</span><strong class="vision-metric danger">0.0%</strong>${visionBadge("Below benchmark", "bad")}</article>
+      </div>
+      <div class="vision-grid-2 spaced">
+        <article class="vision-card">
+          <h2>Why Patients Did Not Meet</h2>
+          <div class="vision-bar-row"><span>Missing screening result</span><div><b style="width:86%"></b></div><strong>2,140</strong></div>
+          <div class="vision-bar-row"><span>Lab interface mapping gap</span><div><b style="width:52%"></b></div><strong>1,284</strong></div>
+          <div class="vision-bar-row"><span>Documentation not coded</span><div><b style="width:38%"></b></div><strong>936</strong></div>
+          <button class="vision-btn secondary" data-vision-screen="patient-evidence" type="button">View patient evidence</button>
+        </article>
+        <article class="vision-soft-card">
+          <h2>Top Priority Cohort</h2>
+          <p><strong>428 patients appear to have screening evidence outside the measure result.</strong></p>
+          <div class="vision-status-row"><strong>Potential score improvement</strong><strong>+3.4 points</strong></div>
+          <div class="vision-status-row"><strong>Recommended route</strong>${visionBadge("Chart chase + mapping", "warn")}</div>
+          <div class="vision-status-row"><strong>Expected owner</strong><span>Quality analyst with interface review</span></div>
+          <button class="vision-btn" data-vision-screen="patient-evidence" type="button">Review evidence sample</button>
+        </article>
+      </div>
+      <div class="vision-grid-4 spaced">
+        <article class="vision-card"><h2>Evidence Status</h2><div class="vision-donut"><span>428<br><em>found</em></span></div></article>
+        <article class="vision-card"><h2>Data Gaps</h2><div class="vision-donut amber"><span>3<br><em>feeds</em></span></div></article>
+        <article class="vision-card"><h2>Exceptions</h2><div class="vision-donut blue"><span>37<br><em>review</em></span></div></article>
+        <article class="vision-card"><h2>Opportunity Summary</h2><div class="vision-status-row"><strong>Score</strong>${visionBadge("+3.4 pts", "good")}</div><div class="vision-status-row"><strong>Impact</strong><strong>+$116K</strong></div><div class="vision-status-row"><strong>Patients</strong><strong>428</strong></div></article>
+      </div>
+    `,
+  });
+}
+
+function renderVisionPatientEvidenceScreen() {
+  return renderVisionScreenFrame({
+    id: "patient-evidence",
+    crumb: "Patient Evidence",
+    title: "Patient HY-10482 / CMS349v8",
+    subtitle: "Show exactly why a patient qualifies, why the result is currently not met, and what evidence can change the result.",
+    filters: `<span>Measurement Period: 2026</span><span>Source refresh: Today 6:10 AM</span>`,
+    actions: `<button class="vision-btn secondary" data-toast="Evidence exported" type="button">Export evidence</button>`,
+    body: `
+      <div class="vision-grid-3">
+        <article class="vision-card"><h2>Patient HY-10482</h2><p>Age 49 / Infectious disease cohort / attributed to subgroup SG-00000004.</p><button class="vision-btn secondary" data-toast="Patient chart opened" type="button">View chart</button></article>
+        <article class="vision-card"><h2>Measure</h2><strong class="vision-metric">CMS349v8</strong><p>HIV Screening</p></article>
+        <article class="vision-card"><h2>Overall Result</h2><strong class="vision-metric danger">NOT MET</strong><p>Evidence exists but is not mapped into numerator logic.</p></article>
+      </div>
+      <div class="vision-grid-5 spaced">
+        <article class="vision-card"><span class="vision-kicker">Satisfied</span><strong class="vision-metric">4</strong><p>criteria</p></article>
+        <article class="vision-card"><span class="vision-kicker">Not satisfied</span><strong class="vision-metric danger">2</strong><p>criteria</p></article>
+        <article class="vision-card"><span class="vision-kicker">Not evidenced</span><strong class="vision-metric">5</strong><p>criteria</p></article>
+        <article class="vision-card"><span class="vision-kicker">Exceptions</span><strong class="vision-metric">0</strong><p>criteria</p></article>
+        <article class="vision-card"><span class="vision-kicker">Denominator</span><strong class="vision-metric">Yes</strong>${visionBadge("Included", "info")}</article>
+      </div>
+      <div class="vision-wide-left spaced">
+        <article class="vision-card">
+          ${renderVisionTabs([
+            { id: "evaluation", label: "Measure Evaluation" },
+            { id: "timeline", label: "Timeline" },
+            { id: "logic", label: "CQL Logic Map" },
+            { id: "source", label: "Source Evidence" },
+          ], "visionEvidenceTab")}
+          <h2>Initial Population ${visionBadge("Satisfied", "good")}</h2>
+          <table class="vision-table">
+            <thead><tr><th>Specification criteria</th><th>Patient evidence</th><th>Result</th></tr></thead>
+            <tbody>
+              <tr><td>Age is 15 to 65</td><td>DOB 1977-06-17, age 49 in 2026</td><td>${visionBadge("Satisfied", "good")}</td></tr>
+              <tr><td>Qualifying encounter</td><td>Office visit on 2026-04-03</td><td>${visionBadge("Satisfied", "good")}</td></tr>
+              <tr><td>Attributed to MVP subgroup</td><td>SG-00000004 infectious disease subgroup</td><td>${visionBadge("Satisfied", "good")}</td></tr>
+            </tbody>
+          </table>
+          <h2 class="section-gap">Numerator ${visionBadge("Not satisfied", "bad")}</h2>
+          <table class="vision-table">
+            <thead><tr><th>Specification criteria</th><th>Patient evidence</th><th>Result</th></tr></thead>
+            <tbody>
+              <tr><td>HIV screening result during eligible period</td><td>External lab result present, missing LOINC mapping</td><td>${visionBadge("Not satisfied", "bad")}</td></tr>
+              <tr><td>Result linked to supported data source</td><td>Result source not attached to measure calculation feed</td><td>${visionBadge("Not evidenced", "warn")}</td></tr>
+            </tbody>
+          </table>
+        </article>
+        <aside class="vision-stack">
+          <article class="vision-soft-card"><h2>Interpretation</h2><p>Patient is correctly included in the denominator. Numerator can change if the lab mapping and source evidence are accepted.</p></article>
+          <article class="vision-card"><h2>Key Patient Data</h2><ul class="vision-list"><li><span class="vision-dot good"></span><span><strong>Qualifying encounter</strong><em>Office visit on Apr 03, 2026</em></span></li><li><span class="vision-dot warn"></span><span><strong>Screening result</strong><em>External lab evidence found, mapping incomplete</em></span></li><li><span class="vision-dot good"></span><span><strong>Attribution</strong><em>Infectious disease subgroup</em></span></li></ul></article>
+          <article class="vision-card"><h2>Data Sources</h2><p>EHR encounters, external lab feed, attribution roster, QPP subgroup registration draft.</p><div class="vision-status-row"><strong>Data refreshed</strong><span>Today 6:10 AM</span></div></article>
+        </aside>
+      </div>
+    `,
+  });
+}
+
+function renderVisionReadinessScreen() {
+  return renderVisionScreenFrame({
+    id: "readiness",
+    crumb: "Readiness",
+    title: "Fix What Blocks Submission",
+    subtitle: "Keep setup health separate from strategy selection so blockers are managed as work, not extra context.",
+    filters: `<span>Program: MVP specialty subgroups</span><span>Package: Draft SUB-2026-00912</span>`,
+    body: `
+      <div class="vision-grid-4">
+        <article class="vision-card"><span class="vision-kicker">Ready</span><strong class="vision-metric">8</strong><p>domains/checks</p></article>
+        <article class="vision-card"><span class="vision-kicker">Warnings</span><strong class="vision-metric">5</strong><p>review before approval</p></article>
+        <article class="vision-card"><span class="vision-kicker">Blocked</span><strong class="vision-metric danger">3</strong><p>must resolve</p></article>
+        <article class="vision-card"><span class="vision-kicker">Risk</span><strong class="vision-metric">Med</strong><p>submission readiness</p></article>
+      </div>
+      <div class="vision-grid-2 spaced">
+        <article class="vision-card">
+          <h2>Readiness by Domain</h2>
+          <table class="vision-table">
+            <thead><tr><th>Domain</th><th>Status</th><th>Impact</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><strong>Subgroup registration</strong></td><td>${visionBadge("Warning", "warn")}</td><td>Mental health narrative needs customer confirmation</td><td><button class="vision-row-button" data-vision-screen="strategy" type="button">Review</button></td></tr>
+              <tr><td><strong>Personnel</strong></td><td>${visionBadge("Blocked", "bad")}</td><td>14 clinicians missing valid aliases for attribution</td><td><button class="vision-row-button" data-toast="Personnel worklist opened" type="button">Fix</button></td></tr>
+              <tr><td><strong>Data sources</strong></td><td>${visionBadge("Warning", "warn")}</td><td>HIV lab feed mapping affects numerator confidence</td><td><button class="vision-row-button" data-vision-screen="measure-detail" type="button">Open</button></td></tr>
+              <tr><td><strong>Security</strong></td><td>${visionBadge("Ready", "good")}</td><td>CMS QPP OAuth connection available</td><td><button class="vision-row-button" data-vision-screen="submissions" type="button">View</button></td></tr>
+              <tr><td><strong>QRDA package</strong></td><td>${visionBadge("Ready", "good")}</td><td>Export can be generated after package approval</td><td><button class="vision-row-button" data-vision-screen="qrda" type="button">View</button></td></tr>
+            </tbody>
+          </table>
+        </article>
+        <article class="vision-soft-card">
+          <h2>Recommended Fix Order</h2>
+          <ol class="vision-ordered-list">
+            <li>Resolve clinician attribution aliases that affect subgroup rosters.</li>
+            <li>Confirm subgroup composition and narrative for CMS registration.</li>
+            <li>Review HIV lab mapping before final patient validation.</li>
+          </ol>
+          <button class="vision-btn" data-vision-screen="submissions" type="button">Continue to submission prep</button>
+        </article>
+      </div>
+    `,
+  });
+}
+
+function renderVisionSubmissionScreen() {
+  const tabs = [
+    { id: "cms", label: "CMS API Submission" },
+    { id: "qrda-linked", label: "Linked QRDA Package" },
+    { id: "history", label: "Submission History" },
+    { id: "archive", label: "Archive" },
+  ];
+  return renderVisionScreenFrame({
+    id: "submissions",
+    crumb: "Submissions",
+    title: "Guided Submission",
+    subtitle: "Prepare, approve, and submit the selected strategy through a governed workflow.",
+    filters: `<span>Draft: SUB-2026-00912</span><span>Program: MVP specialty subgroups</span>`,
+    body: `
+      ${renderVisionTabs(tabs, "visionSubmissionTab")}
+      <div class="vision-stepper">
+        <div class="done"><span>1</span>Pre-check</div>
+        <div class="done"><span>2</span>Optimize</div>
+        <div class="active"><span>3</span>Validate</div>
+        <div><span>4</span>Approve</div>
+        <div><span>5</span>Submit</div>
+        <div><span>6</span>Archive</div>
+      </div>
+      <div class="vision-grid-2">
+        <article class="vision-card">
+          <h2>Submission Package</h2>
+          <table class="vision-table">
+            <tbody>
+              <tr><td>Strategy</td><td><strong>MVP specialty subgroups</strong></td></tr>
+              <tr><td>Subgroups</td><td><strong>3 included, 1 blocked</strong></td></tr>
+              <tr><td>Providers</td><td><strong>143 included</strong></td></tr>
+              <tr><td>Projected final score</td><td><strong>93.8</strong></td></tr>
+              <tr><td>OAuth session</td><td><strong>${qppSession.label} / ${qppSession.remaining}</strong></td></tr>
+            </tbody>
+          </table>
+          <div class="vision-action-row">
+            <button class="vision-btn secondary" data-vision-screen="readiness" type="button">Review readiness</button>
+            <button class="vision-btn" data-toast="Submission package approved" type="button">Approve package</button>
+          </div>
+        </article>
+        <article class="vision-soft-card">
+          <h2>What Will Be Submitted</h2>
+          <div class="vision-status-row"><strong>Infectious disease subgroup</strong>${visionBadge("Ready", "good")}</div>
+          <div class="vision-status-row"><strong>Mental health subgroup</strong>${visionBadge("Needs narrative", "warn")}</div>
+          <div class="vision-status-row"><strong>Women's health subgroup</strong>${visionBadge("Ready", "good")}</div>
+          <div class="vision-status-row"><strong>Cardiology MVP</strong>${visionBadge("Excluded", "bad")}</div>
+          <button class="vision-btn secondary" data-vision-screen="strategy" type="button">Edit strategy mix</button>
+        </article>
+      </div>
+      <div class="vision-grid-2 spaced">
+        <article class="vision-card">
+          <h2>Submission Steps</h2>
+          <table class="vision-table">
+            <thead><tr><th>Step</th><th>Status</th><th>Detail</th></tr></thead>
+            <tbody>
+              ${visionSubmissionRows.map((row) => `<tr><td><strong>${row.step}</strong></td><td>${row.status}</td><td>${row.detail}</td></tr>`).join("")}
+            </tbody>
+          </table>
+        </article>
+        <article class="vision-card">
+          <h2>Linked QRDA Export</h2>
+          <p>QRDA files are generated from the same approved package so downloaded files and API submission cannot drift apart.</p>
+          <div class="vision-file-row"><span>III</span><strong>QRDA_III_Hyperion_2026.xml</strong><button class="vision-row-button" data-vision-screen="qrda" type="button">Open</button></div>
+          <div class="vision-file-row"><span>ZIP</span><strong>CMS_Upload_Package.zip</strong><button class="vision-row-button" data-vision-screen="qrda" type="button">Open</button></div>
+        </article>
+      </div>
+    `,
+  });
+}
+
+function renderVisionQrdaScreen() {
+  return renderVisionScreenFrame({
+    id: "qrda",
+    crumb: "QRDA Export",
+    title: "Generate QRDA Files",
+    subtitle: "Generate validated file packages as a supporting workflow after the strategy and package are approved.",
+    filters: `<span>Performance Year: 2026</span><span>Customer: Hyperion Health System</span>`,
+    actions: `<button class="vision-btn secondary" data-vision-screen="submissions" type="button">Back to submission</button>`,
+    body: `
+      <div class="vision-grid-2">
+        <article class="vision-soft-card">
+          <h2>Export Scope</h2>
+          <table class="vision-table">
+            <tbody>
+              <tr><td>Source package</td><td><strong>SUB-2026-00912 approved MVP draft</strong></td></tr>
+              <tr><td>QRDA category</td><td><strong>QRDA III summary + QRDA I patient files</strong></td></tr>
+              <tr><td>Reporting level</td><td><strong>MVP subgroup</strong></td></tr>
+              <tr><td>Measures</td><td><strong>All approved strategy measures</strong></td></tr>
+            </tbody>
+          </table>
+          <button class="vision-btn" data-toast="QRDA package validated" type="button">Validate and generate</button>
+        </article>
+        <article class="vision-card">
+          <h2>QRDA Readiness</h2>
+          <div class="vision-status-row"><strong>Measure selection</strong>${visionBadge("Passed", "good")}</div>
+          <div class="vision-status-row"><strong>Entity identifiers</strong>${visionBadge("Passed", "good")}</div>
+          <div class="vision-status-row"><strong>TIN / NPI mapping</strong>${visionBadge("1 warning", "warn")}</div>
+          <div class="vision-status-row"><strong>Data completeness</strong>${visionBadge("72%", "warn")}</div>
+          <div class="vision-status-row"><strong>Schema validation</strong>${visionBadge("Passed", "good")}</div>
+        </article>
+      </div>
+      <div class="vision-grid-2 spaced">
+        <article class="vision-card">
+          <h2>Generated Package</h2>
+          <div class="vision-file-row"><span>III</span><strong>QRDA_III_Hyperion_2026.xml</strong><button class="vision-row-button" data-toast="QRDA III downloaded" type="button">Download</button></div>
+          <div class="vision-file-row"><span>I</span><strong>QRDA_I_Hyperion_patient_files.zip</strong><button class="vision-row-button" data-toast="QRDA I downloaded" type="button">Download</button></div>
+          <div class="vision-file-row"><span>VAL</span><strong>Validation_Report_2026.pdf</strong><button class="vision-row-button" data-toast="Validation report downloaded" type="button">Download</button></div>
+        </article>
+        <article class="vision-card">
+          <h2>Recent QRDA Exports</h2>
+          <table class="vision-table">
+            <thead><tr><th>Date</th><th>Scope</th><th>Type</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Jan 22, 10:38 AM</td><td>MVP subgroup</td><td>QRDA III</td><td>${visionBadge("Ready", "good")}</td></tr>
+              <tr><td>Jan 20, 4:11 PM</td><td>All NPIs</td><td>QRDA I</td><td>${visionBadge("Ready", "good")}</td></tr>
+              <tr><td>Jan 18, 9:02 AM</td><td>MVP subgroup</td><td>QRDA III</td><td>${visionBadge("Warnings", "warn")}</td></tr>
+            </tbody>
+          </table>
+        </article>
+      </div>
+    `,
+  });
+}
+
+function renderVisionAuditScreen() {
+  return renderVisionScreenFrame({
+    id: "audit",
+    crumb: "Audit",
+    title: "Audit Center",
+    subtitle: "Durable traceability for strategy decisions, evidence review, approvals, CMS submission, and file exports.",
+    filters: `<span>Date range: Last 30 days</span><span>Event: All</span><span>User: All</span>`,
+    body: `
+      <div class="vision-grid-4">
+        <article class="vision-card"><span class="vision-kicker">Submission events</span><strong class="vision-metric">28</strong></article>
+        <article class="vision-card"><span class="vision-kicker">Evidence views</span><strong class="vision-metric">142</strong></article>
+        <article class="vision-card"><span class="vision-kicker">File events</span><strong class="vision-metric">19</strong></article>
+        <article class="vision-card"><span class="vision-kicker">Worklist actions</span><strong class="vision-metric">11</strong></article>
+      </div>
+      <article class="vision-card spaced">
+        <h2>Audit Events</h2>
+        <table class="vision-table">
+          <thead><tr><th>Date / Time</th><th>User</th><th>Event</th><th>Object</th><th>Outcome</th></tr></thead>
+          <tbody>
+            <tr><td>Jan 22, 10:42 AM</td><td>Quality Admin</td><td>Approved submission strategy</td><td>SUB-2026-00912</td><td>${visionBadge("Success", "good")}</td></tr>
+            <tr><td>Jan 22, 10:30 AM</td><td>Reviewer A</td><td>Created patient worklist</td><td>HIV evidence cohort</td><td>${visionBadge("Success", "good")}</td></tr>
+            <tr><td>Jan 22, 10:21 AM</td><td>Reviewer A</td><td>Viewed patient evidence</td><td>CMS349v8 / HY-10482</td><td>${visionBadge("Success", "good")}</td></tr>
+            <tr><td>Jan 22, 10:39 AM</td><td>Quality Admin</td><td>Generated QRDA package</td><td>QRDA_III_Hyperion_2026.xml</td><td>${visionBadge("Success", "good")}</td></tr>
+            <tr><td>Jan 21, 4:08 PM</td><td>Analyst B</td><td>Resolved attribution alias</td><td>NPI roster</td><td>${visionBadge("Success", "good")}</td></tr>
+          </tbody>
+        </table>
+        <button class="vision-btn secondary" data-toast="Audit report exported" type="button">Export audit report</button>
+      </article>
+    `,
+  });
 }
 
 function renderVisionStageContent(stage) {
@@ -3479,14 +4163,33 @@ function renderDesignLab() {
   content.querySelectorAll("[data-switch-lab]").forEach((button) => {
     button.addEventListener("click", () => {
       state.labMode = button.dataset.switchLab;
-      state.visionRoute = "workflow";
+      state.visionRoute = "home";
       render();
+    });
+  });
+  content.querySelectorAll("[data-vision-screen]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const screenId = button.dataset.visionScreen;
+      state.visionRoute = screenId;
+      const stageId = visionStageIdForScreen(screenId);
+      const stageIndex = visionStages.findIndex((stage) => stage.id === stageId);
+      state.labStep = stageIndex >= 0 ? stageIndex : state.labStep;
+      render();
+    });
+  });
+  content.querySelectorAll("[data-vision-tab]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const [key, value] = button.dataset.visionTab.split(":");
+      if (key && Object.prototype.hasOwnProperty.call(state, key)) {
+        state[key] = value;
+        render();
+      }
     });
   });
   content.querySelectorAll("[data-lab-step]").forEach((button) => {
     button.addEventListener("click", () => {
       state.labStep = Number(button.dataset.labStep);
-      state.visionRoute = "workflow";
+      state.visionRoute = visionScreenForStage(visionStages[state.labStep]?.id || "strategy");
       render();
     });
   });
@@ -3495,14 +4198,14 @@ function renderDesignLab() {
       const nextScenario = button.dataset.labNext;
       const steps = workflowSteps(scenarioDefinitions[nextScenario] || scenario);
       state.labStep = Math.min(state.labStep + 1, steps.length - 1);
-      state.visionRoute = "workflow";
+      state.visionRoute = visionScreenForStage(visionStages[state.labStep]?.id || "strategy");
       render();
     });
   });
   content.querySelectorAll("[data-lab-prev]").forEach((button) => {
     button.addEventListener("click", () => {
       state.labStep = Math.max(state.labStep - 1, 0);
-      state.visionRoute = "workflow";
+      state.visionRoute = visionScreenForStage(visionStages[state.labStep]?.id || "strategy");
       render();
     });
   });
@@ -3510,7 +4213,7 @@ function renderDesignLab() {
     button.addEventListener("click", () => {
       const delta = Number(button.dataset.visionNext);
       state.labStep = Math.min(Math.max(state.labStep + delta, 0), visionStages.length - 1);
-      state.visionRoute = "workflow";
+      state.visionRoute = visionScreenForStage(visionStages[state.labStep]?.id || "strategy");
       render();
     });
   });
@@ -3530,14 +4233,14 @@ function renderDesignLab() {
   });
   content.querySelectorAll("[data-vision-workflow]").forEach((button) => {
     button.addEventListener("click", () => {
-      state.visionRoute = "workflow";
+      state.visionRoute = visionScreenForStage(currentVisionStage().stage.id);
       render();
     });
   });
   content.querySelectorAll("[data-vision-strategy]").forEach((button) => {
     button.addEventListener("click", () => {
       state.selectedVisionStrategy = button.dataset.visionStrategy;
-      state.visionRoute = "workflow";
+      state.visionRoute = "strategy";
       state.visionStrategyLocked = false;
       render();
     });
@@ -3556,7 +4259,7 @@ function renderDesignLab() {
       state.visionStrategyLocked = true;
       showToast(`${selectedVisionStrategy().path} locked for 2026 strategy`);
       state.labStep = Math.min(state.labStep + 1, visionStages.length - 1);
-      state.visionRoute = "workflow";
+      state.visionRoute = "performance";
       render();
     });
   });
@@ -3579,7 +4282,7 @@ function renderDesignLab() {
   content.querySelectorAll("[data-vision-subgroup]").forEach((button) => {
     button.addEventListener("click", () => {
       state.selectedVisionSubgroup = button.dataset.visionSubgroup;
-      state.visionRoute = "workflow";
+      state.visionRoute = "strategy";
       render();
     });
   });
@@ -3595,7 +4298,7 @@ function renderDesignLab() {
       if (!nextScenario) return;
       state.scenario = nextScenario;
       state.labStep = 0;
-      state.visionRoute = "workflow";
+      state.visionRoute = "home";
       resetMvpSpecialtySelection();
       scenarioSelect.value = nextScenario;
       render();
@@ -3607,7 +4310,7 @@ function renderDesignLab() {
       if (!nextScenario) return;
       state.scenario = nextScenario;
       state.labStep = 0;
-      state.visionRoute = "workflow";
+      state.visionRoute = "home";
       resetMvpSpecialtySelection();
       scenarioSelect.value = nextScenario;
       render();
@@ -4115,7 +4818,7 @@ function renderScenarioFocus(scenario) {
   return `
     <dl class="focus-list">
       <div><dt>Program</dt><dd>${programLabel(scenario.program)}</dd></div>
-      <div><dt>Customer</dt><dd>ZzMount Desert Island Hospital</dd></div>
+      <div><dt>Customer</dt><dd>Hyperion Health System</dd></div>
       <div><dt>Quality Score</dt><dd>59% (17.6 out of 30)</dd></div>
       <div><dt>Providers</dt><dd>61</dd></div>
     </dl>
