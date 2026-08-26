@@ -1076,6 +1076,7 @@ const programSelect = document.getElementById("programSelect");
 const labModeSelect = document.getElementById("labModeSelect");
 const scenarioSelect = document.getElementById("scenarioSelect");
 const runScenarioButton = document.getElementById("runScenarioButton");
+const prototypeFaqMenu = document.getElementById("prototypeFaqMenu");
 const sidebar = document.getElementById("sidebar");
 const content = document.getElementById("content");
 const toast = document.getElementById("toast");
@@ -1112,6 +1113,19 @@ scenarioSelect.addEventListener("change", (event) => {
 
 runScenarioButton.addEventListener("click", () => {
   applyScenario(state.scenario, state.labMode === "production");
+});
+
+document.querySelectorAll("[data-global-faq]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const target = button.dataset.globalFaq;
+    const stageIndex = target === "current" ? state.labStep : visionStages.findIndex((stage) => stage.id === target);
+    state.labMode = "vision";
+    state.labStep = stageIndex >= 0 ? stageIndex : 0;
+    state.visionRoute = "phase-faq";
+    labModeSelect.value = state.labMode;
+    prototypeFaqMenu?.removeAttribute("open");
+    render();
+  });
 });
 
 function setProgram(program, route = "performance") {
@@ -2849,12 +2863,24 @@ function renderVisionNavigation(workflow) {
         `).join("")}
       </nav>
       <div class="vision-reference-nav">
-        <span>Reference</span>
-        <button class="${state.visionRoute === "phase-faq" ? "active" : ""}" data-vision-faq>
-          <strong>${workflow.stage.label} FAQ</strong>
-          <span>Inputs, rules, rationale</span>
-          <em>Supporting details for the current phase</em>
-        </button>
+        <span>Help</span>
+        <details class="vision-reference-menu" ${state.visionRoute === "phase-faq" ? "open" : ""}>
+          <summary>FAQ and reference</summary>
+          <div>
+            <button class="${state.visionRoute === "phase-faq" ? "active" : ""}" data-vision-faq-stage="${workflow.stage.id}">
+              <strong>${workflow.stage.label} FAQ</strong>
+              <span>Inputs, rules, rationale</span>
+            </button>
+            <button data-vision-faq-stage="strategy">
+              <strong>Recommendation inputs</strong>
+              <span>Enabled measures, specialty mix, performance forecast</span>
+            </button>
+            <button data-vision-faq-stage="submit">
+              <strong>Submission rules</strong>
+              <span>QPP OAuth, validation, export, receipt tracking</span>
+            </button>
+          </div>
+        </details>
       </div>
       <div class="vision-nav-footer">
         <span>Workflow progress</span>
@@ -3494,6 +3520,14 @@ function renderDesignLab() {
       render();
     });
   });
+  content.querySelectorAll("[data-vision-faq-stage]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const stageIndex = visionStages.findIndex((stage) => stage.id === button.dataset.visionFaqStage);
+      state.labStep = stageIndex >= 0 ? stageIndex : state.labStep;
+      state.visionRoute = "phase-faq";
+      render();
+    });
+  });
   content.querySelectorAll("[data-vision-workflow]").forEach((button) => {
     button.addEventListener("click", () => {
       state.visionRoute = "workflow";
@@ -3750,8 +3784,6 @@ function renderCommandCenterSnapshot(scenario, compact) {
         <strong>${profile.strategy}</strong>
         <span>${profile.inactiveNote}</span>
       </div>
-      ${renderMeasurePathwayQualifier({ compact, mode: "command" })}
-      ${renderCustomerPhaseGuide(scenario, { compact })}
       ${renderProviderAssignmentPlanner(scenario, { compact })}
       ${renderMvpSelectionWorkbench(scenario, { compact })}
       <div class="workbench-grid">
@@ -3801,8 +3833,6 @@ function renderPathwayHub(scenario) {
           <span class="eyebrow">Guided Workflow</span>
           <h2>${scenario.label}</h2>
         </div>
-        ${renderMeasurePathwayQualifier({ mode: "hub" })}
-        ${renderCustomerPhaseGuide(scenario)}
         ${renderProviderAssignmentPlanner(scenario)}
         ${renderMvpSelectionWorkbench(scenario)}
         <div class="lab-panel">
@@ -3854,8 +3884,6 @@ function renderSmartGuidedSubmission(scenario) {
           `;
         }).join("")}
       </div>
-      ${renderMeasurePathwayQualifier({ compact: true, mode: "smart" })}
-      ${renderCustomerPhaseGuide(scenario)}
       ${renderProviderAssignmentPlanner(scenario, { compact: scenario.program !== "MVP" })}
       ${renderMvpSelectionWorkbench(scenario, { compact: scenario.program !== "MVP" })}
       <div class="smart-workspace">
@@ -4158,29 +4186,29 @@ function workflowSteps(scenario) {
   const terminal = (label, verb = "Done") => ({ label, verb, next: false, toast: `${label} queued` });
   const map = {
     "mvp-zmvp4": [
-      { title: "Infer Available Paths", body: "Start from the customer’s fixed enabled measures, roster, TIN/NPI eligibility, and participation context. Do not ask the user to choose a measure inventory.", signal: "The first visible customer action is choosing a supported submission path, not reviewing raw measure setup.", view: "scope", actions: [action("Open recommended path"), terminal("Explain legacy MIPS", "Note")] },
+      { title: "Compare Submission Strategies", body: "Start with the candidate strategy list. The system has already used the customer’s fixed enabled measures, roster, eligibility, and participation context to remove unsupported paths and rank viable options.", signal: "The first visible customer action is choosing a supported submission strategy.", view: "scope", actions: [action("Open recommended strategy"), terminal("Explain legacy MIPS", "Note")] },
       { title: "Configure MVP Path", body: "Ask whether the practice is single-specialty or multi-specialty, then collect only the relevant specialties. The MVP list is narrowed by specialty and disabled when the customer does not have supporting measures enabled.", signal: "The customer sees a short viable MVP list with clear unavailable reasons.", view: "submissions", actions: [action("Select MVP candidate"), terminal("Compare levels", "Compare")] },
       { title: "Forecast Provider Fit", body: "Forecast each provider’s performance against the selected MVP before assigning the provider to an individual, subgroup, group, or APM Entity path.", signal: "Provider assignment is based on predicted performance and readiness, not a static TIN/NPI specialty inference.", view: "score", actions: [action("Review provider forecast"), terminal("Flag low confidence", "Flag")] },
       { title: "Register and Package", body: "Register the MVP or subgroup when needed, preserve the subgroup ID, freeze the submission-ready package, and queue the CMS submit or export action.", signal: "Submission intent is obvious and carries customer, MVP, level, subgroup, and performance period forward.", view: "score", actions: [terminal("Queue MVP package", "Queue"), terminal("Download details", "Download")] },
     ],
     "appplus-score": [
-      { title: "Confirm Submission Strategy", body: "Open a customer workspace where MVP Submission, APP Plus, and QRDA remain visible while retired Traditional MIPS is transition context.", signal: "Unused programs do not compete with the active submission strategy.", view: "scope", actions: [action("Open APP Plus"), terminal("View transition note", "View")] },
+      { title: "Choose APP Plus Strategy", body: "Open the customer workspace with APP Plus as the active strategy, MVP Submission available when specialty cohorts fit, and QRDA available as the supported export path.", signal: "Unused programs do not compete with the active submission strategy.", view: "scope", actions: [action("Open APP Plus"), terminal("View transition note", "View")] },
       { title: "Open APM Entity", body: "Land on the APM Entity score context with the entity name, score, and reporting period already selected.", signal: "APP Plus feels like a peer pathway but keeps APM-specific language.", view: "score", actions: [action("Review CQM scores"), terminal("Open entity roster", "Open")] },
       { title: "Resolve Score Signals", body: "Surface high-volume measures, weak rates, selected eCQM/CQM mode, and missing supplemental inputs before export.", signal: "The screen tells users what needs attention instead of only listing numbers.", view: "score", actions: [action("Review outliers"), terminal("Assign follow-up", "Assign")] },
       { title: "Export APP Plus Package", body: "Prepare a package with program, entity, year, and file format already scoped from the customer strategy.", signal: "The export path carries context forward.", view: "qrda", actions: [terminal("Queue APP Plus export", "Queue"), terminal("Download score data", "Download")] },
     ],
     "mips-performance": [
-      { title: "Show Transition Context", body: "Traditional MIPS is available only as a legacy reference while MVP Submission, APP Plus, and QRDA remain the in-app future-state paths.", signal: "Users understand MIPS is not the primary future pathway.", view: "scope", actions: [action("Open legacy scorecard"), terminal("View migration note", "Note")] },
+      { title: "Compare Future Pathways", body: "Use Traditional MIPS only as a baseline while MVP Submission, APP Plus, and QRDA carry the future in-app strategy.", signal: "Users understand MIPS is not the primary future pathway.", view: "scope", actions: [action("Open legacy scorecard"), terminal("View migration note", "Note")] },
       { title: "Review Customer Score", body: "Display the customer-level quality score and provider count using the same production data shape.", signal: "Legacy data remains accessible without driving the future workflow.", view: "score", actions: [action("Open score detail"), terminal("Export legacy report", "Export")] },
       { title: "Route to Future Pathway", body: "Offer the next likely customer action: MVP Submission, APP Plus review, or QRDA package generation.", signal: "The UI nudges users from MIPS reference data toward configured future paths.", view: "scope", actions: [terminal("Recommend MVP path", "Recommend"), terminal("Create QRDA package", "Queue")] },
     ],
     "mvp-individual": [
-      { title: "Review Eligible Clinicians", body: "Keep the user inside MVP Submission and start from clinician roster, TIN/NPI eligibility, and historical measure performance. Specialty is a facility-selected filter.", signal: "The dependent filters make sense because selected specialty and pathway context are explicit.", view: "scope", actions: [action("Choose Individual scope"), terminal("Review subgroup scope", "Review")] },
+      { title: "Choose Individual Strategy", body: "Keep the user inside MVP Submission and let them choose the individual path when the provider forecast shows it is better than subgroup or group reporting.", signal: "The dependent filters make sense because selected specialty and pathway context are explicit.", view: "scope", actions: [action("Choose Individual scope"), terminal("Review subgroup scope", "Review")] },
       { title: "Choose Composition, Specialty, and MVP", body: "Choose the individual clinician, confirm whether the practice context is single-specialty or multi-specialty, select the facility-confirmed specialty set, then filter available MVPs by patient population and measure fit.", signal: "Disabled fields explain what must be selected before an eligible clinician or MVP can be chosen.", view: "submissions", actions: [action("Select clinician"), terminal("Clear filters", "Clear")] },
       { title: "Forecast Individual Draft", body: "Show clinician, chosen MVP, TIN/NPI, quality measures, forecast score, QPP OAuth status, and missing supplemental data before draft creation.", signal: "The user can see whether the individual MVP submission is viable before registering or packaging.", view: "draft", actions: [terminal("Create individual draft", "Create"), terminal("Save filter set", "Save")] },
     ],
     "qrda-export": [
-      { title: "Start from Export Pathway", body: "QRDA is treated as a first-class pathway with customer and active program strategy visible.", signal: "File generation is no longer a detached utility screen.", view: "scope", actions: [action("Configure QRDA package"), terminal("View generated files", "Open")] },
+      { title: "Choose Export Strategy", body: "Treat QRDA as the package/output path for the approved strategy, with customer and active program context carried forward.", signal: "File generation is no longer a detached utility screen.", view: "scope", actions: [action("Configure QRDA package"), terminal("View generated files", "Open")] },
       { title: "Choose Category and Program", body: "Select QRDA I or QRDA III, then choose from only the customer’s configured programs.", signal: "Users cannot accidentally generate files for programs the customer does not use.", view: "qrda", actions: [action("Choose QRDA III"), terminal("Switch category", "Switch")] },
       { title: "Confirm Scope", body: "Scope options adapt to the program: subgroup for MVP, APM Entity for APP Plus, and individual when supported.", signal: "Program rules are visible in the controls instead of hidden behind validation errors.", view: "qrda", actions: [action("Confirm scope"), terminal("Preview package name", "Preview")] },
       { title: "Generate Package", body: "Queue a ZIP package and expose status, warnings, and download actions in the same pathway.", signal: "Users can understand package readiness and next action immediately.", view: "qrda", actions: [terminal("Generate ZIP", "Generate"), terminal("Download history", "Open")] },

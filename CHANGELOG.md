@@ -1,5 +1,12 @@
 # Changelog
 
+## v37
+
+- Removed the central recommendation-input and phase-checklist panels from the visible A/B prototype routes.
+- Added a compact FAQ menu in the persistent Design Lab controls for inputs, rules, rationale, and submission context.
+- Replaced the Vision Platform reference button with a normal FAQ/reference dropdown in the app navigation pane.
+- Reworded first-step labels so the customer starts by comparing/selecting strategy, not reviewing inferred inputs.
+
 ## v36
 
 - Added the prior-year submission as a persistent baseline inside the Choose Strategy rail.

@@ -30,7 +30,7 @@ body {
 .lab-bar {
   min-height: 54px;
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) auto auto auto;
+  grid-template-columns: minmax(260px, 1fr) auto auto auto auto;
   gap: 12px;
   align-items: center;
   padding: 8px 14px;
@@ -49,7 +49,8 @@ body {
 }
 
 .lab-title span,
-.lab-bar label {
+.lab-bar label,
+.prototype-faq-menu summary {
   color: var(--muted);
   font-size: 12px;
 }
@@ -68,6 +69,70 @@ body {
   background: #fff;
   color: var(--text);
   padding: 0 8px;
+}
+
+.prototype-faq-menu {
+  justify-self: end;
+  position: relative;
+}
+
+.prototype-faq-menu summary {
+  min-height: 30px;
+  border: 1px solid #aeb8c2;
+  border-radius: 3px;
+  background: #fff;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 11px;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.prototype-faq-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.prototype-faq-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 50;
+  width: 360px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(30, 34, 38, 0.18);
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+}
+
+.prototype-faq-panel button {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  display: grid;
+  gap: 3px;
+  padding: 9px 10px;
+  text-align: left;
+}
+
+.prototype-faq-panel button:hover {
+  border-color: #d9dee3;
+  background: #f8fafb;
+}
+
+.prototype-faq-panel strong {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.prototype-faq-panel span {
+  color: var(--muted);
+  line-height: 1.35;
 }
 
 .lab-btn {
@@ -1623,6 +1688,46 @@ th.numeric {
 
 .vision-reference-nav > span {
   padding: 0 8px;
+}
+
+.vision-reference-menu {
+  position: relative;
+}
+
+.vision-reference-menu summary {
+  min-height: 38px;
+  border: 1px solid #d9dee3;
+  border-radius: 4px;
+  background: #fff;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.vision-reference-menu summary::after {
+  content: "⌄";
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.vision-reference-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.vision-reference-menu[open] summary {
+  border-color: #86b6d6;
+  background: #f1f8fc;
+}
+
+.vision-reference-menu > div {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
 }
 
 .vision-reference-nav button {
@@ -3628,6 +3733,7 @@ body.oj-redwood {
 
 .lab-title span,
 .lab-bar label,
+.prototype-faq-menu summary,
 .field label,
 .quality-mode-row label {
   color: var(--oracle-ink-muted);
@@ -3649,6 +3755,7 @@ button:focus-visible {
 }
 
 .lab-bar select,
+.prototype-faq-menu summary,
 .topbar select,
 .score-controls select,
 .select-period select,
@@ -5708,8 +5815,16 @@ body.oj-redwood {
     grid-template-columns: 1fr;
   }
 
-  .lab-bar select {
+  .lab-bar select,
+  .prototype-faq-menu,
+  .prototype-faq-menu summary {
     min-width: 0;
+    width: 100%;
+  }
+
+  .prototype-faq-panel {
+    left: 0;
+    right: auto;
     width: 100%;
   }
 
