@@ -14,6 +14,7 @@ const state = {
   mvpSpecialties: null,
   practiceComposition: "multi",
   selectedVisionStrategy: "mvp-specialty-subgroups",
+  selectedVisionSubgroup: "infectious-disease",
 };
 
 const defaultScenarioByProgram = {
@@ -521,10 +522,10 @@ const qppSession = {
 const visionStages = [
   {
     id: "strategy",
-    timebox: "January-February",
+    sequence: "Step 1",
     label: "Strategy",
     title: "Choose the strongest submission strategy",
-    promise: "Start the year with a recommended strategy instead of a long measure list.",
+    promise: "Start with a recommended strategy instead of a long measure list.",
     customerQuestion: "What is the most effective strategy for this organization?",
     systemAction: "Forecasts program fit from enabled measures, provider specialty mix, and current performance.",
     artifact: "Approved 2026 submission strategy",
@@ -532,10 +533,10 @@ const visionStages = [
   },
   {
     id: "improve",
-    timebox: "March-September",
+    sequence: "Step 2",
     label: "Improve",
     title: "Turn gaps into routed work",
-    promise: "Move from planning to score improvement while there is still time to act.",
+    promise: "Move from planning to score improvement while teams can still act.",
     customerQuestion: "Which issues can my teams actually fix this month?",
     systemAction: "Finds likely evidence, separates documentation, workflow, and data-mapping issues, then routes work.",
     artifact: "Prioritized quality work queue",
@@ -543,7 +544,7 @@ const visionStages = [
   },
   {
     id: "monitor",
-    timebox: "Ongoing",
+    sequence: "Step 3",
     label: "Monitor",
     title: "Catch changes before they become submission risk",
     promise: "Watch week-over-week satisfaction changes and surface credible exceptions.",
@@ -554,7 +555,7 @@ const visionStages = [
   },
   {
     id: "validate",
-    timebox: "October-November",
+    sequence: "Step 4",
     label: "Validate",
     title: "Validate the representative population",
     promise: "Focus human judgment on the exceptions that matter, not the entire submission.",
@@ -565,7 +566,7 @@ const visionStages = [
   },
   {
     id: "submit",
-    timebox: "Submission",
+    sequence: "Step 5",
     label: "Submit",
     title: "Submit securely without the scramble",
     promise: "Send the approved version through secure OAuth and track CMS response.",
@@ -577,11 +578,97 @@ const visionStages = [
 ];
 
 const visionStrategyInputs = [
-  { label: "Enabled clinician measures", value: "eCQM + CQM", detail: "Supports MVP and QRDA paths" },
-  { label: "Specialty mix", value: "4 cohorts", detail: "Cardiology, infectious disease, women’s health, mental health" },
-  { label: "Performance forecast", value: "+5.5 pts", detail: "Best modeled lift from MVP subgroup strategy" },
-  { label: "APM participation", value: "Available", detail: "APP Plus stays visible when entity participation applies" },
+  { label: "Enabled measure signal", source: "Customer measure configuration", value: "eCQM + CQM measures available", detail: "Supports infectious disease, mental health, women’s health, APP Plus, and QRDA; cardiology MVP is unavailable until supporting measures are enabled.", impact: "3 MVP subgroups supported; cardiology blocked" },
+  { label: "Specialty signal", source: "Roster + customer-confirmed specialty", value: "4 specialty cohorts", detail: "Cardiology 45, infectious disease 45, women’s health 45, mental health 53.", impact: "Cohorts are customer-confirmed, not inferred from TIN/NPI" },
+  { label: "Performance signal", source: "Current measure performance", value: "+5.5 point modeled lift", detail: "Forecast compares current score, case volume, denominator gaps, and measure availability by provider.", impact: "Provider/MVP forecast drives ranking" },
+  { label: "Program signal", source: "Participation and CMS rules", value: "MVP primary, APP Plus available", detail: "Traditional MIPS is transition context; QRDA is a supporting export path after approval.", impact: "Prioritize MVP; keep APP Plus and QRDA available" },
 ];
+
+const visionMvpSubgroupRows = [
+  {
+    id: "infectious-disease",
+    subgroup: "Infectious disease and immunology subgroup",
+    specialty: "Infectious Disease",
+    mvpId: "M1368",
+    mvpName: "Prevention and Treatment of Infectious Disorders Including Hepatitis C and HIV",
+    providers: 45,
+    reportingLevel: "Subgroup",
+    currentScore: "37%",
+    projectedScore: "93.8",
+    lift: "+5.5 pts",
+    measureFit: "CMS349v8 and CMS2v15 enabled",
+    confidence: "High",
+    rationale: "Specialty and enabled measures align to HIV, hepatitis C, and preventive screening quality work.",
+  },
+  {
+    id: "mental-health",
+    subgroup: "Behavioral health and psychiatry clinicians",
+    specialty: "Mental Health",
+    mvpId: "M1369",
+    mvpName: "Quality Care in Mental Health and Substance Use Disorders",
+    providers: 53,
+    reportingLevel: "Subgroup",
+    currentScore: "41%",
+    projectedScore: "91.6",
+    lift: "+4.2 pts",
+    measureFit: "CMS2v15 enabled",
+    confidence: "Medium",
+    rationale: "Specialty-specific MVP avoids mixing behavioral health performance with unrelated group measures.",
+  },
+  {
+    id: "womens-health",
+    subgroup: "Women’s health clinicians",
+    specialty: "Women’s Health",
+    mvpId: "M1366",
+    mvpName: "Focusing on Women’s Health",
+    providers: 45,
+    reportingLevel: "Subgroup",
+    currentScore: "55%",
+    projectedScore: "89.4",
+    lift: "+2.8 pts",
+    measureFit: "CMS153v14 enabled",
+    confidence: "Medium",
+    rationale: "Submission can preserve women’s health quality work while keeping non-aligned clinicians outside the cohort.",
+  },
+  {
+    id: "heart-disease",
+    subgroup: "Heart disease clinicians",
+    specialty: "Cardiology",
+    mvpId: "G0055",
+    mvpName: "Advancing Care for Heart Disease",
+    providers: 45,
+    reportingLevel: "Unavailable",
+    currentScore: "40%",
+    projectedScore: "Not modeled",
+    lift: "Blocked",
+    measureFit: "Required cardiology measures not enabled",
+    confidence: "Blocked",
+    rationale: "Keep visible as unavailable so the customer understands why cardiology is not recommended for this setup.",
+  },
+];
+
+const visionProviderMixRows = {
+  "infectious-disease": [
+    { provider: "Jane Coleman, MD", specialty: "Infectious Disease", npi: "1942000000", current: "61.2", forecast: "74.8", recommendation: "Include" },
+    { provider: "Marcus Bell, NP", specialty: "Infectious Disease", npi: "1942000001", current: "58.9", forecast: "70.4", recommendation: "Include" },
+    { provider: "Rita Holmes, PA", specialty: "Immunology", npi: "1942000018", current: "52.6", forecast: "67.1", recommendation: "Review" },
+  ],
+  "mental-health": [
+    { provider: "Elena Morales, MD", specialty: "Psychiatry", npi: "1942000004", current: "69.1", forecast: "82.6", recommendation: "Include" },
+    { provider: "Caroline Meyer, LCSW", specialty: "Behavioral Health", npi: "1942000024", current: "64.7", forecast: "80.2", recommendation: "Include" },
+    { provider: "Avery Nelson, NP", specialty: "Mental Health", npi: "1942000025", current: "47.4", forecast: "61.9", recommendation: "Review" },
+  ],
+  "womens-health": [
+    { provider: "Priya Shah, CNM", specialty: "Women’s Health", npi: "1942000005", current: "63.8", forecast: "77.0", recommendation: "Include" },
+    { provider: "Megan Park, MD", specialty: "Gynecology", npi: "1942000031", current: "57.0", forecast: "70.8", recommendation: "Include" },
+    { provider: "Lena Ortiz, NP", specialty: "Obstetrics", npi: "1942000032", current: "48.3", forecast: "62.5", recommendation: "Review" },
+  ],
+  "heart-disease": [
+    { provider: "Nadia Singh, MD", specialty: "Cardiology", npi: "1942000002", current: "67.4", forecast: "Not modeled", recommendation: "Blocked" },
+    { provider: "Robert Kane, PA", specialty: "Cardiology", npi: "1942000003", current: "48.2", forecast: "Not modeled", recommendation: "Blocked" },
+    { provider: "Thomas Riley, MD", specialty: "Family Medicine", npi: "1942000006", current: "72.5", forecast: "Not modeled", recommendation: "Blocked" },
+  ],
+};
 
 const visionStrategyRows = [
   {
@@ -594,6 +681,7 @@ const visionStrategyRows = [
     performance: "93.8 projected",
     lift: "+5.5 pts",
     effort: "Medium",
+    scope: "MVP subgroup registration",
   },
   {
     id: "mvp-mixed",
@@ -605,6 +693,7 @@ const visionStrategyRows = [
     performance: "91.2 projected",
     lift: "+2.9 pts",
     effort: "High",
+    scope: "MVP subgroup and individual review",
   },
   {
     id: "appplus",
@@ -616,6 +705,7 @@ const visionStrategyRows = [
     performance: "88.6 projected",
     lift: "+0.8 pts",
     effort: "Low",
+    scope: "APM Entity submission",
   },
   {
     id: "qrda-support",
@@ -627,6 +717,7 @@ const visionStrategyRows = [
     performance: "No score change",
     lift: "0 pts",
     effort: "Low",
+    scope: "QRDA I or QRDA III package",
   },
   {
     id: "traditional-mips",
@@ -638,8 +729,107 @@ const visionStrategyRows = [
     performance: "85.4 projected",
     lift: "-2.1 pts",
     effort: "Medium",
+    scope: "Legacy review only",
   },
 ];
+
+const visionStrategyContext = {
+  "mvp-specialty-subgroups": {
+    bestFor: "Multispecialty organizations where specialty-specific MVPs are better representations of care than one blended group submission.",
+    primaryDecision: "Approve the specialty subgroup strategy, then register each supported MVP subgroup with its roster, composition, and narrative rationale.",
+    inputs: [
+      "Enabled EC measure inventory supports infectious disease, mental health, and women's health MVPs.",
+      "Provider roster contains distinct specialty cohorts with enough volume for subgroup planning.",
+      "Forecasting shows the highest modeled lift when providers are assigned to specialty-fit MVPs.",
+    ],
+    customerDecisions: [
+      "Confirm whether each subgroup is single-specialty or multispecialty.",
+      "Approve the providers included in each subgroup.",
+      "Approve selected MVP, measure mode, and subgroup narrative before CMS registration.",
+    ],
+    constraints: [
+      "Do not infer specialty from TIN/NPI alone.",
+      "Large multispecialty practices should not be routed to MVP group reporting when subgroup or individual paths are required.",
+      "Unavailable MVPs stay visible with the exact measure gap that blocks selection.",
+    ],
+  },
+  "mvp-mixed": {
+    bestFor: "Customers with one or two strong specialty cohorts plus several clinicians whose specialty, attribution, or performance is not clean enough for immediate subgroup registration.",
+    primaryDecision: "Use subgroup registration for clean cohorts and route uncertain clinicians through individual review before package approval.",
+    inputs: [
+      "Specialty roster contains mixed-confidence provider assignments.",
+      "Some MVPs have partial measure coverage or lower case-volume confidence.",
+      "Provider-level forecasts show meaningful variance within the same TIN.",
+    ],
+    customerDecisions: [
+      "Choose which clinicians stay in subgroup reporting.",
+      "Choose which clinicians need individual review.",
+      "Resolve measure gaps before locking each draft.",
+    ],
+    constraints: [
+      "Higher operational effort because the customer manages both subgroup and individual paths.",
+      "Requires clearer review state so clinicians do not disappear from the strategy.",
+      "Should not be presented as simpler than the specialty subgroup strategy.",
+    ],
+  },
+  appplus: {
+    bestFor: "Customers whose APM Entity participation is the governing submission strategy and whose APM measure package is already supported.",
+    primaryDecision: "Confirm APM Entity participation and use APP Plus as the primary submission package.",
+    inputs: [
+      "APM Entity measures are enabled for the customer.",
+      "Participation context indicates APP Plus eligibility.",
+      "Quality performance is modeled at the APM Entity level rather than specialty subgroup level.",
+    ],
+    customerDecisions: [
+      "Confirm APM Entity participation.",
+      "Approve APM measure package and reporting period.",
+      "Use MVP only for adjacent specialty strategy planning when appropriate.",
+    ],
+    constraints: [
+      "Not a replacement for MVP when the customer is not participating as an APM Entity.",
+      "Provider specialty mix is less central than APM participation and measure package fit.",
+      "QRDA remains a package/export mechanism after approval.",
+    ],
+  },
+  "qrda-support": {
+    bestFor: "Customers that need a file package after a strategy has already been approved.",
+    primaryDecision: "Generate the correct QRDA package from the approved MVP or APP Plus submission version.",
+    inputs: [
+      "Approved strategy identifies program, scope, period, and collection type.",
+      "Enabled measures have export-ready data after validation.",
+      "Submission status determines whether QRDA is a support path or final handoff.",
+    ],
+    customerDecisions: [
+      "Choose QRDA I or QRDA III only after the submission package is approved.",
+      "Confirm program, scope, and reporting period.",
+      "Download or transmit the frozen package.",
+    ],
+    constraints: [
+      "Should not appear as the primary strategy recommendation.",
+      "Must avoid sending a different version than the one approved in validation.",
+      "Hospital reporting is out of app and should not appear as a top-line path here.",
+    ],
+  },
+  "traditional-mips": {
+    bestFor: "Transition review, historical comparison, and customer education while traditional MIPS winds down.",
+    primaryDecision: "Use only as context unless a customer still has a required legacy submission use case.",
+    inputs: [
+      "Legacy MIPS measures are still visible for this customer.",
+      "Future-state strategy should prioritize MVP-based paths.",
+      "Customer may need to compare old and new score expectations during transition.",
+    ],
+    customerDecisions: [
+      "Review historical performance if needed.",
+      "Avoid planning a future operating model around traditional MIPS.",
+      "Use MVP or APP Plus for the active submission strategy when supported.",
+    ],
+    constraints: [
+      "Retiring path should not compete visually with recommended active paths.",
+      "Selection is disabled in the prototype to keep the presentation focused.",
+      "Keep enough context to explain why the customer is being routed elsewhere.",
+    ],
+  },
+};
 
 const visionWorkQueueRows = [
   { type: "Evidence likely exists", owner: "Chart chase", count: "428 patients", next: "Agent review queued" },
@@ -961,6 +1151,7 @@ function render() {
   labModeSelect.value = state.labMode;
   scenarioSelect.value = state.scenario;
   content.classList.remove("flush");
+  content.classList.remove("vision-mode-content");
   if (state.labMode !== "production") {
     return renderDesignLab();
   }
@@ -2581,55 +2772,65 @@ function currentVisionStage() {
 function renderVisionPlatform() {
   const workflow = currentVisionStage();
   const primaryButton = workflow.stage.id === "strategy"
-    ? `<button class="btn" data-select-vision-strategy="${state.selectedVisionStrategy}">Select Strategy</button>`
-    : `<button class="btn" data-vision-next="1" ${workflow.index === visionStages.length - 1 ? "disabled" : ""}>${workflow.stage.primaryAction}</button>`;
+    ? `<button class="btn" data-select-vision-strategy="${state.selectedVisionStrategy}">Approve Strategy</button>`
+    : `<button class="btn secondary" data-toast="${workflow.stage.primaryAction} opened">${workflow.stage.primaryAction}</button>`;
   return `
-    <div class="vision-shell">
-      <header class="vision-header">
-        <div>
-          <span class="eyebrow">Oracle Health Data Submissions</span>
-          <h1>Quality Operating System</h1>
-          <p>Choose the right strategy, improve performance all year, validate with confidence, and submit without the scramble.</p>
+    <div class="vision-app-shell">
+      ${renderVisionNavigation(workflow)}
+      <main class="vision-workspace">
+        <header class="vision-workspace-header">
+          <div>
+            <span class="eyebrow">${workflow.stage.label}</span>
+            <h1>${workflow.stage.title}</h1>
+            <p>${workflow.stage.promise}</p>
+          </div>
+          <div class="vision-panel-actions">
+            <button class="btn ghost" data-vision-next="-1" ${workflow.index === 0 ? "disabled" : ""}>Back</button>
+            ${primaryButton}
+            <button class="btn" data-vision-next="1" ${workflow.index === visionStages.length - 1 ? "disabled" : ""}>Continue</button>
+          </div>
+        </header>
+        <div class="vision-context-row">
+          <div><span>Customer question</span><strong>${workflow.stage.customerQuestion}</strong></div>
+          <div><span>System role</span><strong>${workflow.stage.systemAction}</strong></div>
+          <div><span>Output</span><strong>${workflow.stage.artifact}</strong></div>
         </div>
-        <div class="vision-progress">
-          <span>${workflow.percent}%</span>
-          <strong>${workflow.stage.label}</strong>
-          <em>${workflow.stage.timebox}</em>
-        </div>
-      </header>
-      <nav class="vision-stage-nav" aria-label="Vision platform stages">
+        <section class="vision-panel vision-focus">
+          ${renderVisionStageContent(workflow.stage)}
+        </section>
+      </main>
+    </div>
+  `;
+}
+
+function renderVisionNavigation(workflow) {
+  return `
+    <aside class="vision-nav-pane" aria-label="Quality operating system navigation">
+      <div class="vision-nav-brand">
+        <span>Oracle Health Data Submissions</span>
+        <strong>Quality Operating System</strong>
+      </div>
+      <div class="vision-nav-customer">
+        <span>Customer</span>
+        <strong>ZzMount Desert Island Hospital</strong>
+        <em>PY 2026 strategy workspace</em>
+      </div>
+      <nav class="vision-left-nav" aria-label="Workflow areas">
         ${visionStages.map((stage, index) => `
           <button class="${index === workflow.index ? "active" : index < workflow.index ? "complete" : "future"}" data-lab-step="${index}">
-            <span>${index + 1}</span>
             <strong>${stage.label}</strong>
-            <em>${stage.timebox}</em>
+            <span>${index < workflow.index ? "Complete" : index === workflow.index ? "Current" : "Ready when reached"}</span>
+            <em>${stage.promise}</em>
           </button>
         `).join("")}
       </nav>
-      <div class="vision-stage-layout">
-        <main class="vision-panel vision-focus">
-          <div class="vision-panel-title">
-            <div>
-              <span class="eyebrow">${workflow.stage.timebox}</span>
-              <h2>${workflow.stage.title}</h2>
-            </div>
-            ${primaryButton}
-          </div>
-          ${renderVisionStageContent(workflow.stage)}
-        </main>
-        <aside class="vision-panel vision-aide">
-          <span class="eyebrow">Next action</span>
-          <h3>${workflow.stage.customerQuestion}</h3>
-          <p>${workflow.stage.promise}</p>
-          <div class="vision-output"><span>Output</span><strong>${workflow.stage.artifact}</strong></div>
-          <div class="workflow-actions">
-            <button class="btn ghost" data-vision-next="-1" ${workflow.index === 0 ? "disabled" : ""}>Back</button>
-            <button class="btn" data-vision-next="1" ${workflow.index === visionStages.length - 1 ? "disabled" : ""}>Continue</button>
-          </div>
-          <button class="btn secondary" data-open-production="mvp-zmvp4">Open Production Control</button>
-        </aside>
+      <div class="vision-nav-footer">
+        <span>Workflow progress</span>
+        <strong>${workflow.percent}% complete</strong>
+        <em>${workflow.stage.artifact}</em>
+        <button class="lab-btn" data-open-production="mvp-zmvp4">Open Production Control</button>
       </div>
-    </div>
+    </aside>
   `;
 }
 
@@ -2643,6 +2844,143 @@ function renderVisionStageContent(stage) {
 
 function selectedVisionStrategy() {
   return visionStrategyRows.find((row) => row.id === state.selectedVisionStrategy) || visionStrategyRows[0];
+}
+
+function selectedVisionSubgroup() {
+  return visionMvpSubgroupRows.find((row) => row.id === state.selectedVisionSubgroup) || visionMvpSubgroupRows[0];
+}
+
+function strategyContextFor(row) {
+  return visionStrategyContext[row.id] || {
+    bestFor: row.strategy,
+    primaryDecision: "Review the modeled strategy before approval.",
+    inputs: [row.measureCoverage],
+    customerDecisions: ["Confirm the customer wants to use this strategy."],
+    constraints: ["No additional constraints modeled."],
+  };
+}
+
+function renderEvidenceList(items) {
+  return `
+    <ul>
+      ${items.map((item) => `<li>${item}</li>`).join("")}
+    </ul>
+  `;
+}
+
+function strategyTone(row) {
+  if (row.recommendation === "Recommended") return "ready";
+  if (row.recommendation === "Transition only") return "disabled";
+  if (row.recommendation === "Supporting path") return "support";
+  return "warn";
+}
+
+function renderStrategyInputSummary() {
+  return `
+    <section class="strategy-input-summary" aria-label="Inputs used by the recommendation engine">
+      <div class="vision-section-title">
+        <span class="eyebrow">Recommendation inputs</span>
+        <h3>Known customer facts used to model the strategy</h3>
+      </div>
+      <div class="strategy-input-grid">
+        ${visionStrategyInputs.map((item) => `
+          <article>
+            <span>${item.label}</span>
+            <strong>${item.value}</strong>
+            <em>${item.source}</em>
+            <p>${item.impact}</p>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderStrategyCandidateList(selected) {
+  return `
+    <section class="strategy-candidate-list" aria-label="Candidate submission strategies">
+      <div class="vision-section-title">
+        <span class="eyebrow">Candidate submission strategies</span>
+        <h3>Compare the full strategy context before approval</h3>
+      </div>
+      ${visionStrategyRows.map((row) => {
+        const context = strategyContextFor(row);
+        return `
+          <button class="strategy-candidate ${row.id === selected.id ? "selected" : ""} ${strategyTone(row)}" data-vision-strategy="${row.id}">
+            <div class="strategy-candidate-head">
+              <span class="status-chip ${strategyTone(row)}">${row.recommendation}</span>
+              <strong>${row.path}</strong>
+            </div>
+            <p>${row.strategy}</p>
+            <dl>
+              <div><dt>Scope</dt><dd>${row.scope}</dd></div>
+              <div><dt>Forecast</dt><dd>${row.performance}</dd></div>
+              <div><dt>Impact</dt><dd>${row.lift}</dd></div>
+              <div><dt>Effort</dt><dd>${row.effort}</dd></div>
+            </dl>
+            <small><strong>Best fit:</strong> ${context.bestFor}</small>
+            <small><strong>Customer decision:</strong> ${context.primaryDecision}</small>
+          </button>
+        `;
+      }).join("")}
+    </section>
+  `;
+}
+
+function renderSelectedStrategyDetail(selected) {
+  const context = strategyContextFor(selected);
+  return `
+    <section class="selected-strategy-detail">
+      <div class="selected-strategy-header">
+        <div>
+          <span class="status-chip ${strategyTone(selected)}">${selected.recommendation}</span>
+          <h3>${selected.path}</h3>
+          <p>${selected.strategy}</p>
+        </div>
+        <button class="btn" data-select-vision-strategy="${selected.id}" ${selected.recommendation === "Transition only" ? "disabled" : ""}>Approve Strategy</button>
+      </div>
+      <div class="strategy-detail-metrics">
+        <div><span>Modeled score</span><strong>${selected.performance}</strong><em>${selected.lift} vs baseline</em></div>
+        <div><span>Measure fit</span><strong>${selected.fit}</strong><em>${selected.measureCoverage}</em></div>
+        <div><span>Workflow effort</span><strong>${selected.effort}</strong><em>${selected.scope}</em></div>
+      </div>
+      <div class="strategy-context-grid">
+        <article>
+          <span>Inputs behind this recommendation</span>
+          ${renderEvidenceList(context.inputs)}
+        </article>
+        <article>
+          <span>Customer decisions required</span>
+          ${renderEvidenceList(context.customerDecisions)}
+        </article>
+        <article>
+          <span>Rules and limits to surface</span>
+          ${renderEvidenceList(context.constraints)}
+        </article>
+      </div>
+      ${selected.id === "mvp-specialty-subgroups" ? renderVisionMvpSubgroupMixer() : `
+        <div class="strategy-non-mvp-detail">
+          <span class="eyebrow">Operational detail</span>
+          <p>${context.bestFor}</p>
+          <p>${context.primaryDecision}</p>
+        </div>
+      `}
+    </section>
+  `;
+}
+
+function renderActiveStrategyContext(tone = "") {
+  const selected = selectedVisionStrategy();
+  return `
+    <div class="active-strategy-context ${tone}">
+      <div>
+        <span>Active strategy</span>
+        <strong>${selected.path}</strong>
+        <em>${selected.scope} · ${selected.performance} · ${selected.lift}</em>
+      </div>
+      <button class="lab-btn" data-lab-step="0">Review Strategy</button>
+    </div>
+  `;
 }
 
 function renderVisionTaskStrip(tasks, activeIndex = 0) {
@@ -2662,57 +3000,96 @@ function renderVisionStrategyStage() {
   const selected = selectedVisionStrategy();
   return `
     <section class="vision-stage-content">
-      ${renderVisionTaskStrip(["Review inferred inputs", "Compare strategies", "Select strategy"], 1)}
-      <div class="vision-input-strip">
-        ${visionStrategyInputs.map((item) => `
-          <div>
-            <span>${item.label}</span>
-            <strong>${item.value}</strong>
-            <em>${item.detail}</em>
-          </div>
-        `).join("")}
+      ${renderStrategyInputSummary()}
+      <div class="strategy-workspace-grid">
+        ${renderStrategyCandidateList(selected)}
+        ${renderSelectedStrategyDetail(selected)}
       </div>
-      <div class="strategy-workbench">
-        <div>
-          <div class="vision-recommendation">
-            <span>Selected strategy</span>
-            <h3>${selected.path}</h3>
-            <p>${selected.strategy}</p>
+    </section>
+  `;
+}
+
+function renderVisionMvpSubgroupMixer() {
+  const selected = selectedVisionSubgroup();
+  const providers = visionProviderMixRows[selected.id] || [];
+  return `
+    <section class="subgroup-mixer">
+      <div class="vision-section-title">
+        <span class="eyebrow">Exact submission strategy mix</span>
+        <h3>MVP specialty subgroups and provider mix</h3>
+        <p>The customer can select each subgroup row to inspect specialty, provider, performance, forecast, and eligibility rationale before registration.</p>
+      </div>
+      <div class="subgroup-strategy-table-wrap">
+        <table class="vision-table subgroup-strategy-table">
+          <thead>
+            <tr>
+              <th>Decision</th>
+              <th>Specialty cohort</th>
+              <th>MVP</th>
+              <th>Reporting level</th>
+              <th class="numeric">Providers</th>
+              <th>Measure support</th>
+              <th class="numeric">Current</th>
+              <th class="numeric">Forecast</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+          ${visionMvpSubgroupRows.map((row) => `
+            <tr class="${row.id === selected.id ? "selected" : ""} ${row.confidence === "Blocked" ? "blocked" : ""}">
+              <td><span class="status-chip ${row.confidence === "High" ? "ready" : row.confidence === "Blocked" ? "disabled" : "warn"}">${row.confidence}</span></td>
+              <td><strong>${row.subgroup}</strong><span class="subline">${row.specialty}</span></td>
+              <td><strong>${row.mvpId}</strong><span class="subline">${row.mvpName}</span></td>
+              <td>${row.reportingLevel}</td>
+              <td class="numeric">${row.providers}</td>
+              <td>${row.measureFit}</td>
+              <td class="numeric">${row.currentScore}</td>
+              <td class="numeric"><strong>${row.projectedScore}</strong><span class="subline">${row.lift}</span></td>
+              <td><button class="link" data-vision-subgroup="${row.id}">${row.id === selected.id ? "Viewing" : "View"}</button></td>
+            </tr>
+          `).join("")}
+          </tbody>
+        </table>
+      </div>
+      <div class="subgroup-detail-grid">
+        <div class="subgroup-detail">
+          <div class="subgroup-detail-header">
+            <div>
+              <span class="eyebrow">${selected.reportingLevel}</span>
+              <h3>${selected.subgroup}</h3>
+              <p>${selected.mvpId} · ${selected.mvpName}</p>
+            </div>
+            <span class="status-chip ${selected.confidence === "High" ? "ready" : selected.confidence === "Blocked" ? "disabled" : "warn"}">${selected.confidence}</span>
           </div>
-          <table class="vision-table strategy-table">
-            <thead><tr><th>Strategy</th><th>Fit</th><th>Measure coverage</th><th>Forecast</th><th>Effort</th><th>Action</th></tr></thead>
+          <div class="subgroup-metrics">
+            <div><span>Providers</span><strong>${selected.providers}</strong></div>
+            <div><span>Current</span><strong>${selected.currentScore}</strong></div>
+            <div><span>Forecast</span><strong>${selected.projectedScore}</strong></div>
+            <div><span>Lift</span><strong>${selected.lift}</strong></div>
+          </div>
+          <p class="subgroup-rationale">${selected.rationale}</p>
+        </div>
+        <div class="subgroup-provider-panel">
+          <div class="vision-section-title">
+            <span class="eyebrow">Provider roster detail</span>
+            <h3>${selected.specialty} provider mix</h3>
+          </div>
+          <table class="vision-table provider-mix-table">
+            <thead><tr><th>Provider</th><th>Specialty</th><th>NPI</th><th>Current</th><th>Forecast</th><th>Recommendation</th></tr></thead>
             <tbody>
-              ${visionStrategyRows.map((row) => {
-                const active = row.id === selected.id;
-                const disabled = row.recommendation === "Transition only";
-                return `
-                  <tr class="${active ? "selected" : ""} ${disabled ? "disabled" : ""}">
-                    <td><strong>${row.path}</strong><span>${row.recommendation}</span></td>
-                    <td>${row.fit}</td>
-                    <td>${row.measureCoverage}</td>
-                    <td><strong>${row.performance}</strong><span>${row.lift}</span></td>
-                    <td>${row.effort}</td>
-                    <td>
-                      <button class="link" data-vision-strategy="${row.id}">View</button>
-                      <button class="btn small" data-select-vision-strategy="${row.id}" ${disabled ? "disabled" : ""}>Select</button>
-                    </td>
-                  </tr>
-                `;
-              }).join("")}
+              ${providers.map((provider) => `
+                <tr>
+                  <td><strong>${provider.provider}</strong></td>
+                  <td>${provider.specialty}</td>
+                  <td>${provider.npi}</td>
+                  <td>${provider.current}</td>
+                  <td>${provider.forecast}</td>
+                  <td><span class="status-chip ${provider.recommendation === "Include" ? "ready" : provider.recommendation === "Blocked" ? "disabled" : "warn"}">${provider.recommendation}</span></td>
+                </tr>
+              `).join("")}
             </tbody>
           </table>
         </div>
-        <aside class="strategy-detail">
-          <span class="eyebrow">Recommendation basis</span>
-          <h3>${selected.performance}</h3>
-          <p>${selected.measureCoverage}. ${selected.fit} specialty fit. ${selected.lift} modeled quality impact.</p>
-          <dl>
-            <div><dt>Program</dt><dd>${selected.path}</dd></div>
-            <div><dt>Operational effort</dt><dd>${selected.effort}</dd></div>
-            <div><dt>Decision</dt><dd>${selected.recommendation}</dd></div>
-          </dl>
-          <button class="btn" data-select-vision-strategy="${selected.id}" ${selected.recommendation === "Transition only" ? "disabled" : ""}>Use This Strategy</button>
-        </aside>
       </div>
     </section>
   `;
@@ -2722,7 +3099,7 @@ function renderVisionImproveStage() {
   const selected = selectedVisionStrategy();
   return `
     <section class="vision-stage-content">
-      ${renderVisionTaskStrip(["Find measure opportunities", "Classify root cause", "Route work"], 0)}
+      ${renderActiveStrategyContext("teal")}
       <div class="vision-recommendation teal">
         <span>Agentic work queue</span>
         <h3>Route the right issue to the right team</h3>
@@ -2734,7 +3111,7 @@ function renderVisionImproveStage() {
         <div><span>Data issues</span><strong>3</strong><em>Feeds or mappings need attention</em></div>
       </div>
       <table class="vision-table">
-        <thead><tr><th>Issue type</th><th>Owner</th><th>Volume</th><th>Next action</th><th></th></tr></thead>
+        <thead><tr><th>Issue type</th><th>Owner</th><th>Volume</th><th>Work item</th><th></th></tr></thead>
         <tbody>
           ${visionWorkQueueRows.map((row) => `
             <tr><td><strong>${row.type}</strong></td><td>${row.owner}</td><td>${row.count}</td><td>${row.next}</td><td><button class="btn small" data-toast="${row.type} queue opened">Open</button></td></tr>
@@ -2748,7 +3125,7 @@ function renderVisionImproveStage() {
 function renderVisionMonitorStage() {
   return `
     <section class="vision-stage-content">
-      ${renderVisionTaskStrip(["Review change signal", "Check likely cause", "Assign owner"], 0)}
+      ${renderActiveStrategyContext("amber")}
       <div class="vision-recommendation amber">
         <span>Exception monitoring</span>
         <h3>Abnormal changes come to the quality manager</h3>
@@ -2774,7 +3151,7 @@ function renderVisionMonitorStage() {
 function renderVisionValidateStage() {
   return `
     <section class="vision-stage-content">
-      ${renderVisionTaskStrip(["Review selected population", "Resolve exceptions", "Approve package"], 1)}
+      ${renderActiveStrategyContext()}
       <div class="vision-recommendation">
         <span>Representative validation</span>
         <h3>Validate the data that best represents the organization</h3>
@@ -2805,7 +3182,7 @@ function renderVisionValidateStage() {
 function renderVisionSubmitStage() {
   return `
     <section class="vision-stage-content">
-      ${renderVisionTaskStrip(["Confirm approved version", "Submit through OAuth", "Track CMS receipt"], 1)}
+      ${renderActiveStrategyContext("green")}
       <div class="vision-recommendation green">
         <span>Secure submission</span>
         <h3>Approved data is sent through the active CMS QPP connection</h3>
@@ -2832,6 +3209,7 @@ function renderDesignLab() {
   document.querySelector(".app-shell").classList.add("design-lab-mode");
   document.querySelector(".app-shell").classList.remove("home-mode");
   document.querySelector(".body-grid").classList.add("home-mode");
+  content.classList.toggle("vision-mode-content", state.labMode === "vision");
   sidebar.innerHTML = "";
   const scenario = scenarioDefinitions[state.scenario];
   const workflow = currentWorkflow(scenario);
@@ -2903,6 +3281,12 @@ function renderDesignLab() {
       state.selectedVisionStrategy = button.dataset.selectVisionStrategy;
       showToast(`${selectedVisionStrategy().path} selected for 2026 strategy`);
       state.labStep = Math.min(state.labStep + 1, visionStages.length - 1);
+      render();
+    });
+  });
+  content.querySelectorAll("[data-vision-subgroup]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.selectedVisionSubgroup = button.dataset.visionSubgroup;
       render();
     });
   });

@@ -1,5 +1,20 @@
 # Changelog
 
+## v33
+
+- Reworked the Vision Platform into a standard desktop app layout with a persistent left navigation pane.
+- Removed the large horizontal step strip and the context popover from the vision workflow.
+- Expanded candidate submission strategies with scope, forecast, input evidence, customer decisions, and rules/constraints.
+- Converted the MVP specialty subgroup mix into an interactive operational table with provider roster detail.
+
+## v32
+
+- Removed month/timebox labels from the Vision Platform stages.
+- Converted the vision flow into a full-width desktop workspace with ancillary context hidden behind a compact menu.
+- Removed the persistent Next Action rail.
+- Added an interactive MVP specialty subgroup mixer with provider, specialty, NPI, score, forecast, and inclusion detail.
+- Clarified the input signals used to generate strategy recommendations.
+
 ## v31
 
 - Reworked the Vision Platform into a production-like desktop workbench with actionable phase steps.
