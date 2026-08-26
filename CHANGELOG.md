@@ -1,5 +1,13 @@
 # Changelog
 
+## v36
+
+- Added the prior-year submission as a persistent baseline inside the Choose Strategy rail.
+- Reframed forecasted strategies as editable starting points instead of fixed pre-built choices.
+- Removed the redundant header-level Approve Strategy action.
+- Added a single Lock Strategy action in the selected strategy workspace.
+- Made the MVP strategy mix manually adjustable with include/exclude controls for subgroup cohorts.
+
 ## v35
 
 - Moved recommendation inputs, customer confirmations, and CMS/rules context into a dedicated Phase FAQ screen in the Vision Platform navigation.

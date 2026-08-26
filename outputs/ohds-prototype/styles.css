@@ -1526,8 +1526,10 @@ th.numeric {
 .vision-reference-nav > span,
 .vision-nav-footer span,
 .strategy-candidate dt,
+.previous-strategy-baseline dt,
 .strategy-detail-metrics span,
 .active-strategy-context span,
+.subgroup-mix-toolbar span,
 .strategy-input-grid span {
   color: var(--muted);
   display: block;
@@ -1978,6 +1980,41 @@ th.numeric {
   min-width: 0;
 }
 
+.previous-strategy-baseline {
+  border: 1px solid #cdd9e3;
+  border-radius: 6px;
+  background: #f8fbfd;
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+.previous-strategy-baseline strong {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.previous-strategy-baseline dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 8px;
+  margin: 0;
+}
+
+.previous-strategy-baseline dt,
+.previous-strategy-baseline dd {
+  margin: 0;
+}
+
+.previous-strategy-baseline dd {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.25;
+  margin-top: 2px;
+}
+
 .strategy-candidate-table-wrap {
   border: 1px solid #e1e5e8;
   border-radius: 6px;
@@ -2111,6 +2148,13 @@ th.numeric {
   padding: 12px;
 }
 
+.selected-strategy-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
 .selected-strategy-header h3 {
   font-size: 25px;
   line-height: 1.15;
@@ -2132,6 +2176,43 @@ th.numeric {
   font-size: 12px;
   font-weight: 700;
   padding: 3px 8px;
+}
+
+.strategy-baseline-comparison {
+  border: 1px solid #e1e5e8;
+  border-radius: 6px;
+  background: #fff;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  overflow: hidden;
+}
+
+.strategy-baseline-comparison div {
+  border-right: 1px solid #e1e5e8;
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+}
+
+.strategy-baseline-comparison div:last-child {
+  border-right: 0;
+}
+
+.strategy-baseline-comparison span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.strategy-baseline-comparison strong {
+  color: var(--text);
+  line-height: 1.25;
+}
+
+.strategy-baseline-comparison em {
+  color: var(--muted);
+  font-style: normal;
 }
 
 .strategy-detail-metrics {
@@ -2588,6 +2669,22 @@ th.numeric {
   overflow: auto;
 }
 
+.subgroup-mix-toolbar {
+  border: 1px solid #e4e8ec;
+  border-radius: 6px;
+  background: #f8fafb;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 9px 10px;
+}
+
+.subgroup-mix-toolbar strong {
+  color: var(--text);
+}
+
 .subgroup-strategy-table {
   min-width: 0;
   table-layout: fixed;
@@ -2634,8 +2731,30 @@ th.numeric {
   background: #f8f7f5;
 }
 
+.subgroup-strategy-table tr.excluded td {
+  color: #776f67;
+  background: #fbfaf8;
+}
+
 .subgroup-strategy-table .link {
   white-space: nowrap;
+}
+
+.mix-checkbox {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+
+.mix-checkbox input {
+  width: 16px;
+  height: 16px;
+}
+
+.mix-checkbox span {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .subgroup-detail-grid {

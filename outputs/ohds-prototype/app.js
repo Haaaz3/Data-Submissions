@@ -14,6 +14,14 @@ const state = {
   mvpSpecialties: null,
   practiceComposition: "multi",
   visionRoute: "workflow",
+  visionStrategyLocked: false,
+  visionStrategyEditMode: false,
+  visionSubgroupSelections: {
+    "infectious-disease": true,
+    "mental-health": true,
+    "womens-health": true,
+    "heart-disease": false,
+  },
   selectedVisionStrategy: "mvp-specialty-subgroups",
   selectedVisionSubgroup: "infectious-disease",
 };
@@ -520,17 +528,27 @@ const qppSession = {
   user: "b.g.sunil.kumar@oracle.com",
 };
 
+const previousSubmissionBaseline = {
+  year: "PY 2025",
+  path: "Traditional MIPS group",
+  delivery: "CMS QPP API + QRDA III export",
+  score: "72.4",
+  providers: "61 providers",
+  measures: "6 quality measures, PI, IA",
+  status: "Submitted",
+};
+
 const visionStages = [
   {
     id: "strategy",
     sequence: "Step 1",
     label: "Strategy",
-    title: "Select submission strategy",
-    promise: "Choose the recommended path, review the exact strategy mix, and approve the submission plan.",
+    title: "Choose or edit submission strategy",
+    promise: "Start from last year’s baseline or a forecasted strategy, adjust the mix, then lock the plan.",
     customerQuestion: "What is the most effective strategy for this organization?",
     systemAction: "Forecasts program fit from enabled measures, provider specialty mix, and current performance.",
     artifact: "Approved 2026 submission strategy",
-    primaryAction: "Select Recommended Strategy",
+    primaryAction: "Lock Strategy",
   },
   {
     id: "improve",
@@ -1075,6 +1093,7 @@ labModeSelect.addEventListener("change", (event) => {
   state.labMode = event.target.value;
   state.labStep = 0;
   state.visionRoute = "workflow";
+  state.visionStrategyLocked = false;
   applyScenario(state.scenario, state.labMode === "production");
 });
 
@@ -1082,6 +1101,7 @@ scenarioSelect.addEventListener("change", (event) => {
   state.scenario = event.target.value;
   state.labStep = 0;
   state.visionRoute = "workflow";
+  state.visionStrategyLocked = false;
   resetMvpSpecialtySelection();
   if (state.labMode === "production") {
     applyScenario(state.scenario, true);
@@ -1128,6 +1148,7 @@ function applyScenario(scenarioKey, mutateProductionRoute) {
   state.scenario = scenarioKey;
   state.labStep = 0;
   state.visionRoute = "workflow";
+  state.visionStrategyLocked = false;
   resetMvpSpecialtySelection();
   scenarioSelect.value = scenarioKey;
   labModeSelect.value = state.labMode;
@@ -2776,10 +2797,8 @@ function currentVisionStage() {
 function renderVisionPlatform() {
   const workflow = currentVisionStage();
   const inFaq = state.visionRoute === "phase-faq";
-  const activeStrategy = selectedVisionStrategy();
-  const primaryButton = workflow.stage.id === "strategy"
-    ? `<button class="btn" data-select-vision-strategy="${activeStrategy.id}" ${activeStrategy.recommendation === "Transition only" ? "disabled" : ""}>Approve Strategy</button>`
-    : `<button class="btn secondary" data-toast="${workflow.stage.primaryAction} opened">${workflow.stage.primaryAction}</button>`;
+  const continueDisabled = workflow.stage.id === "strategy" && !state.visionStrategyLocked;
+  const continueLabel = workflow.stage.id === "strategy" ? "Continue to Improve" : "Continue";
   return `
     <div class="vision-app-shell">
       ${renderVisionNavigation(workflow)}
@@ -2795,8 +2814,8 @@ function renderVisionPlatform() {
               <button class="btn" data-vision-workflow>Back to ${workflow.stage.label}</button>
             ` : `
               <button class="btn ghost" data-vision-next="-1" ${workflow.index === 0 ? "disabled" : ""}>Back</button>
-              ${primaryButton}
-              <button class="btn" data-vision-next="1" ${workflow.index === visionStages.length - 1 ? "disabled" : ""}>Continue</button>
+              ${workflow.stage.id !== "strategy" ? `<button class="btn secondary" data-toast="${workflow.stage.primaryAction} opened">${workflow.stage.primaryAction}</button>` : ""}
+              <button class="btn" data-vision-next="1" ${workflow.index === visionStages.length - 1 || continueDisabled ? "disabled" : ""}>${continueLabel}</button>
             `}
           </div>
         </header>
@@ -2863,6 +2882,38 @@ function selectedVisionSubgroup() {
   return visionMvpSubgroupRows.find((row) => row.id === state.selectedVisionSubgroup) || visionMvpSubgroupRows[0];
 }
 
+function isVisionSubgroupIncluded(row) {
+  if (row.confidence === "Blocked") return false;
+  return state.visionSubgroupSelections[row.id] !== false;
+}
+
+function includedVisionSubgroups() {
+  return visionMvpSubgroupRows.filter((row) => isVisionSubgroupIncluded(row));
+}
+
+function visionStrategyDraftSummary() {
+  const included = includedVisionSubgroups();
+  const providers = included.reduce((sum, row) => sum + Number(row.providers || 0), 0);
+  const reviewCount = included.filter((row) => row.confidence !== "High").length;
+  return {
+    subgroups: included.length,
+    providers,
+    reviewCount,
+    blocked: visionMvpSubgroupRows.filter((row) => row.confidence === "Blocked").length,
+  };
+}
+
+function resetVisionStrategyMix() {
+  state.visionSubgroupSelections = {
+    "infectious-disease": true,
+    "mental-health": true,
+    "womens-health": true,
+    "heart-disease": false,
+  };
+  state.visionStrategyEditMode = false;
+  state.visionStrategyLocked = false;
+}
+
 function strategyContextFor(row) {
   return visionStrategyContext[row.id] || {
     bestFor: row.strategy,
@@ -2914,9 +2965,19 @@ function renderStrategyCandidateList(selected) {
     <section class="strategy-candidate-list" aria-label="Candidate submission strategies">
       <div class="vision-section-title">
         <span class="eyebrow">Choose strategy</span>
-        <h3>Candidate submission strategies</h3>
-        <p>Pick the strategy the customer wants to operationalize.</p>
+        <h3>Starting points</h3>
+        <p>Compare last year’s submission against the forecasted options.</p>
       </div>
+      <article class="previous-strategy-baseline">
+        <span class="status-chip support">Previous year baseline</span>
+        <strong>${previousSubmissionBaseline.year} ${previousSubmissionBaseline.path}</strong>
+        <dl>
+          <div><dt>Score</dt><dd>${previousSubmissionBaseline.score}</dd></div>
+          <div><dt>Roster</dt><dd>${previousSubmissionBaseline.providers}</dd></div>
+          <div><dt>Delivery</dt><dd>${previousSubmissionBaseline.delivery}</dd></div>
+          <div><dt>Measures</dt><dd>${previousSubmissionBaseline.measures}</dd></div>
+        </dl>
+      </article>
       ${visionStrategyRows.map((row) => {
         const context = strategyContextFor(row);
         return `
@@ -2940,6 +3001,8 @@ function renderStrategyCandidateList(selected) {
 }
 
 function renderSelectedStrategyDetail(selected) {
+  const summary = visionStrategyDraftSummary();
+  const locked = state.visionStrategyLocked ? "Locked" : state.visionStrategyEditMode ? "Manual edits active" : "Forecasted draft";
   const metrics = `
     <div class="strategy-detail-metrics">
       <div><span>Modeled score</span><strong>${selected.performance}</strong><em>${selected.lift} vs baseline</em></div>
@@ -2958,9 +3021,18 @@ function renderSelectedStrategyDetail(selected) {
             <span>${selected.performance}</span>
             <span>${selected.lift}</span>
             <span>${selected.fit} fit</span>
+            <span>${locked}</span>
           </div>
         </div>
-        <button class="btn" data-select-vision-strategy="${selected.id}" ${selected.recommendation === "Transition only" ? "disabled" : ""}>Approve Strategy</button>
+        <div class="selected-strategy-actions">
+          <button class="btn secondary" data-customize-vision-strategy ${selected.id !== "mvp-specialty-subgroups" ? "disabled" : ""}>Customize Mix</button>
+          <button class="btn" data-lock-vision-strategy="${selected.id}" ${selected.recommendation === "Transition only" ? "disabled" : ""}>Lock Strategy</button>
+        </div>
+      </div>
+      <div class="strategy-baseline-comparison">
+        <div><span>Previous submission</span><strong>${previousSubmissionBaseline.path}</strong><em>${previousSubmissionBaseline.score} · ${previousSubmissionBaseline.providers}</em></div>
+        <div><span>Selected draft</span><strong>${selected.path}</strong><em>${selected.performance} · ${selected.lift}</em></div>
+        <div><span>Current mix</span><strong>${summary.subgroups} subgroups · ${summary.providers} providers</strong><em>${summary.reviewCount} cohort needs review · ${summary.blocked} blocked</em></div>
       </div>
       ${selected.id === "mvp-specialty-subgroups" ? renderVisionMvpSubgroupMixer() : `
         ${metrics}
@@ -3139,38 +3211,56 @@ function renderVisionFaqScreen(stage) {
 function renderVisionMvpSubgroupMixer() {
   const selected = selectedVisionSubgroup();
   const providers = visionProviderMixRows[selected.id] || [];
+  const summary = visionStrategyDraftSummary();
   return `
     <section class="subgroup-mixer">
       <div class="vision-section-title">
         <span class="eyebrow">Exact submission strategy mix</span>
         <h3>MVP specialty subgroups and provider mix</h3>
-        <p>The customer can select each subgroup row to inspect specialty, provider, performance, forecast, and eligibility rationale before registration.</p>
+        <p>Select a subgroup to inspect the roster, or adjust the included cohorts before locking the strategy.</p>
+      </div>
+      <div class="subgroup-mix-toolbar">
+        <div>
+          <strong>${summary.subgroups} subgroups included · ${summary.providers} providers</strong>
+          <span>${state.visionStrategyEditMode ? "Manual mix" : "Recommended mix"} · ${state.visionStrategyLocked ? "Locked" : "Unlocked"}</span>
+        </div>
+        <button class="link" data-reset-vision-strategy>Use recommended mix</button>
       </div>
       <div class="subgroup-strategy-table-wrap">
         <table class="vision-table subgroup-strategy-table">
           <thead>
             <tr>
-              <th>Decision</th>
+              <th>Include</th>
               <th>Specialty cohort</th>
               <th>MVP</th>
-              <th>Reporting level</th>
+              <th>Level</th>
               <th class="numeric">Providers</th>
               <th class="numeric">Forecast</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-          ${visionMvpSubgroupRows.map((row) => `
-            <tr class="${row.id === selected.id ? "selected" : ""} ${row.confidence === "Blocked" ? "blocked" : ""}">
-              <td><span class="status-chip ${row.confidence === "High" ? "ready" : row.confidence === "Blocked" ? "disabled" : "warn"}">${row.confidence}</span></td>
-              <td><strong>${row.subgroup}</strong><span class="subline">${row.specialty}</span></td>
-              <td><strong>${row.mvpId}</strong><span class="subline">${row.mvpName}</span><span class="subline">${row.measureFit}</span></td>
-              <td>${row.reportingLevel}</td>
-              <td class="numeric">${row.providers}</td>
-              <td class="numeric"><strong>${row.projectedScore}</strong><span class="subline">${row.currentScore} current · ${row.lift}</span></td>
-              <td><button class="link" data-vision-subgroup="${row.id}">${row.id === selected.id ? "Viewing" : "View"}</button></td>
-            </tr>
-          `).join("")}
+          ${visionMvpSubgroupRows.map((row) => {
+            const included = isVisionSubgroupIncluded(row);
+            const blocked = row.confidence === "Blocked";
+            return `
+              <tr class="${row.id === selected.id ? "selected" : ""} ${blocked ? "blocked" : ""} ${!included ? "excluded" : ""}">
+                <td>
+                  <label class="mix-checkbox">
+                    <input type="checkbox" data-toggle-vision-subgroup="${row.id}" ${included ? "checked" : ""} ${blocked ? "disabled" : ""} />
+                    <span>${blocked ? "Blocked" : included ? "In" : "Out"}</span>
+                  </label>
+                  <span class="subline">${row.confidence}</span>
+                </td>
+                <td><strong>${row.subgroup}</strong><span class="subline">${row.specialty}</span></td>
+                <td><strong>${row.mvpId}</strong><span class="subline">${row.mvpName}</span><span class="subline">${row.measureFit}</span></td>
+                <td>${row.reportingLevel}</td>
+                <td class="numeric">${row.providers}</td>
+                <td class="numeric"><strong>${row.projectedScore}</strong><span class="subline">${row.currentScore} current · ${row.lift}</span></td>
+                <td><button class="link" data-vision-subgroup="${row.id}">${row.id === selected.id ? "Viewing" : "View"}</button></td>
+              </tr>
+            `;
+          }).join("")}
           </tbody>
         </table>
       </div>
@@ -3414,15 +3504,41 @@ function renderDesignLab() {
     button.addEventListener("click", () => {
       state.selectedVisionStrategy = button.dataset.visionStrategy;
       state.visionRoute = "workflow";
+      state.visionStrategyLocked = false;
       render();
     });
   });
-  content.querySelectorAll("[data-select-vision-strategy]").forEach((button) => {
+  content.querySelectorAll("[data-customize-vision-strategy]").forEach((button) => {
     button.addEventListener("click", () => {
-      state.selectedVisionStrategy = button.dataset.selectVisionStrategy;
-      showToast(`${selectedVisionStrategy().path} selected for 2026 strategy`);
+      state.visionStrategyEditMode = true;
+      state.visionStrategyLocked = false;
+      showToast("MVP strategy mix is editable");
+      render();
+    });
+  });
+  content.querySelectorAll("[data-lock-vision-strategy]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.selectedVisionStrategy = button.dataset.lockVisionStrategy;
+      state.visionStrategyLocked = true;
+      showToast(`${selectedVisionStrategy().path} locked for 2026 strategy`);
       state.labStep = Math.min(state.labStep + 1, visionStages.length - 1);
       state.visionRoute = "workflow";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-reset-vision-strategy]").forEach((button) => {
+    button.addEventListener("click", () => {
+      resetVisionStrategyMix();
+      showToast("Recommended MVP mix restored");
+      render();
+    });
+  });
+  content.querySelectorAll("[data-toggle-vision-subgroup]").forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      state.visionSubgroupSelections[checkbox.dataset.toggleVisionSubgroup] = checkbox.checked;
+      state.selectedVisionSubgroup = checkbox.dataset.toggleVisionSubgroup;
+      state.visionStrategyEditMode = true;
+      state.visionStrategyLocked = false;
       render();
     });
   });
