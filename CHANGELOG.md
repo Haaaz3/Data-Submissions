@@ -1,5 +1,12 @@
 # Changelog
 
+## v31
+
+- Reworked the Vision Platform into a production-like desktop workbench with actionable phase steps.
+- Simplified the right rail from Customer Lens to a compact Next Action panel.
+- Expanded Strategy into a compare-and-select workflow driven by enabled measures, specialty mix, APM context, and forecast performance.
+- Added row-level actions for improvement work queues, monitoring exceptions, validation checks, and submission status.
+
 ## v30
 
 - Added a default Vision Platform mode organized around Strategy, Improve, Monitor, Validate, and Submit.
