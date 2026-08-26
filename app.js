@@ -13,6 +13,7 @@ const state = {
   mvpSpecialty: null,
   mvpSpecialties: null,
   practiceComposition: "multi",
+  selectedVisionStrategy: "mvp-specialty-subgroups",
 };
 
 const defaultScenarioByProgram = {
@@ -575,11 +576,69 @@ const visionStages = [
   },
 ];
 
+const visionStrategyInputs = [
+  { label: "Enabled clinician measures", value: "eCQM + CQM", detail: "Supports MVP and QRDA paths" },
+  { label: "Specialty mix", value: "4 cohorts", detail: "Cardiology, infectious disease, women’s health, mental health" },
+  { label: "Performance forecast", value: "+5.5 pts", detail: "Best modeled lift from MVP subgroup strategy" },
+  { label: "APM participation", value: "Available", detail: "APP Plus stays visible when entity participation applies" },
+];
+
 const visionStrategyRows = [
-  { path: "MVP Submission", recommendation: "Recommended", impact: "Highest score lift", rationale: "Best match to specialty mix and enabled measure coverage." },
-  { path: "APP Plus", recommendation: "Available", impact: "Use when APM Entity applies", rationale: "Keep visible for customers with APM participation." },
-  { path: "QRDA Export", recommendation: "Supporting path", impact: "File fallback", rationale: "Generate only from approved clinician or APM packages." },
-  { path: "Traditional MIPS", recommendation: "Transition only", impact: "Retiring", rationale: "Retain as reference while customers migrate to MVPs." },
+  {
+    id: "mvp-specialty-subgroups",
+    path: "MVP specialty subgroups",
+    recommendation: "Recommended",
+    strategy: "Submit MVPs by specialty cohort, with subgroup rationale and provider forecast before registration.",
+    fit: "Strong",
+    measureCoverage: "Supported by enabled EC measures",
+    performance: "93.8 projected",
+    lift: "+5.5 pts",
+    effort: "Medium",
+  },
+  {
+    id: "mvp-mixed",
+    path: "MVP mixed subgroup + individual",
+    recommendation: "Candidate",
+    strategy: "Use subgroups where cohorts are stable; route low-confidence providers through individual review.",
+    fit: "Moderate",
+    measureCoverage: "Partial specialty coverage",
+    performance: "91.2 projected",
+    lift: "+2.9 pts",
+    effort: "High",
+  },
+  {
+    id: "appplus",
+    path: "APP Plus APM Entity",
+    recommendation: "Available",
+    strategy: "Use APM Entity submission if the customer’s participation contract is the driving strategy.",
+    fit: "Conditional",
+    measureCoverage: "Supported when APM measures apply",
+    performance: "88.6 projected",
+    lift: "+0.8 pts",
+    effort: "Low",
+  },
+  {
+    id: "qrda-support",
+    path: "QRDA file support",
+    recommendation: "Supporting path",
+    strategy: "Generate QRDA only from an approved MVP or APP Plus package, not as the primary strategy.",
+    fit: "Support",
+    measureCoverage: "Export-ready after strategy approval",
+    performance: "No score change",
+    lift: "0 pts",
+    effort: "Low",
+  },
+  {
+    id: "traditional-mips",
+    path: "Traditional MIPS",
+    recommendation: "Transition only",
+    strategy: "Keep for legacy review while customers migrate to MVP-based submissions.",
+    fit: "Retiring",
+    measureCoverage: "Do not optimize future-state around it",
+    performance: "85.4 projected",
+    lift: "-2.1 pts",
+    effort: "Medium",
+  },
 ];
 
 const visionWorkQueueRows = [
@@ -2521,6 +2580,9 @@ function currentVisionStage() {
 
 function renderVisionPlatform() {
   const workflow = currentVisionStage();
+  const primaryButton = workflow.stage.id === "strategy"
+    ? `<button class="btn" data-select-vision-strategy="${state.selectedVisionStrategy}">Select Strategy</button>`
+    : `<button class="btn" data-vision-next="1" ${workflow.index === visionStages.length - 1 ? "disabled" : ""}>${workflow.stage.primaryAction}</button>`;
   return `
     <div class="vision-shell">
       <header class="vision-header">
@@ -2551,18 +2613,15 @@ function renderVisionPlatform() {
               <span class="eyebrow">${workflow.stage.timebox}</span>
               <h2>${workflow.stage.title}</h2>
             </div>
-            <button class="btn" data-vision-next="1" ${workflow.index === visionStages.length - 1 ? "disabled" : ""}>${workflow.stage.primaryAction}</button>
+            ${primaryButton}
           </div>
           ${renderVisionStageContent(workflow.stage)}
         </main>
         <aside class="vision-panel vision-aide">
-          <span class="eyebrow">Customer lens</span>
-          <h3>${workflow.stage.promise}</h3>
-          <dl>
-            <div><dt>Question</dt><dd>${workflow.stage.customerQuestion}</dd></div>
-            <div><dt>System role</dt><dd>${workflow.stage.systemAction}</dd></div>
-            <div><dt>Output</dt><dd>${workflow.stage.artifact}</dd></div>
-          </dl>
+          <span class="eyebrow">Next action</span>
+          <h3>${workflow.stage.customerQuestion}</h3>
+          <p>${workflow.stage.promise}</p>
+          <div class="vision-output"><span>Output</span><strong>${workflow.stage.artifact}</strong></div>
           <div class="workflow-actions">
             <button class="btn ghost" data-vision-next="-1" ${workflow.index === 0 ? "disabled" : ""}>Back</button>
             <button class="btn" data-vision-next="1" ${workflow.index === visionStages.length - 1 ? "disabled" : ""}>Continue</button>
@@ -2582,43 +2641,92 @@ function renderVisionStageContent(stage) {
   return renderVisionSubmitStage();
 }
 
+function selectedVisionStrategy() {
+  return visionStrategyRows.find((row) => row.id === state.selectedVisionStrategy) || visionStrategyRows[0];
+}
+
+function renderVisionTaskStrip(tasks, activeIndex = 0) {
+  return `
+    <div class="vision-task-strip">
+      ${tasks.map((task, index) => `
+        <button class="${index < activeIndex ? "complete" : index === activeIndex ? "active" : ""}" data-toast="${task} opened">
+          <span>${index + 1}</span>
+          <strong>${task}</strong>
+        </button>
+      `).join("")}
+    </div>
+  `;
+}
+
 function renderVisionStrategyStage() {
+  const selected = selectedVisionStrategy();
   return `
     <section class="vision-stage-content">
-      <div class="vision-recommendation">
-        <span>Recommended strategy</span>
-        <h3>MVP Submission - Prevention and Treatment of Infectious Disorders</h3>
-        <p>Best fit based on the customer setup already known to the platform: specialty mix, enabled measure coverage, and provider performance forecast.</p>
+      ${renderVisionTaskStrip(["Review inferred inputs", "Compare strategies", "Select strategy"], 1)}
+      <div class="vision-input-strip">
+        ${visionStrategyInputs.map((item) => `
+          <div>
+            <span>${item.label}</span>
+            <strong>${item.value}</strong>
+            <em>${item.detail}</em>
+          </div>
+        `).join("")}
       </div>
-      <div class="vision-kpi-row">
-        <div><span>Projected quality score</span><strong>93.8</strong><em>+5.5 point forecast lift</em></div>
-        <div><span>Strategy confidence</span><strong>High</strong><em>Supported path, low data risk</em></div>
-        <div><span>Provider fit</span><strong>45</strong><em>Clinicians forecast for subgroup review</em></div>
+      <div class="strategy-workbench">
+        <div>
+          <div class="vision-recommendation">
+            <span>Selected strategy</span>
+            <h3>${selected.path}</h3>
+            <p>${selected.strategy}</p>
+          </div>
+          <table class="vision-table strategy-table">
+            <thead><tr><th>Strategy</th><th>Fit</th><th>Measure coverage</th><th>Forecast</th><th>Effort</th><th>Action</th></tr></thead>
+            <tbody>
+              ${visionStrategyRows.map((row) => {
+                const active = row.id === selected.id;
+                const disabled = row.recommendation === "Transition only";
+                return `
+                  <tr class="${active ? "selected" : ""} ${disabled ? "disabled" : ""}">
+                    <td><strong>${row.path}</strong><span>${row.recommendation}</span></td>
+                    <td>${row.fit}</td>
+                    <td>${row.measureCoverage}</td>
+                    <td><strong>${row.performance}</strong><span>${row.lift}</span></td>
+                    <td>${row.effort}</td>
+                    <td>
+                      <button class="link" data-vision-strategy="${row.id}">View</button>
+                      <button class="btn small" data-select-vision-strategy="${row.id}" ${disabled ? "disabled" : ""}>Select</button>
+                    </td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+        <aside class="strategy-detail">
+          <span class="eyebrow">Recommendation basis</span>
+          <h3>${selected.performance}</h3>
+          <p>${selected.measureCoverage}. ${selected.fit} specialty fit. ${selected.lift} modeled quality impact.</p>
+          <dl>
+            <div><dt>Program</dt><dd>${selected.path}</dd></div>
+            <div><dt>Operational effort</dt><dd>${selected.effort}</dd></div>
+            <div><dt>Decision</dt><dd>${selected.recommendation}</dd></div>
+          </dl>
+          <button class="btn" data-select-vision-strategy="${selected.id}" ${selected.recommendation === "Transition only" ? "disabled" : ""}>Use This Strategy</button>
+        </aside>
       </div>
-      <table class="vision-table">
-        <thead><tr><th>Path</th><th>Recommendation</th><th>Expected impact</th><th>Why</th></tr></thead>
-        <tbody>
-          ${visionStrategyRows.map((row) => `
-            <tr>
-              <td><strong>${row.path}</strong></td>
-              <td><span class="status-chip ${row.recommendation === "Recommended" ? "ready" : row.recommendation === "Transition only" ? "warn" : ""}">${row.recommendation}</span></td>
-              <td>${row.impact}</td>
-              <td>${row.rationale}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
     </section>
   `;
 }
 
 function renderVisionImproveStage() {
+  const selected = selectedVisionStrategy();
   return `
     <section class="vision-stage-content">
+      ${renderVisionTaskStrip(["Find measure opportunities", "Classify root cause", "Route work"], 0)}
       <div class="vision-recommendation teal">
         <span>Agentic work queue</span>
         <h3>Route the right issue to the right team</h3>
-        <p>The platform separates evidence that can be found automatically from problems that need documentation, workflow, or data-mapping intervention.</p>
+        <p>${selected.path} is active. The platform separates evidence that can be found automatically from problems that need documentation, workflow, or data-mapping intervention.</p>
       </div>
       <div class="vision-kpi-row">
         <div><span>Evidence found</span><strong>428</strong><em>Patients ready for support review</em></div>
@@ -2626,10 +2734,10 @@ function renderVisionImproveStage() {
         <div><span>Data issues</span><strong>3</strong><em>Feeds or mappings need attention</em></div>
       </div>
       <table class="vision-table">
-        <thead><tr><th>Issue type</th><th>Owner</th><th>Volume</th><th>Next action</th></tr></thead>
+        <thead><tr><th>Issue type</th><th>Owner</th><th>Volume</th><th>Next action</th><th></th></tr></thead>
         <tbody>
           ${visionWorkQueueRows.map((row) => `
-            <tr><td><strong>${row.type}</strong></td><td>${row.owner}</td><td>${row.count}</td><td>${row.next}</td></tr>
+            <tr><td><strong>${row.type}</strong></td><td>${row.owner}</td><td>${row.count}</td><td>${row.next}</td><td><button class="btn small" data-toast="${row.type} queue opened">Open</button></td></tr>
           `).join("")}
         </tbody>
       </table>
@@ -2640,6 +2748,7 @@ function renderVisionImproveStage() {
 function renderVisionMonitorStage() {
   return `
     <section class="vision-stage-content">
+      ${renderVisionTaskStrip(["Review change signal", "Check likely cause", "Assign owner"], 0)}
       <div class="vision-recommendation amber">
         <span>Exception monitoring</span>
         <h3>Abnormal changes come to the quality manager</h3>
@@ -2651,10 +2760,10 @@ function renderVisionMonitorStage() {
         <div><span>Blood pressure</span><strong>+0.8 pts</strong><em>Expected trend</em></div>
       </div>
       <table class="vision-table">
-        <thead><tr><th>Signal</th><th>Likely cause</th><th>Action</th></tr></thead>
+        <thead><tr><th>Signal</th><th>Likely cause</th><th>Action</th><th></th></tr></thead>
         <tbody>
           ${visionMonitorRows.map((row) => `
-            <tr><td><strong>${row.signal}</strong></td><td>${row.cause}</td><td>${row.action}</td></tr>
+            <tr><td><strong>${row.signal}</strong></td><td>${row.cause}</td><td>${row.action}</td><td><button class="btn small" data-toast="${row.signal} assigned">Assign</button></td></tr>
           `).join("")}
         </tbody>
       </table>
@@ -2665,6 +2774,7 @@ function renderVisionMonitorStage() {
 function renderVisionValidateStage() {
   return `
     <section class="vision-stage-content">
+      ${renderVisionTaskStrip(["Review selected population", "Resolve exceptions", "Approve package"], 1)}
       <div class="vision-recommendation">
         <span>Representative validation</span>
         <h3>Validate the data that best represents the organization</h3>
@@ -2676,13 +2786,14 @@ function renderVisionValidateStage() {
         <div><span>Needs judgment</span><strong>37</strong><em>Exceptions queued for review</em></div>
       </div>
       <table class="vision-table">
-        <thead><tr><th>Validation check</th><th>Status</th><th>Detail</th></tr></thead>
+        <thead><tr><th>Validation check</th><th>Status</th><th>Detail</th><th></th></tr></thead>
         <tbody>
           ${visionValidationRows.map((row) => `
             <tr>
               <td><strong>${row.check}</strong></td>
               <td><span class="status-chip ${row.status === "Ready" ? "ready" : "warn"}">${row.status}</span></td>
               <td>${row.detail}</td>
+              <td><button class="btn small" data-toast="${row.check} opened">${row.status === "Ready" ? "Review" : "Resolve"}</button></td>
             </tr>
           `).join("")}
         </tbody>
@@ -2694,6 +2805,7 @@ function renderVisionValidateStage() {
 function renderVisionSubmitStage() {
   return `
     <section class="vision-stage-content">
+      ${renderVisionTaskStrip(["Confirm approved version", "Submit through OAuth", "Track CMS receipt"], 1)}
       <div class="vision-recommendation green">
         <span>Secure submission</span>
         <h3>Approved data is sent through the active CMS QPP connection</h3>
@@ -2705,10 +2817,10 @@ function renderVisionSubmitStage() {
         <div><span>CMS response</span><strong>Pending</strong><em>Receipt tracked in workspace</em></div>
       </div>
       <table class="vision-table">
-        <thead><tr><th>Submission step</th><th>Status</th><th>Detail</th></tr></thead>
+        <thead><tr><th>Submission step</th><th>Status</th><th>Detail</th><th></th></tr></thead>
         <tbody>
           ${visionSubmissionRows.map((row) => `
-            <tr><td><strong>${row.step}</strong></td><td>${row.status}</td><td>${row.detail}</td></tr>
+            <tr><td><strong>${row.step}</strong></td><td>${row.status}</td><td>${row.detail}</td><td><button class="btn small" data-toast="${row.step} reviewed">Open</button></td></tr>
           `).join("")}
         </tbody>
       </table>
@@ -2777,6 +2889,20 @@ function renderDesignLab() {
     button.addEventListener("click", () => {
       const delta = Number(button.dataset.visionNext);
       state.labStep = Math.min(Math.max(state.labStep + delta, 0), visionStages.length - 1);
+      render();
+    });
+  });
+  content.querySelectorAll("[data-vision-strategy]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.selectedVisionStrategy = button.dataset.visionStrategy;
+      render();
+    });
+  });
+  content.querySelectorAll("[data-select-vision-strategy]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.selectedVisionStrategy = button.dataset.selectVisionStrategy;
+      showToast(`${selectedVisionStrategy().path} selected for 2026 strategy`);
+      state.labStep = Math.min(state.labStep + 1, visionStages.length - 1);
       render();
     });
   });

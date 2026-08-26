@@ -1651,6 +1651,158 @@ th.numeric {
   gap: 14px;
 }
 
+.vision-task-strip {
+  border: 1px solid #e1e5e8;
+  border-radius: 6px;
+  background: #fafafa;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  overflow: hidden;
+}
+
+.vision-task-strip button {
+  min-height: 50px;
+  border: 0;
+  background: #fff;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 9px 11px;
+  text-align: left;
+}
+
+.vision-task-strip button span {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #eef3f6;
+  color: #3d5566;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.vision-task-strip button.active {
+  background: #f2f8fc;
+  box-shadow: inset 3px 0 0 #2f7fbd;
+}
+
+.vision-task-strip button.complete span,
+.vision-task-strip button.active span {
+  background: #287a3e;
+  color: #fff;
+}
+
+.vision-input-strip {
+  border: 1px solid #e1e5e8;
+  border-radius: 6px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  overflow: hidden;
+}
+
+.vision-input-strip div {
+  border-right: 1px solid #e1e5e8;
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+}
+
+.vision-input-strip div:last-child {
+  border-right: 0;
+}
+
+.vision-input-strip span,
+.strategy-table td span {
+  color: var(--muted);
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.vision-input-strip strong {
+  color: var(--text);
+  font-size: 18px;
+}
+
+.vision-input-strip em {
+  color: var(--muted);
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.strategy-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 14px;
+  align-items: start;
+}
+
+.strategy-table tr.selected td {
+  background: #f2f8fc;
+}
+
+.strategy-table tr.disabled {
+  color: #776f67;
+}
+
+.strategy-table tr.disabled td {
+  background: #f8f7f5;
+}
+
+.strategy-table td:last-child {
+  white-space: nowrap;
+}
+
+.strategy-detail {
+  border: 1px solid #e1e5e8;
+  border-radius: 6px;
+  background: #fff;
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+  position: sticky;
+  top: 12px;
+}
+
+.strategy-detail h3 {
+  font-size: 24px;
+  margin: 0;
+}
+
+.strategy-detail p {
+  color: var(--muted);
+  line-height: 1.42;
+  margin: 0;
+}
+
+.strategy-detail dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.strategy-detail dt,
+.strategy-detail dd {
+  margin: 0;
+}
+
+.strategy-detail dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.strategy-detail dd {
+  color: var(--text);
+  margin-top: 2px;
+}
+
 .vision-recommendation {
   border-left: 4px solid #2f7fbd;
   background: #f7fafc;
@@ -1759,15 +1911,37 @@ th.numeric {
 
 .vision-aide {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   position: sticky;
   top: 12px;
 }
 
 .vision-aide h3 {
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1.25;
   overflow-wrap: anywhere;
+}
+
+.vision-aide p {
+  color: var(--muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.vision-output {
+  border: 1px solid #e1e5e8;
+  border-radius: 6px;
+  background: #fafafa;
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+}
+
+.vision-output span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .vision-aide dl {
