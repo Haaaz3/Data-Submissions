@@ -6,7 +6,7 @@
 - Recording 2: MVP performance list, MVP empty/loading states, program selector options.
 - Recording 3: MIPS score summary with real measure values, score filters, Summary/Details/Exports tabs, Export action, outcome processing date, MVP subgroup performance rows, and MVP individual-submission filters.
 - Screenshot set 1: MVP subgroup score detail for ZzMVP2 and ZzMVP4, MVP ID/subgroup ID values, scorecard entity selector values, performance-period dropdown values, CQM empty state, and pathway/login landing layout.
-- Recording 4: customer-scoped micro-app switching across MIPS, MVP, APPPLUS, and QRDA; APP Plus performance and score summary for CCPM Community Care Partnership of Maine; MIPS single-customer performance row for ZzMount Desert Island Hospital.
+- Recording 4: customer-scoped micro-app switching across MIPS, MVP, APPPLUS, and QRDA; APP Plus performance and score summary for CCPM Community Care Partnership of Maine; MIPS single-customer performance row for Hyperion Health System.
 - Product text: MIPS, MVP Submission, Hospital Quality Reporting, APP, APP Plus, QRDA I/III support, scopes, generated file naming conventions, and submission capabilities.
 - PDF: Support CQMs and eCQMs in submissions with CMS QPP OAuth, including separate-category and unified-Quality design approaches.
 

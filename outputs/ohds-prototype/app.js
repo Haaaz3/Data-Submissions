@@ -88,7 +88,7 @@ const scenarioDefinitions = {
 
 const customerProfiles = {
   zmdi: {
-    name: "ZzMount Desert Island Hospital",
+    name: "Hyperion Health System",
     reportingYear: "PY 2026",
     strategy: "Show legacy as disabled",
     activeSummary: "MVP Submission + APP Plus + QRDA",
@@ -118,7 +118,7 @@ const customerProfiles = {
 const measureInventoryProfiles = {
   zmdi: {
     id: "zmdi",
-    customerName: "ZzMount Desert Island Hospital",
+    customerName: "Hyperion Health System",
     ownerType: "EC + APM-ready",
     period: "PY 2026",
     lastRefresh: "2026-07-15",
@@ -885,7 +885,7 @@ const periods = {
 
 const performanceRows = {
   MIPS: [
-    { name: "ZzMount Desert Island Hospital", period: "eCQM 2026 Analytics Calendar 2026", quality: "59% (17.6 out of 30)", providers: 61 },
+    { name: "Hyperion Health System", period: "eCQM 2026 Analytics Calendar 2026", quality: "59% (17.6 out of 30)", providers: 61 },
   ],
   MVP: [
     { participation: "Subgroup", name: "ZzMVP2", mvp: "Heart Disease", period: "eCQM 2026 Analytics Calendar 2026", quality: "40% (11.9 out of 30)", providers: 45 },
@@ -901,7 +901,7 @@ const performanceRows = {
     { name: "CCPM Community Care Partnership of Maine", period: "eCQM 2026 Analytics Calendar 2026", quality: "30% (15.1 out of 50)", tins: 0 },
   ],
   HQR: [
-    { name: "ZzMount Desert Island Hospital", period: "Hospital Quality Reporting CY2026 Preview", quality: "86% readiness", providers: 0 },
+    { name: "Hyperion Health System", period: "Hospital Quality Reporting CY2026 Preview", quality: "86% readiness", providers: 0 },
     { name: "Northern Coast Medical Center", period: "Hospital IQR CY2025 Submission", quality: "74% readiness", providers: 0 },
   ],
 };
@@ -909,7 +909,7 @@ const performanceRows = {
 const submissions = {
   MIPS: {
     Group: [
-      { name: "ZzMount Desert Island Hospital", practice: "ZzMount Desert Island Hospital", tin: "3130ccdb", composite: "72.4", quality: "72.4", pi: "pending", ia: "pending" },
+      { name: "Hyperion Health System", practice: "Hyperion Health System", tin: "3130ccdb", composite: "72.4", quality: "72.4", pi: "pending", ia: "pending" },
       { name: "MIPS Org View Test", practice: "MIPS Org View Test", tin: "000011111", composite: "loading", quality: "FROZEN", pi: "loading", ia: "loading" },
       { name: "TIN 1: CernerDemo", practice: "TIN 1: CernerDemo", tin: "000000011", composite: "loading", quality: "loading", pi: "loading", ia: "loading" },
       { name: "TIN 3: CernerDemo", practice: "TIN 3: CernerDemo", tin: "000988985", composite: "loading", quality: "loading", pi: "loading", ia: "loading" },
@@ -943,7 +943,7 @@ const submissions = {
   },
   HQR: {
     Hospital: [
-      { name: "Hospital Quality eCQM Package", practice: "ZzMount Desert Island Hospital", tin: "CCN 200001", composite: "draft", quality: "86% readiness", pi: "not applicable", ia: "not applicable" },
+      { name: "Hospital Quality eCQM Package", practice: "Hyperion Health System", tin: "CCN 200001", composite: "draft", quality: "86% readiness", pi: "not applicable", ia: "not applicable" },
       { name: "Hospital IQR Submission", practice: "Northern Coast Medical Center", tin: "CCN 200114", composite: "review", quality: "74% readiness", pi: "not applicable", ia: "not applicable" },
     ],
   },
@@ -1013,9 +1013,9 @@ const mvpScorecards = {
 
 const scorecardsByProgram = {
   MIPS: {
-    "ZzMount Desert Island Hospital": {
+    "Hyperion Health System": {
       measures,
-      entities: ["ZzMount Desert Island Hospital"],
+      entities: ["Hyperion Health System"],
     },
   },
   APPPLUS: {
@@ -1029,13 +1029,13 @@ const scorecardsByProgram = {
     },
   },
   HQR: {
-    "ZzMount Desert Island Hospital": {
+    "Hyperion Health System": {
       measures: [
         measures[1],
         measures[3],
         measures[6],
       ],
-      entities: ["ZzMount Desert Island Hospital", "Northern Coast Medical Center"],
+      entities: ["Hyperion Health System", "Northern Coast Medical Center"],
     },
   },
 };
@@ -2463,7 +2463,7 @@ function renderSubmissions(scope) {
           <div class="field"><label>MVP Group/Subgroup</label><select data-individual-group aria-label="MVP Group/Subgroup"><option value="">-- Select Group/Subgroup --</option>${mvpIndividualGroups.map((group) => `<option value="${group.id}"${group.id === state.selectedIndividualGroup ? " selected" : ""}>${group.id} - ${group.name}</option>`).join("")}</select></div>
           <div class="field"><label><span class="required">*</span> Eligible Clinician</label><select data-individual-clinician aria-label="Eligible Clinician" ${state.selectedIndividualGroup ? "" : "disabled"}><option value="">${state.selectedIndividualGroup ? "-- Select Clinician --" : "Select subgroup first"}</option>${availableClinicians.map((clinician) => `<option value="${clinician.npi}"${clinician.npi === state.selectedIndividualClinician ? " selected" : ""}>${clinician.name} - NPI ${clinician.npi}</option>`).join("")}</select></div>
         ` : `
-          <div class="field"><label>${scope === "APM Entity" ? "APM Entity" : state.program === "MVP" ? "MVP Group/Subgroup" : scope + " Practice"}</label><select><option></option><option>ZzMount Desert Island Hospital</option><option>ZzMVP2</option><option>MIPS Org View Test</option><option>TIN 1: CernerDemo</option></select></div>
+          <div class="field"><label>${scope === "APM Entity" ? "APM Entity" : state.program === "MVP" ? "MVP Group/Subgroup" : scope + " Practice"}</label><select><option></option><option>Hyperion Health System</option><option>ZzMVP2</option><option>MIPS Org View Test</option><option>TIN 1: CernerDemo</option></select></div>
         `}
         <div class="field"><label>Submission Name</label><div class="search-control"><input placeholder="Submission Name" /><button aria-label="Search">⌕</button></div></div>
       </div>
@@ -2850,7 +2850,7 @@ function renderVisionNavigation(workflow) {
       </div>
       <div class="vision-nav-customer">
         <span>Customer</span>
-        <strong>ZzMount Desert Island Hospital</strong>
+        <strong>Hyperion Health System</strong>
         <em>PY 2026 strategy workspace</em>
       </div>
       <nav class="vision-left-nav" aria-label="Workflow areas">
@@ -4115,7 +4115,7 @@ function renderScenarioFocus(scenario) {
   return `
     <dl class="focus-list">
       <div><dt>Program</dt><dd>${programLabel(scenario.program)}</dd></div>
-      <div><dt>Customer</dt><dd>ZzMount Desert Island Hospital</dd></div>
+      <div><dt>Customer</dt><dd>Hyperion Health System</dd></div>
       <div><dt>Quality Score</dt><dd>59% (17.6 out of 30)</dd></div>
       <div><dt>Providers</dt><dd>61</dd></div>
     </dl>

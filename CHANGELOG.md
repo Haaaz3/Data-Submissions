@@ -1,5 +1,9 @@
 # Changelog
 
+## v38
+
+- Renamed the prototype customer to Hyperion Health System across the app and public review copy.
+
 ## v37
 
 - Removed the central recommendation-input and phase-checklist panels from the visible A/B prototype routes.
