@@ -1,5 +1,19 @@
 # Changelog
 
+## v35
+
+- Moved recommendation inputs, customer confirmations, and CMS/rules context into a dedicated Phase FAQ screen in the Vision Platform navigation.
+- Removed non-actionable confirmation/rules cards from the central Strategy workflow.
+- Restored the Strategy screen to a compact selector plus selected-strategy workspace so the MVP/provider mix is the primary interaction.
+- Compressed the MVP subgroup table so forecast, current performance, measure fit, and provider mix stay visible without crowding the page.
+
+## v34
+
+- Removed the non-actionable customer-question/system-role/output row from the Vision Platform workspace.
+- Moved recommendation inputs and supporting context into a collapsed FAQ/reference section.
+- Made candidate submission strategies the first interactive content on the Strategy screen.
+- Kept strategy-specific rules, customer decisions, subgroup mix, and provider detail in the active decision workspace.
+
 ## v33
 
 - Reworked the Vision Platform into a standard desktop app layout with a persistent left navigation pane.
