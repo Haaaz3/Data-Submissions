@@ -1,5 +1,12 @@
 # Changelog
 
+## v39
+
+- Reworked the Vision Platform into a cleaner desktop-app shell inspired by the attached redesign reference.
+- Added focused Home, Strategy, Performance, Measure Detail, Patient Evidence, Readiness, Submissions, QRDA Export, and Audit screens.
+- Moved recommendation inputs and rules out of the central workflow and into Strategy assumptions plus FAQ/reference.
+- Simplified Strategy to one primary decision action while preserving prior-year baseline, candidate strategies, forecasting, and interactive MVP/provider mix detail.
+
 ## v38
 
 - Renamed the prototype customer to Hyperion Health System across the app and public review copy.
