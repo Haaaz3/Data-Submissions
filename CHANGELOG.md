@@ -1,5 +1,12 @@
 # Changelog
 
+## v30
+
+- Added a default Vision Platform mode organized around Strategy, Improve, Monitor, Validate, and Submit.
+- Reduced each future-state screen to one customer task, one decision, and one next action.
+- Reframed the demo around inferred strategy, agentic work queues, abnormality monitoring, representative validation, and secure OAuth submission.
+- Kept Production Today available as the control while making the visionary flow the presentation default.
+
 ## v29
 
 - Simplified path finding so customer setup is loaded first and the first visible customer action is choosing a supported submission path.

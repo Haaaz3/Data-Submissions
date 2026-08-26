@@ -1486,6 +1486,314 @@ th.numeric {
   margin: 4px 0 0;
 }
 
+.vision-canvas {
+  max-width: 1440px;
+}
+
+.vision-shell {
+  display: grid;
+  gap: 14px;
+}
+
+.vision-header,
+.vision-panel {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  min-width: 0;
+}
+
+.vision-header {
+  display: grid;
+  grid-template-columns: minmax(420px, 1fr) 180px;
+  gap: 18px;
+  align-items: center;
+  padding: 18px 20px;
+}
+
+.vision-header h1 {
+  font-size: 34px;
+  line-height: 1.05;
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+
+.vision-header p {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.4;
+  margin: 0;
+  max-width: 860px;
+}
+
+.vision-progress {
+  border-left: 1px solid #e2e5e8;
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+  padding-left: 18px;
+  text-align: right;
+}
+
+.vision-progress span {
+  color: #0f6d52;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.vision-progress strong,
+.vision-progress em {
+  display: block;
+}
+
+.vision-progress em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.vision-stage-nav {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(130px, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.vision-stage-nav button {
+  min-height: 70px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 3px 8px;
+  align-items: center;
+  padding: 9px 10px;
+  text-align: left;
+}
+
+.vision-stage-nav button span {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #eef3f6;
+  color: #3d5566;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.vision-stage-nav button strong {
+  color: var(--text);
+}
+
+.vision-stage-nav button em {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.vision-stage-nav button.active {
+  border-color: #2f7fbd;
+  background: #f2f8fc;
+  box-shadow: inset 3px 0 0 #2f7fbd;
+}
+
+.vision-stage-nav button.active span,
+.vision-stage-nav button.complete span {
+  background: #287a3e;
+  color: #fff;
+}
+
+.vision-stage-nav button.future {
+  background: #f8f7f5;
+}
+
+.vision-stage-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 14px;
+  align-items: start;
+  min-width: 0;
+}
+
+.vision-panel {
+  padding: 16px;
+}
+
+.vision-focus {
+  min-height: 520px;
+}
+
+.vision-panel-title {
+  border-bottom: 1px solid #e6e8eb;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+}
+
+.vision-panel-title h2,
+.vision-aide h3 {
+  margin: 0;
+}
+
+.vision-panel-title h2 {
+  font-size: 26px;
+  overflow-wrap: anywhere;
+}
+
+.vision-stage-content {
+  display: grid;
+  gap: 14px;
+}
+
+.vision-recommendation {
+  border-left: 4px solid #2f7fbd;
+  background: #f7fafc;
+  display: grid;
+  gap: 5px;
+  padding: 14px 16px;
+}
+
+.vision-recommendation.teal {
+  border-left-color: #3a8ea3;
+  background: #f3fafb;
+}
+
+.vision-recommendation.amber {
+  border-left-color: #b9861f;
+  background: #fff9ed;
+}
+
+.vision-recommendation.green {
+  border-left-color: #287a3e;
+  background: #f4fbf5;
+}
+
+.vision-recommendation span,
+.vision-kpi-row span,
+.vision-trend-strip span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.vision-recommendation h3 {
+  font-size: 24px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.vision-recommendation p {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.42;
+  margin: 0;
+  max-width: 900px;
+}
+
+.vision-kpi-row,
+.vision-trend-strip {
+  border: 1px solid #e1e5e8;
+  border-radius: 6px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  overflow: hidden;
+}
+
+.vision-kpi-row div,
+.vision-trend-strip div {
+  border-right: 1px solid #e1e5e8;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.vision-kpi-row div:last-child,
+.vision-trend-strip div:last-child {
+  border-right: 0;
+}
+
+.vision-kpi-row strong,
+.vision-trend-strip strong {
+  color: var(--text);
+  font-size: 24px;
+}
+
+.vision-kpi-row em,
+.vision-trend-strip em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.vision-table {
+  width: 100%;
+  min-width: 0;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+}
+
+.vision-table th,
+.vision-table td {
+  border-bottom: 1px solid #e5e8eb;
+  padding: 11px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.vision-table th {
+  background: #f3f4f6;
+  color: #3c424a;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.vision-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.vision-aide {
+  display: grid;
+  gap: 14px;
+  position: sticky;
+  top: 12px;
+}
+
+.vision-aide h3 {
+  font-size: 20px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.vision-aide dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.vision-aide dt,
+.vision-aide dd {
+  margin: 0;
+}
+
+.vision-aide dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.vision-aide dd {
+  color: var(--text);
+  line-height: 1.4;
+  margin-top: 3px;
+}
+
 .smart-shell {
   border: 1px solid var(--line);
   border-radius: 3px;
@@ -4159,6 +4467,11 @@ body.oj-redwood {
   .pathway-grid,
   .intake-hero,
   .path-finder-checklist,
+  .vision-header,
+  .vision-stage-nav,
+  .vision-stage-layout,
+  .vision-kpi-row,
+  .vision-trend-strip,
   .measure-summary-grid,
   .measure-pathway-matrix,
   .section-heading-row,
@@ -4208,6 +4521,57 @@ body.oj-redwood {
   .smart-context dl {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .vision-progress {
+    border-left: 0;
+    border-top: 1px solid #e2e5e8;
+    justify-items: start;
+    padding-left: 0;
+    padding-top: 12px;
+    text-align: left;
+  }
+
+  .vision-panel-title {
+    display: grid;
+  }
+
+  .vision-table {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .vision-table thead {
+    display: none;
+  }
+
+  .vision-table tbody,
+  .vision-table tr,
+  .vision-table th,
+  .vision-table td {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .vision-table tr {
+    border-bottom: 1px solid #e5e8eb;
+    padding: 8px 10px;
+  }
+
+  .vision-table td {
+    border-bottom: 0;
+    padding: 4px 0;
+  }
+
+  .vision-table td:not(:first-child) {
+    color: var(--muted);
+  }
+
+  .vision-aide {
+    position: static;
   }
 
   .smart-panel-title {

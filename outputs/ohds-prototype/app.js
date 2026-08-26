@@ -7,7 +7,7 @@ const state = {
   selectedIndividualGroup: "",
   selectedIndividualClinician: "",
   scoreTab: "Summary",
-  labMode: "production",
+  labMode: "vision",
   scenario: "mvp-zmvp4",
   labStep: 0,
   mvpSpecialty: null,
@@ -516,6 +516,95 @@ const qppSession = {
   remaining: "15 mins",
   user: "b.g.sunil.kumar@oracle.com",
 };
+
+const visionStages = [
+  {
+    id: "strategy",
+    timebox: "January-February",
+    label: "Strategy",
+    title: "Choose the strongest submission strategy",
+    promise: "Start the year with a recommended strategy instead of a long measure list.",
+    customerQuestion: "What is the most effective strategy for this organization?",
+    systemAction: "Forecasts program fit from enabled measures, provider specialty mix, and current performance.",
+    artifact: "Approved 2026 submission strategy",
+    primaryAction: "Select Recommended Strategy",
+  },
+  {
+    id: "improve",
+    timebox: "March-September",
+    label: "Improve",
+    title: "Turn gaps into routed work",
+    promise: "Move from planning to score improvement while there is still time to act.",
+    customerQuestion: "Which issues can my teams actually fix this month?",
+    systemAction: "Finds likely evidence, separates documentation, workflow, and data-mapping issues, then routes work.",
+    artifact: "Prioritized quality work queue",
+    primaryAction: "Open Work Queue",
+  },
+  {
+    id: "monitor",
+    timebox: "Ongoing",
+    label: "Monitor",
+    title: "Catch changes before they become submission risk",
+    promise: "Watch week-over-week satisfaction changes and surface credible exceptions.",
+    customerQuestion: "Where should I direct attention this week?",
+    systemAction: "Flags sudden drops, unlikely improvements, stale feeds, and mapping shifts.",
+    artifact: "Exception watchlist",
+    primaryAction: "Review Exceptions",
+  },
+  {
+    id: "validate",
+    timebox: "October-November",
+    label: "Validate",
+    title: "Validate the representative population",
+    promise: "Focus human judgment on the exceptions that matter, not the entire submission.",
+    customerQuestion: "Can I stand behind this submission?",
+    systemAction: "Selects a representative validation population and performs deep patient, data, and logic checks.",
+    artifact: "Validated submission package",
+    primaryAction: "Approve Validation",
+  },
+  {
+    id: "submit",
+    timebox: "Submission",
+    label: "Submit",
+    title: "Submit securely without the scramble",
+    promise: "Send the approved version through secure OAuth and track CMS response.",
+    customerQuestion: "Was the approved data submitted successfully?",
+    systemAction: "Uses the active CMS QPP connection to submit, track receipt, and resolve final exceptions.",
+    artifact: "CMS receipt and audit trail",
+    primaryAction: "Submit to CMS",
+  },
+];
+
+const visionStrategyRows = [
+  { path: "MVP Submission", recommendation: "Recommended", impact: "Highest score lift", rationale: "Best match to specialty mix and enabled measure coverage." },
+  { path: "APP Plus", recommendation: "Available", impact: "Use when APM Entity applies", rationale: "Keep visible for customers with APM participation." },
+  { path: "QRDA Export", recommendation: "Supporting path", impact: "File fallback", rationale: "Generate only from approved clinician or APM packages." },
+  { path: "Traditional MIPS", recommendation: "Transition only", impact: "Retiring", rationale: "Retain as reference while customers migrate to MVPs." },
+];
+
+const visionWorkQueueRows = [
+  { type: "Evidence likely exists", owner: "Chart chase", count: "428 patients", next: "Agent review queued" },
+  { type: "Documentation gap", owner: "Clinical operations", count: "112 patients", next: "Workflow follow-up" },
+  { type: "Data mapping issue", owner: "Interface team", count: "3 feeds", next: "Mapping ticket ready" },
+];
+
+const visionMonitorRows = [
+  { signal: "Depression screening dropped 7.4 pts", cause: "Documentation workflow changed", action: "Route to clinic manager" },
+  { signal: "HIV screening improved 18.2 pts", cause: "Improvement exceeds expected trend", action: "Audit sample evidence" },
+  { signal: "Blood pressure denominator shifted", cause: "Possible feed or mapping change", action: "Review data lineage" },
+];
+
+const visionValidationRows = [
+  { check: "Population representativeness", status: "Ready", detail: "Sample mirrors specialty, payer, and measure mix." },
+  { check: "Patient qualification logic", status: "Review", detail: "37 records need human judgment." },
+  { check: "Evidence traceability", status: "Ready", detail: "Every accepted record links to source evidence." },
+];
+
+const visionSubmissionRows = [
+  { step: "Package approved", status: "Complete", detail: "MVP subgroup and APP Plus package frozen." },
+  { step: "CMS QPP OAuth", status: "Active", detail: `${qppSession.user} - ${qppSession.remaining} remaining.` },
+  { step: "CMS receipt", status: "Waiting", detail: "Receipt appears here after secure submission." },
+];
 
 const periods = {
   MIPS: ["eCQM 2026 Analytics Calendar 2026", "CQM 2025 Performance Year", "eCQM 2025 Performance Year"],
@@ -2425,6 +2514,208 @@ function renderFlowMap() {
   `;
 }
 
+function currentVisionStage() {
+  const index = Math.min(Math.max(state.labStep, 0), visionStages.length - 1);
+  return { index, stage: visionStages[index], percent: Math.round(((index + 1) / visionStages.length) * 100) };
+}
+
+function renderVisionPlatform() {
+  const workflow = currentVisionStage();
+  return `
+    <div class="vision-shell">
+      <header class="vision-header">
+        <div>
+          <span class="eyebrow">Oracle Health Data Submissions</span>
+          <h1>Quality Operating System</h1>
+          <p>Choose the right strategy, improve performance all year, validate with confidence, and submit without the scramble.</p>
+        </div>
+        <div class="vision-progress">
+          <span>${workflow.percent}%</span>
+          <strong>${workflow.stage.label}</strong>
+          <em>${workflow.stage.timebox}</em>
+        </div>
+      </header>
+      <nav class="vision-stage-nav" aria-label="Vision platform stages">
+        ${visionStages.map((stage, index) => `
+          <button class="${index === workflow.index ? "active" : index < workflow.index ? "complete" : "future"}" data-lab-step="${index}">
+            <span>${index + 1}</span>
+            <strong>${stage.label}</strong>
+            <em>${stage.timebox}</em>
+          </button>
+        `).join("")}
+      </nav>
+      <div class="vision-stage-layout">
+        <main class="vision-panel vision-focus">
+          <div class="vision-panel-title">
+            <div>
+              <span class="eyebrow">${workflow.stage.timebox}</span>
+              <h2>${workflow.stage.title}</h2>
+            </div>
+            <button class="btn" data-vision-next="1" ${workflow.index === visionStages.length - 1 ? "disabled" : ""}>${workflow.stage.primaryAction}</button>
+          </div>
+          ${renderVisionStageContent(workflow.stage)}
+        </main>
+        <aside class="vision-panel vision-aide">
+          <span class="eyebrow">Customer lens</span>
+          <h3>${workflow.stage.promise}</h3>
+          <dl>
+            <div><dt>Question</dt><dd>${workflow.stage.customerQuestion}</dd></div>
+            <div><dt>System role</dt><dd>${workflow.stage.systemAction}</dd></div>
+            <div><dt>Output</dt><dd>${workflow.stage.artifact}</dd></div>
+          </dl>
+          <div class="workflow-actions">
+            <button class="btn ghost" data-vision-next="-1" ${workflow.index === 0 ? "disabled" : ""}>Back</button>
+            <button class="btn" data-vision-next="1" ${workflow.index === visionStages.length - 1 ? "disabled" : ""}>Continue</button>
+          </div>
+          <button class="btn secondary" data-open-production="mvp-zmvp4">Open Production Control</button>
+        </aside>
+      </div>
+    </div>
+  `;
+}
+
+function renderVisionStageContent(stage) {
+  if (stage.id === "strategy") return renderVisionStrategyStage();
+  if (stage.id === "improve") return renderVisionImproveStage();
+  if (stage.id === "monitor") return renderVisionMonitorStage();
+  if (stage.id === "validate") return renderVisionValidateStage();
+  return renderVisionSubmitStage();
+}
+
+function renderVisionStrategyStage() {
+  return `
+    <section class="vision-stage-content">
+      <div class="vision-recommendation">
+        <span>Recommended strategy</span>
+        <h3>MVP Submission - Prevention and Treatment of Infectious Disorders</h3>
+        <p>Best fit based on the customer setup already known to the platform: specialty mix, enabled measure coverage, and provider performance forecast.</p>
+      </div>
+      <div class="vision-kpi-row">
+        <div><span>Projected quality score</span><strong>93.8</strong><em>+5.5 point forecast lift</em></div>
+        <div><span>Strategy confidence</span><strong>High</strong><em>Supported path, low data risk</em></div>
+        <div><span>Provider fit</span><strong>45</strong><em>Clinicians forecast for subgroup review</em></div>
+      </div>
+      <table class="vision-table">
+        <thead><tr><th>Path</th><th>Recommendation</th><th>Expected impact</th><th>Why</th></tr></thead>
+        <tbody>
+          ${visionStrategyRows.map((row) => `
+            <tr>
+              <td><strong>${row.path}</strong></td>
+              <td><span class="status-chip ${row.recommendation === "Recommended" ? "ready" : row.recommendation === "Transition only" ? "warn" : ""}">${row.recommendation}</span></td>
+              <td>${row.impact}</td>
+              <td>${row.rationale}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </section>
+  `;
+}
+
+function renderVisionImproveStage() {
+  return `
+    <section class="vision-stage-content">
+      <div class="vision-recommendation teal">
+        <span>Agentic work queue</span>
+        <h3>Route the right issue to the right team</h3>
+        <p>The platform separates evidence that can be found automatically from problems that need documentation, workflow, or data-mapping intervention.</p>
+      </div>
+      <div class="vision-kpi-row">
+        <div><span>Evidence found</span><strong>428</strong><em>Patients ready for support review</em></div>
+        <div><span>Actionable gaps</span><strong>112</strong><em>Routed before year end</em></div>
+        <div><span>Data issues</span><strong>3</strong><em>Feeds or mappings need attention</em></div>
+      </div>
+      <table class="vision-table">
+        <thead><tr><th>Issue type</th><th>Owner</th><th>Volume</th><th>Next action</th></tr></thead>
+        <tbody>
+          ${visionWorkQueueRows.map((row) => `
+            <tr><td><strong>${row.type}</strong></td><td>${row.owner}</td><td>${row.count}</td><td>${row.next}</td></tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </section>
+  `;
+}
+
+function renderVisionMonitorStage() {
+  return `
+    <section class="vision-stage-content">
+      <div class="vision-recommendation amber">
+        <span>Exception monitoring</span>
+        <h3>Abnormal changes come to the quality manager</h3>
+        <p>Week-over-week satisfaction rates are watched for unexpected drops, unlikely jumps, stale feeds, and denominator shifts.</p>
+      </div>
+      <div class="vision-trend-strip">
+        <div><span>Depression screening</span><strong>-7.4 pts</strong><em>Needs review</em></div>
+        <div><span>HIV screening</span><strong>+18.2 pts</strong><em>Audit sample</em></div>
+        <div><span>Blood pressure</span><strong>+0.8 pts</strong><em>Expected trend</em></div>
+      </div>
+      <table class="vision-table">
+        <thead><tr><th>Signal</th><th>Likely cause</th><th>Action</th></tr></thead>
+        <tbody>
+          ${visionMonitorRows.map((row) => `
+            <tr><td><strong>${row.signal}</strong></td><td>${row.cause}</td><td>${row.action}</td></tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </section>
+  `;
+}
+
+function renderVisionValidateStage() {
+  return `
+    <section class="vision-stage-content">
+      <div class="vision-recommendation">
+        <span>Representative validation</span>
+        <h3>Validate the data that best represents the organization</h3>
+        <p>The platform chooses the validation population, checks patient qualification logic, and leaves human judgment for true exceptions.</p>
+      </div>
+      <div class="vision-kpi-row">
+        <div><span>Validation population</span><strong>1,240</strong><em>Representative records selected</em></div>
+        <div><span>Auto-validated</span><strong>97%</strong><em>Evidence and logic confirmed</em></div>
+        <div><span>Needs judgment</span><strong>37</strong><em>Exceptions queued for review</em></div>
+      </div>
+      <table class="vision-table">
+        <thead><tr><th>Validation check</th><th>Status</th><th>Detail</th></tr></thead>
+        <tbody>
+          ${visionValidationRows.map((row) => `
+            <tr>
+              <td><strong>${row.check}</strong></td>
+              <td><span class="status-chip ${row.status === "Ready" ? "ready" : "warn"}">${row.status}</span></td>
+              <td>${row.detail}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </section>
+  `;
+}
+
+function renderVisionSubmitStage() {
+  return `
+    <section class="vision-stage-content">
+      <div class="vision-recommendation green">
+        <span>Secure submission</span>
+        <h3>Approved data is sent through the active CMS QPP connection</h3>
+        <p>No file handoffs, credential chasing, or version ambiguity. The audit trail shows exactly what was approved and submitted.</p>
+      </div>
+      <div class="vision-kpi-row">
+        <div><span>Submission package</span><strong>Frozen</strong><em>Approved version locked</em></div>
+        <div><span>OAuth session</span><strong>Active</strong><em>${qppSession.remaining} remaining</em></div>
+        <div><span>CMS response</span><strong>Pending</strong><em>Receipt tracked in workspace</em></div>
+      </div>
+      <table class="vision-table">
+        <thead><tr><th>Submission step</th><th>Status</th><th>Detail</th></tr></thead>
+        <tbody>
+          ${visionSubmissionRows.map((row) => `
+            <tr><td><strong>${row.step}</strong></td><td>${row.status}</td><td>${row.detail}</td></tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </section>
+  `;
+}
+
 function renderDesignLab() {
   document.querySelector(".app-shell").classList.add("design-lab-mode");
   document.querySelector(".app-shell").classList.remove("home-mode");
@@ -2433,19 +2724,21 @@ function renderDesignLab() {
   const scenario = scenarioDefinitions[state.scenario];
   const workflow = currentWorkflow(scenario);
   content.innerHTML = `
-    <section class="design-lab-canvas">
-      <div class="lab-scenario">
-        <div>
-          <span class="eyebrow">Scenario</span>
-          <h1>${scenario.label}</h1>
-          <p>${scenario.goal}</p>
+    <section class="design-lab-canvas ${state.labMode === "vision" ? "vision-canvas" : ""}">
+      ${state.labMode === "vision" ? renderVisionPlatform() : `
+        <div class="lab-scenario">
+          <div>
+            <span class="eyebrow">Scenario</span>
+            <h1>${scenario.label}</h1>
+            <p>${scenario.goal}</p>
+          </div>
+          <div class="lab-signal">
+            <span>Test Signal</span>
+            <strong>${workflow.step.signal || scenario.signal}</strong>
+          </div>
         </div>
-        <div class="lab-signal">
-          <span>Test Signal</span>
-          <strong>${workflow.step.signal || scenario.signal}</strong>
-        </div>
-      </div>
-      ${state.labMode === "compare" ? renderCompareView(scenario) : renderVariantView(state.labMode, scenario)}
+        ${state.labMode === "compare" ? renderCompareView(scenario) : renderVariantView(state.labMode, scenario)}
+      `}
     </section>
   `;
   content.querySelectorAll("[data-open-production]").forEach((button) => {
@@ -2477,6 +2770,13 @@ function renderDesignLab() {
   content.querySelectorAll("[data-lab-prev]").forEach((button) => {
     button.addEventListener("click", () => {
       state.labStep = Math.max(state.labStep - 1, 0);
+      render();
+    });
+  });
+  content.querySelectorAll("[data-vision-next]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const delta = Number(button.dataset.visionNext);
+      state.labStep = Math.min(Math.max(state.labStep + delta, 0), visionStages.length - 1);
       render();
     });
   });
@@ -2593,6 +2893,9 @@ function renderCompareView(scenario) {
 }
 
 function renderVariantView(mode, scenario) {
+  if (mode === "vision") {
+    return renderVisionPlatform(scenario);
+  }
   if (mode === "smart") {
     return renderSmartGuidedSubmission(scenario);
   }
