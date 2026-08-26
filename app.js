@@ -13,6 +13,7 @@ const state = {
   mvpSpecialty: null,
   mvpSpecialties: null,
   practiceComposition: "multi",
+  visionRoute: "workflow",
   selectedVisionStrategy: "mvp-specialty-subgroups",
   selectedVisionSubgroup: "infectious-disease",
 };
@@ -524,8 +525,8 @@ const visionStages = [
     id: "strategy",
     sequence: "Step 1",
     label: "Strategy",
-    title: "Choose the strongest submission strategy",
-    promise: "Start with a recommended strategy instead of a long measure list.",
+    title: "Select submission strategy",
+    promise: "Choose the recommended path, review the exact strategy mix, and approve the submission plan.",
     customerQuestion: "What is the most effective strategy for this organization?",
     systemAction: "Forecasts program fit from enabled measures, provider specialty mix, and current performance.",
     artifact: "Approved 2026 submission strategy",
@@ -1073,12 +1074,14 @@ document.querySelector(".brand").addEventListener("click", () => {
 labModeSelect.addEventListener("change", (event) => {
   state.labMode = event.target.value;
   state.labStep = 0;
+  state.visionRoute = "workflow";
   applyScenario(state.scenario, state.labMode === "production");
 });
 
 scenarioSelect.addEventListener("change", (event) => {
   state.scenario = event.target.value;
   state.labStep = 0;
+  state.visionRoute = "workflow";
   resetMvpSpecialtySelection();
   if (state.labMode === "production") {
     applyScenario(state.scenario, true);
@@ -1124,6 +1127,7 @@ function applyScenario(scenarioKey, mutateProductionRoute) {
   if (!scenario) return;
   state.scenario = scenarioKey;
   state.labStep = 0;
+  state.visionRoute = "workflow";
   resetMvpSpecialtySelection();
   scenarioSelect.value = scenarioKey;
   labModeSelect.value = state.labMode;
@@ -2771,8 +2775,10 @@ function currentVisionStage() {
 
 function renderVisionPlatform() {
   const workflow = currentVisionStage();
+  const inFaq = state.visionRoute === "phase-faq";
+  const activeStrategy = selectedVisionStrategy();
   const primaryButton = workflow.stage.id === "strategy"
-    ? `<button class="btn" data-select-vision-strategy="${state.selectedVisionStrategy}">Approve Strategy</button>`
+    ? `<button class="btn" data-select-vision-strategy="${activeStrategy.id}" ${activeStrategy.recommendation === "Transition only" ? "disabled" : ""}>Approve Strategy</button>`
     : `<button class="btn secondary" data-toast="${workflow.stage.primaryAction} opened">${workflow.stage.primaryAction}</button>`;
   return `
     <div class="vision-app-shell">
@@ -2780,23 +2786,22 @@ function renderVisionPlatform() {
       <main class="vision-workspace">
         <header class="vision-workspace-header">
           <div>
-            <span class="eyebrow">${workflow.stage.label}</span>
-            <h1>${workflow.stage.title}</h1>
-            <p>${workflow.stage.promise}</p>
+            <span class="eyebrow">${inFaq ? `${workflow.stage.label} reference` : workflow.stage.label}</span>
+            <h1>${inFaq ? `${workflow.stage.label} FAQ` : workflow.stage.title}</h1>
+            <p>${inFaq ? "Inputs, rules, rationale, and supporting context for this phase." : workflow.stage.promise}</p>
           </div>
           <div class="vision-panel-actions">
-            <button class="btn ghost" data-vision-next="-1" ${workflow.index === 0 ? "disabled" : ""}>Back</button>
-            ${primaryButton}
-            <button class="btn" data-vision-next="1" ${workflow.index === visionStages.length - 1 ? "disabled" : ""}>Continue</button>
+            ${inFaq ? `
+              <button class="btn" data-vision-workflow>Back to ${workflow.stage.label}</button>
+            ` : `
+              <button class="btn ghost" data-vision-next="-1" ${workflow.index === 0 ? "disabled" : ""}>Back</button>
+              ${primaryButton}
+              <button class="btn" data-vision-next="1" ${workflow.index === visionStages.length - 1 ? "disabled" : ""}>Continue</button>
+            `}
           </div>
         </header>
-        <div class="vision-context-row">
-          <div><span>Customer question</span><strong>${workflow.stage.customerQuestion}</strong></div>
-          <div><span>System role</span><strong>${workflow.stage.systemAction}</strong></div>
-          <div><span>Output</span><strong>${workflow.stage.artifact}</strong></div>
-        </div>
-        <section class="vision-panel vision-focus">
-          ${renderVisionStageContent(workflow.stage)}
+        <section class="vision-panel vision-focus ${inFaq ? "phase-faq-focus" : ""}">
+          ${inFaq ? renderVisionFaqScreen(workflow.stage) : renderVisionStageContent(workflow.stage)}
         </section>
       </main>
     </div>
@@ -2817,13 +2822,21 @@ function renderVisionNavigation(workflow) {
       </div>
       <nav class="vision-left-nav" aria-label="Workflow areas">
         ${visionStages.map((stage, index) => `
-          <button class="${index === workflow.index ? "active" : index < workflow.index ? "complete" : "future"}" data-lab-step="${index}">
+          <button class="${state.visionRoute !== "phase-faq" && index === workflow.index ? "active" : index < workflow.index ? "complete" : "future"}" data-lab-step="${index}">
             <strong>${stage.label}</strong>
             <span>${index < workflow.index ? "Complete" : index === workflow.index ? "Current" : "Ready when reached"}</span>
             <em>${stage.promise}</em>
           </button>
         `).join("")}
       </nav>
+      <div class="vision-reference-nav">
+        <span>Reference</span>
+        <button class="${state.visionRoute === "phase-faq" ? "active" : ""}" data-vision-faq>
+          <strong>${workflow.stage.label} FAQ</strong>
+          <span>Inputs, rules, rationale</span>
+          <em>Supporting details for the current phase</em>
+        </button>
+      </div>
       <div class="vision-nav-footer">
         <span>Workflow progress</span>
         <strong>${workflow.percent}% complete</strong>
@@ -2900,26 +2913,25 @@ function renderStrategyCandidateList(selected) {
   return `
     <section class="strategy-candidate-list" aria-label="Candidate submission strategies">
       <div class="vision-section-title">
-        <span class="eyebrow">Candidate submission strategies</span>
-        <h3>Compare the full strategy context before approval</h3>
+        <span class="eyebrow">Choose strategy</span>
+        <h3>Candidate submission strategies</h3>
+        <p>Pick the strategy the customer wants to operationalize.</p>
       </div>
       ${visionStrategyRows.map((row) => {
         const context = strategyContextFor(row);
         return `
           <button class="strategy-candidate ${row.id === selected.id ? "selected" : ""} ${strategyTone(row)}" data-vision-strategy="${row.id}">
             <div class="strategy-candidate-head">
-              <span class="status-chip ${strategyTone(row)}">${row.recommendation}</span>
               <strong>${row.path}</strong>
+              <span class="status-chip ${strategyTone(row)}">${row.recommendation}</span>
             </div>
-            <p>${row.strategy}</p>
             <dl>
-              <div><dt>Scope</dt><dd>${row.scope}</dd></div>
               <div><dt>Forecast</dt><dd>${row.performance}</dd></div>
-              <div><dt>Impact</dt><dd>${row.lift}</dd></div>
+              <div><dt>Fit</dt><dd>${row.fit}</dd></div>
+              <div><dt>Scope</dt><dd>${row.scope}</dd></div>
               <div><dt>Effort</dt><dd>${row.effort}</dd></div>
             </dl>
-            <small><strong>Best fit:</strong> ${context.bestFor}</small>
-            <small><strong>Customer decision:</strong> ${context.primaryDecision}</small>
+            <small>${context.bestFor}</small>
           </button>
         `;
       }).join("")}
@@ -2928,7 +2940,13 @@ function renderStrategyCandidateList(selected) {
 }
 
 function renderSelectedStrategyDetail(selected) {
-  const context = strategyContextFor(selected);
+  const metrics = `
+    <div class="strategy-detail-metrics">
+      <div><span>Modeled score</span><strong>${selected.performance}</strong><em>${selected.lift} vs baseline</em></div>
+      <div><span>Measure fit</span><strong>${selected.fit}</strong><em>${selected.measureCoverage}</em></div>
+      <div><span>Workflow effort</span><strong>${selected.effort}</strong><em>${selected.scope}</em></div>
+    </div>
+  `;
   return `
     <section class="selected-strategy-detail">
       <div class="selected-strategy-header">
@@ -2936,35 +2954,94 @@ function renderSelectedStrategyDetail(selected) {
           <span class="status-chip ${strategyTone(selected)}">${selected.recommendation}</span>
           <h3>${selected.path}</h3>
           <p>${selected.strategy}</p>
+          <div class="selected-strategy-summary">
+            <span>${selected.performance}</span>
+            <span>${selected.lift}</span>
+            <span>${selected.fit} fit</span>
+          </div>
         </div>
         <button class="btn" data-select-vision-strategy="${selected.id}" ${selected.recommendation === "Transition only" ? "disabled" : ""}>Approve Strategy</button>
       </div>
-      <div class="strategy-detail-metrics">
-        <div><span>Modeled score</span><strong>${selected.performance}</strong><em>${selected.lift} vs baseline</em></div>
-        <div><span>Measure fit</span><strong>${selected.fit}</strong><em>${selected.measureCoverage}</em></div>
-        <div><span>Workflow effort</span><strong>${selected.effort}</strong><em>${selected.scope}</em></div>
-      </div>
-      <div class="strategy-context-grid">
-        <article>
-          <span>Inputs behind this recommendation</span>
-          ${renderEvidenceList(context.inputs)}
-        </article>
-        <article>
-          <span>Customer decisions required</span>
-          ${renderEvidenceList(context.customerDecisions)}
-        </article>
-        <article>
-          <span>Rules and limits to surface</span>
-          ${renderEvidenceList(context.constraints)}
-        </article>
-      </div>
       ${selected.id === "mvp-specialty-subgroups" ? renderVisionMvpSubgroupMixer() : `
-        <div class="strategy-non-mvp-detail">
-          <span class="eyebrow">Operational detail</span>
-          <p>${context.bestFor}</p>
-          <p>${context.primaryDecision}</p>
-        </div>
+        ${metrics}
+        ${renderStrategyOperationalPanel(selected)}
       `}
+    </section>
+  `;
+}
+
+function renderStrategyOperationalPanel(selected) {
+  const rows = selected.id === "qrda-support" ? [
+    { item: "Approved source package", status: "Required", detail: "Use the approved MVP or APP Plus package as the file source." },
+    { item: "QRDA category", status: "Select", detail: "Choose Category I or Category III for the supported export." },
+    { item: "Package version", status: "Lock", detail: "Generate only from the frozen submission version." },
+  ] : selected.id === "appplus" ? [
+    { item: "APM entity", status: "Confirm", detail: "Confirm the APM Entity participation record." },
+    { item: "Quality package", status: "Configure", detail: "Use the enabled APP Plus measure package." },
+    { item: "Submission forecast", status: "Review", detail: "Review projected score and gaps before approval." },
+  ] : selected.id === "mvp-mixed" ? [
+    { item: "Clean cohorts", status: "Register", detail: "Move stable specialty cohorts into subgroup registration." },
+    { item: "Uncertain clinicians", status: "Review", detail: "Route mixed-confidence clinicians into individual review." },
+    { item: "Package assembly", status: "Draft", detail: "Build subgroup and individual packages after assignment." },
+  ] : [
+    { item: "Legacy view", status: "Disabled", detail: "Use only for transition review and historical comparison." },
+    { item: "Future strategy", status: "Use MVP", detail: "Route supported work into MVP or APP Plus paths." },
+    { item: "Customer message", status: "Explain", detail: "Show why this path is not the recommended operating model." },
+  ];
+  return `
+    <div class="strategy-operational-panel">
+      <div class="vision-section-title">
+        <span class="eyebrow">Operational workspace</span>
+        <h3>What the team can do from this strategy</h3>
+      </div>
+      <table class="vision-table">
+        <thead><tr><th>Work item</th><th>Status</th><th>Submission detail</th></tr></thead>
+        <tbody>
+          ${rows.map((row) => `
+            <tr>
+              <td><strong>${row.item}</strong></td>
+              <td><span class="status-chip ${row.status === "Disabled" ? "disabled" : row.status === "Review" ? "warn" : "ready"}">${row.status}</span></td>
+              <td>${row.detail}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderStrategyFaq(selected) {
+  const context = strategyContextFor(selected);
+  return `
+    <section class="vision-faq" id="strategy-faq" aria-label="Strategy FAQ and reference">
+      <div class="vision-section-title">
+        <span class="eyebrow">FAQ and reference</span>
+        <h3>Recommendation inputs and supporting context</h3>
+      </div>
+      <details>
+        <summary>What inputs generated these strategy recommendations?</summary>
+        ${renderStrategyInputSummary()}
+      </details>
+      <details>
+        <summary>Why is ${selected.path} being shown?</summary>
+        <div class="faq-body">
+          <p>${context.bestFor}</p>
+          ${renderEvidenceList(context.inputs)}
+        </div>
+      </details>
+      <details>
+        <summary>What does the customer still need to confirm?</summary>
+        <div class="faq-body">
+          ${renderEvidenceList(context.customerDecisions)}
+        </div>
+      </details>
+      <details>
+        <summary>What is hidden, disabled, or treated as supporting context?</summary>
+        <div class="faq-body">
+          <p>Hospital quality reporting is treated as an out-of-app experience. Traditional MIPS remains transition context. QRDA appears as a support path after a strategy has been approved.</p>
+          ${renderEvidenceList(context.constraints)}
+        </div>
+      </details>
     </section>
   `;
 }
@@ -2999,12 +3076,62 @@ function renderVisionTaskStrip(tasks, activeIndex = 0) {
 function renderVisionStrategyStage() {
   const selected = selectedVisionStrategy();
   return `
-    <section class="vision-stage-content">
-      ${renderStrategyInputSummary()}
+    <section class="vision-stage-content strategy-stage-content">
       <div class="strategy-workspace-grid">
         ${renderStrategyCandidateList(selected)}
         ${renderSelectedStrategyDetail(selected)}
       </div>
+    </section>
+  `;
+}
+
+function renderVisionFaqScreen(stage) {
+  const selected = selectedVisionStrategy();
+  const context = strategyContextFor(selected);
+  if (stage.id === "strategy") {
+    return `
+      <section class="phase-faq-screen">
+        ${renderStrategyFaq(selected)}
+      </section>
+    `;
+  }
+  return `
+    <section class="phase-faq-screen">
+      <div class="phase-faq-grid">
+        <article>
+          <span class="eyebrow">Customer question</span>
+          <h3>${stage.customerQuestion}</h3>
+          <p>${stage.promise}</p>
+        </article>
+        <article>
+          <span class="eyebrow">System role</span>
+          <h3>${stage.systemAction}</h3>
+          <p>Current active strategy: ${selected.path}. Supporting strategy context is retained here so the operational screen stays focused.</p>
+        </article>
+        <article>
+          <span class="eyebrow">Output</span>
+          <h3>${stage.artifact}</h3>
+          <p>${context.primaryDecision}</p>
+        </article>
+      </div>
+      <details open>
+        <summary>What inputs matter in this phase?</summary>
+        <div class="faq-body">
+          ${renderEvidenceList(context.inputs)}
+        </div>
+      </details>
+      <details>
+        <summary>What does the customer still need to confirm?</summary>
+        <div class="faq-body">
+          ${renderEvidenceList(context.customerDecisions)}
+        </div>
+      </details>
+      <details>
+        <summary>What rules and constraints are being enforced?</summary>
+        <div class="faq-body">
+          ${renderEvidenceList(context.constraints)}
+        </div>
+      </details>
     </section>
   `;
 }
@@ -3028,8 +3155,6 @@ function renderVisionMvpSubgroupMixer() {
               <th>MVP</th>
               <th>Reporting level</th>
               <th class="numeric">Providers</th>
-              <th>Measure support</th>
-              <th class="numeric">Current</th>
               <th class="numeric">Forecast</th>
               <th></th>
             </tr>
@@ -3039,12 +3164,10 @@ function renderVisionMvpSubgroupMixer() {
             <tr class="${row.id === selected.id ? "selected" : ""} ${row.confidence === "Blocked" ? "blocked" : ""}">
               <td><span class="status-chip ${row.confidence === "High" ? "ready" : row.confidence === "Blocked" ? "disabled" : "warn"}">${row.confidence}</span></td>
               <td><strong>${row.subgroup}</strong><span class="subline">${row.specialty}</span></td>
-              <td><strong>${row.mvpId}</strong><span class="subline">${row.mvpName}</span></td>
+              <td><strong>${row.mvpId}</strong><span class="subline">${row.mvpName}</span><span class="subline">${row.measureFit}</span></td>
               <td>${row.reportingLevel}</td>
               <td class="numeric">${row.providers}</td>
-              <td>${row.measureFit}</td>
-              <td class="numeric">${row.currentScore}</td>
-              <td class="numeric"><strong>${row.projectedScore}</strong><span class="subline">${row.lift}</span></td>
+              <td class="numeric"><strong>${row.projectedScore}</strong><span class="subline">${row.currentScore} current · ${row.lift}</span></td>
               <td><button class="link" data-vision-subgroup="${row.id}">${row.id === selected.id ? "Viewing" : "View"}</button></td>
             </tr>
           `).join("")}
@@ -3240,12 +3363,14 @@ function renderDesignLab() {
   content.querySelectorAll("[data-switch-lab]").forEach((button) => {
     button.addEventListener("click", () => {
       state.labMode = button.dataset.switchLab;
+      state.visionRoute = "workflow";
       render();
     });
   });
   content.querySelectorAll("[data-lab-step]").forEach((button) => {
     button.addEventListener("click", () => {
       state.labStep = Number(button.dataset.labStep);
+      state.visionRoute = "workflow";
       render();
     });
   });
@@ -3254,12 +3379,14 @@ function renderDesignLab() {
       const nextScenario = button.dataset.labNext;
       const steps = workflowSteps(scenarioDefinitions[nextScenario] || scenario);
       state.labStep = Math.min(state.labStep + 1, steps.length - 1);
+      state.visionRoute = "workflow";
       render();
     });
   });
   content.querySelectorAll("[data-lab-prev]").forEach((button) => {
     button.addEventListener("click", () => {
       state.labStep = Math.max(state.labStep - 1, 0);
+      state.visionRoute = "workflow";
       render();
     });
   });
@@ -3267,12 +3394,26 @@ function renderDesignLab() {
     button.addEventListener("click", () => {
       const delta = Number(button.dataset.visionNext);
       state.labStep = Math.min(Math.max(state.labStep + delta, 0), visionStages.length - 1);
+      state.visionRoute = "workflow";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-vision-faq]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.visionRoute = "phase-faq";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-vision-workflow]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.visionRoute = "workflow";
       render();
     });
   });
   content.querySelectorAll("[data-vision-strategy]").forEach((button) => {
     button.addEventListener("click", () => {
       state.selectedVisionStrategy = button.dataset.visionStrategy;
+      state.visionRoute = "workflow";
       render();
     });
   });
@@ -3281,12 +3422,14 @@ function renderDesignLab() {
       state.selectedVisionStrategy = button.dataset.selectVisionStrategy;
       showToast(`${selectedVisionStrategy().path} selected for 2026 strategy`);
       state.labStep = Math.min(state.labStep + 1, visionStages.length - 1);
+      state.visionRoute = "workflow";
       render();
     });
   });
   content.querySelectorAll("[data-vision-subgroup]").forEach((button) => {
     button.addEventListener("click", () => {
       state.selectedVisionSubgroup = button.dataset.visionSubgroup;
+      state.visionRoute = "workflow";
       render();
     });
   });
@@ -3302,6 +3445,7 @@ function renderDesignLab() {
       if (!nextScenario) return;
       state.scenario = nextScenario;
       state.labStep = 0;
+      state.visionRoute = "workflow";
       resetMvpSpecialtySelection();
       scenarioSelect.value = nextScenario;
       render();
@@ -3313,6 +3457,7 @@ function renderDesignLab() {
       if (!nextScenario) return;
       state.scenario = nextScenario;
       state.labStep = 0;
+      state.visionRoute = "workflow";
       resetMvpSpecialtySelection();
       scenarioSelect.value = nextScenario;
       render();
