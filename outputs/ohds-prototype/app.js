@@ -16,6 +16,7 @@ const state = {
   visionRoute: "home",
   visionStrategyTab: "recommended",
   visionPerformanceTab: "summary",
+  visionValidationTab: "plan",
   visionSubmissionTab: "cms",
   visionEvidenceTab: "evaluation",
   visionStrategyLocked: false,
@@ -603,10 +604,8 @@ const visionStages = [
 const visionScreens = [
   { id: "home", label: "Home", stage: "strategy", detail: "Score, strategy, blockers" },
   { id: "strategy", label: "Strategy", stage: "strategy", detail: "Forecast and choose" },
-  { id: "performance", label: "Performance", stage: "improve", detail: "Improve scores" },
-  { id: "measure-detail", label: "Measure Detail", stage: "improve", detail: "Explain one measure" },
-  { id: "patient-evidence", label: "Patient Evidence", stage: "validate", detail: "Why the result counts" },
-  { id: "readiness", label: "Readiness", stage: "validate", detail: "Resolve blockers" },
+  { id: "performance", label: "Performance Workbench", stage: "improve", detail: "Improve scores" },
+  { id: "validation", label: "Measure Validation", stage: "validate", detail: "Prove outcomes" },
   { id: "submissions", label: "Submissions", stage: "submit", detail: "Approve and submit" },
   { id: "qrda", label: "QRDA Export", stage: "submit", detail: "Generate file package" },
   { id: "audit", label: "Audit", stage: "submit", detail: "Approvals and traceability" },
@@ -888,6 +887,63 @@ const visionSubmissionRows = [
   { step: "Package approved", status: "Complete", detail: "MVP subgroup and APP Plus package frozen." },
   { step: "CMS QPP OAuth", status: "Active", detail: `${qppSession.user} - ${qppSession.remaining} remaining.` },
   { step: "CMS receipt", status: "Waiting", detail: "Receipt appears here after secure submission." },
+];
+
+const visionMeasureOpportunityRows = [
+  {
+    measure: "HIV Screening",
+    id: "CMS349v8",
+    subgroup: "M1368 infectious disease",
+    current: "0.0%",
+    benchmark: "88.2%",
+    nearMiss: "428",
+    closeness: "72%",
+    lift: "+3.4 pts",
+    issue: "External lab evidence found, LOINC mapping incomplete",
+    owner: "Interface + chart chase",
+  },
+  {
+    measure: "Screening for Depression and Follow-Up Plan",
+    id: "CMS2v15",
+    subgroup: "M1368 and M1369",
+    current: "86.47%",
+    benchmark: "91.0%",
+    nearMiss: "112",
+    closeness: "81%",
+    lift: "+1.2 pts",
+    issue: "Follow-up plan documented, not coded consistently",
+    owner: "Clinical operations",
+  },
+  {
+    measure: "Chlamydia Screening in Women",
+    id: "CMS153v14",
+    subgroup: "M1366 women's health",
+    current: "9.64%",
+    benchmark: "74.0%",
+    nearMiss: "39",
+    closeness: "64%",
+    lift: "+0.9 pts",
+    issue: "Small stratum volumes and missing lab-source evidence",
+    owner: "Quality analyst",
+  },
+];
+
+const visionValidationSampleRows = [
+  { measure: "HIV Screening", numerator: "5/5", denominator: "5/5", exclusion: "5/5", fallouts: "50 selected", frozen: "Round 1 frozen", status: "Ready" },
+  { measure: "Depression Screening and Follow-Up", numerator: "5/5", denominator: "5/5", exclusion: "4/5", fallouts: "32 selected", frozen: "Needs 1 exclusion", status: "Review" },
+  { measure: "Chlamydia Screening in Women", numerator: "5/5", denominator: "5/5", exclusion: "5/5", fallouts: "27 selected", frozen: "Round 1 frozen", status: "Ready" },
+];
+
+const visionOutcomeShiftRows = [
+  { patient: "HY-10482", measure: "CMS349v8 HIV Screening", prior: "Denominator only", current: "Near miss", cause: "Data change", version: "outcome v42 -> v43", action: "Map lab result" },
+  { patient: "HY-11790", measure: "CMS2v15 Depression Screening", prior: "Numerator", current: "Not met", cause: "Concept change", version: "context v18 -> v19", action: "Review follow-up code" },
+  { patient: "HY-12104", measure: "CMS153v14 Chlamydia Screening", prior: "Excluded", current: "Denominator", cause: "Measure logic", version: "measure v14.1 -> v14.2", action: "Reconcile criteria" },
+];
+
+const visionDeployChangeRows = [
+  { deploy: "2026.10.18 quality rules", change: "Updated HIV lab value set mapping", outcomes: "+214 numerator candidates", status: "Explainable" },
+  { deploy: "2026.10.04 roster refresh", change: "Corrected NPI alias matching for 14 clinicians", outcomes: "+37 denominator records", status: "Needs review" },
+  { deploy: "2026.09.20 measure logic", change: "Applied CMS349v8 quarterly spec update", outcomes: "-18 exclusions, +18 denominator", status: "Reconciled" },
 ];
 
 const periods = {
@@ -2825,18 +2881,22 @@ function currentVisionStage() {
 }
 
 function visionStageIdForScreen(screenId) {
+  if (screenId === "measure-detail") return "improve";
+  if (screenId === "patient-evidence" || screenId === "readiness") return "validate";
   return visionScreens.find((screen) => screen.id === screenId)?.stage || "strategy";
 }
 
 function visionScreenForStage(stageId) {
   if (stageId === "improve") return "performance";
-  if (stageId === "validate") return "readiness";
+  if (stageId === "validate") return "validation";
   if (stageId === "submit") return "submissions";
   return "strategy";
 }
 
 function activeVisionScreenId() {
   if (state.visionRoute === "phase-faq") return "phase-faq";
+  if (state.visionRoute === "measure-detail") return "performance";
+  if (state.visionRoute === "patient-evidence" || state.visionRoute === "readiness") return "validation";
   if (visionScreens.some((screen) => screen.id === state.visionRoute)) return state.visionRoute;
   return visionScreenForStage(currentVisionStage().stage.id);
 }
@@ -2968,9 +3028,7 @@ function renderVisionActiveScreen(activeScreen) {
   }
   if (activeScreen === "strategy") return renderVisionStrategyScreen();
   if (activeScreen === "performance") return renderVisionPerformanceScreen();
-  if (activeScreen === "measure-detail") return renderVisionMeasureDetailScreen();
-  if (activeScreen === "patient-evidence") return renderVisionPatientEvidenceScreen();
-  if (activeScreen === "readiness") return renderVisionReadinessScreen();
+  if (activeScreen === "validation") return renderVisionValidationScreen();
   if (activeScreen === "submissions") return renderVisionSubmissionScreen();
   if (activeScreen === "qrda") return renderVisionQrdaScreen();
   if (activeScreen === "audit") return renderVisionAuditScreen();
@@ -3032,7 +3090,7 @@ function renderVisionHomeScreen() {
             <li><span class="vision-dot warn"></span><span>37 validation records need human judgment before approval.</span></li>
             <li><span class="vision-dot warn"></span><span>3 data feeds have mapping issues that could move forecast confidence.</span></li>
           </ul>
-          <button class="vision-btn secondary" data-vision-screen="readiness" type="button">Review blockers</button>
+          <button class="vision-btn secondary" data-vision-jump="validation:plan" type="button">Review blockers</button>
         </article>
         <article class="vision-card">
           <h2>Submission Status</h2>
@@ -3231,20 +3289,26 @@ function renderVisionStrategyAssumptionsTab() {
 
 function renderVisionPerformanceScreen() {
   const tabs = [
-    { id: "summary", label: "Summary" },
-    { id: "measures", label: "Measures" },
-    { id: "opportunities", label: "Opportunities" },
-    { id: "data-gaps", label: "Data Gaps" },
-    { id: "patients", label: "Patients" },
+    { id: "summary", label: "Opportunity Summary" },
+    { id: "near-misses", label: "Near Misses" },
+    { id: "measure-detail", label: "Measure Detail" },
   ];
+  const activeTab = state.visionPerformanceTab || "summary";
   return renderVisionScreenFrame({
     id: "performance",
     crumb: "Performance",
-    title: "Improve Score and Validate Performance",
-    subtitle: "Turn the selected strategy into routed quality work while there is still time to act.",
+    title: "Performance Workbench",
+    subtitle: "Prioritize the highest-impact measure work and route issues to the team that can actually move the outcome.",
     filters: `<span>Program: MVP specialty subgroups</span><span>Score refresh: Today 6:10 AM</span>`,
     body: `
       ${renderVisionTabs(tabs, "visionPerformanceTab")}
+      ${activeTab === "near-misses" ? renderVisionNearMissTab() : activeTab === "measure-detail" ? renderVisionMeasureOpportunityDetail() : renderVisionOpportunitySummaryTab()}
+    `,
+  });
+}
+
+function renderVisionOpportunitySummaryTab() {
+  return `
       <div class="vision-grid-4">
         <article class="vision-card"><span class="vision-kicker">Projected score</span><strong class="vision-metric">88.3</strong><p>Current forecast</p></article>
         <article class="vision-card"><span class="vision-kicker">Potential lift</span><strong class="vision-metric">+5.5</strong><p>Top actions applied</p></article>
@@ -3255,28 +3319,357 @@ function renderVisionPerformanceScreen() {
         <article class="vision-card">
           <h2>Measure Opportunities</h2>
           <table class="vision-table">
-            <thead><tr><th>Measure</th><th>Current</th><th>Opportunity</th><th>Likely issue</th><th></th></tr></thead>
+            <thead><tr><th>Measure</th><th>Current</th><th>Near miss</th><th>Lift</th><th>Likely issue</th><th></th></tr></thead>
             <tbody>
-              <tr><td><strong>HIV Screening</strong><span class="subline">CMS349v8 / M1368</span></td><td>0.0%</td><td>${visionBadge("+3.4 pts", "bad")}</td><td>Evidence and mapping gap</td><td><button class="vision-row-button" data-vision-screen="measure-detail" type="button">Open</button></td></tr>
-              <tr><td><strong>Screening for Depression and Follow-Up Plan</strong><span class="subline">CMS2v15 / M1368, M1369</span></td><td>86.47%</td><td>${visionBadge("+1.2 pts", "good")}</td><td>Documentation closure</td><td><button class="vision-row-button" data-vision-screen="measure-detail" type="button">Open</button></td></tr>
-              <tr><td><strong>Chlamydia Screening in Women</strong><span class="subline">CMS153v14 / M1366</span></td><td>9.64%</td><td>${visionBadge("+0.9 pts", "warn")}</td><td>Small stratum volumes</td><td><button class="vision-row-button" data-vision-screen="measure-detail" type="button">Open</button></td></tr>
+              ${visionMeasureOpportunityRows.map((row) => `
+                <tr>
+                  <td><strong>${row.measure}</strong><span class="subline">${row.id} / ${row.subgroup}</span></td>
+                  <td>${row.current}<span class="subline">Benchmark ${row.benchmark}</span></td>
+                  <td>${row.nearMiss}<span class="subline">${row.closeness} close</span></td>
+                  <td>${visionBadge(row.lift, row.lift.includes("3.4") ? "bad" : row.lift.includes("1.2") ? "good" : "warn")}</td>
+                  <td>${row.issue}<span class="subline">${row.owner}</span></td>
+                  <td><button class="vision-row-button" data-vision-jump="performance:measure-detail" type="button">Open</button></td>
+                </tr>
+              `).join("")}
             </tbody>
           </table>
         </article>
         <article class="vision-soft-card">
-          <h2>Recommended Next Work</h2>
-          <p><strong>Prioritize HIV Screening evidence review for the infectious disease subgroup.</strong></p>
+          <h2>Recommended Work Queue</h2>
+          <p><strong>Start with patients who are one criterion away from the numerator and whose evidence is already present in another source.</strong></p>
           <div class="vision-status-row"><strong>Potential score improvement</strong><strong>+3.4 points</strong></div>
           <div class="vision-status-row"><strong>Estimated impact</strong><strong>+$116K</strong></div>
-          <div class="vision-status-row"><strong>Owner</strong><span>Interface + chart chase work queue</span></div>
+          <div class="vision-status-row"><strong>Why this first</strong><span>Largest lift, high volume, and high evidence closeness</span></div>
+          <div class="vision-status-row"><strong>Owner</strong><span>Interface + chart chase</span></div>
           <div class="vision-action-row">
-            <button class="vision-btn" data-vision-screen="measure-detail" type="button">Open measure detail</button>
-            <button class="vision-btn secondary" data-vision-screen="patient-evidence" type="button">View patient evidence</button>
+            <button class="vision-btn" data-vision-jump="performance:measure-detail" type="button">Open measure detail</button>
+            <button class="vision-btn secondary" data-vision-jump="validation:patient-evidence" type="button">Validate sample</button>
           </div>
         </article>
       </div>
+      <article class="vision-card spaced">
+        <h2>Routed Work Queue</h2>
+        <table class="vision-table">
+          <thead><tr><th>Issue type</th><th>Owner</th><th>Volume</th><th>Next work item</th><th></th></tr></thead>
+          <tbody>
+            ${visionWorkQueueRows.map((row) => `
+              <tr><td><strong>${row.type}</strong></td><td>${row.owner}</td><td>${row.count}</td><td>${row.next}</td><td><button class="vision-row-button" data-toast="${row.type} queue opened" type="button">Open</button></td></tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </article>
+  `;
+}
+
+function renderVisionNearMissTab() {
+  return `
+    <div class="vision-grid-2">
+      <article class="vision-card">
+        <div class="vision-section-title">
+          <span class="vision-kicker">Near-miss intelligence</span>
+          <h3>Patients closest to satisfying a measure</h3>
+          <p>Closeness is modeled from missing criteria, evidence source confidence, benchmark proximity, and population size.</p>
+        </div>
+        <table class="vision-table">
+          <thead><tr><th>Measure</th><th>Near-miss population</th><th>Closeness</th><th>Best action</th></tr></thead>
+          <tbody>
+            ${visionMeasureOpportunityRows.map((row) => `
+              <tr>
+                <td><strong>${row.measure}</strong><span class="subline">${row.id}</span></td>
+                <td>${row.nearMiss} fall-outs<span class="subline">${row.subgroup}</span></td>
+                <td><div class="near-miss-meter"><span style="width:${row.closeness}"></span></div><span class="subline">${row.closeness} aggregate closeness</span></td>
+                <td>${row.issue}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </article>
+      <article class="vision-soft-card">
+        <h2>Population Closeness</h2>
+        <p>Instead of showing only hit or miss, the workbench groups patients by how much effort it should take to move the outcome.</p>
+        <div class="vision-bar-row"><span>One criterion missing</span><div><b style="width:72%"></b></div><strong>428</strong></div>
+        <div class="vision-bar-row"><span>Evidence likely exists</span><div><b style="width:58%"></b></div><strong>274</strong></div>
+        <div class="vision-bar-row"><span>Workflow documentation</span><div><b style="width:31%"></b></div><strong>112</strong></div>
+        <button class="vision-btn" data-vision-jump="validation:patient-evidence" type="button">Open evidence review</button>
+      </article>
+    </div>
+  `;
+}
+
+function renderVisionMeasureOpportunityDetail() {
+  return `
+    <article class="vision-soft-card">
+      <div class="vision-section-title">
+        <span class="vision-kicker">Selected measure opportunity</span>
+        <h3>HIV Screening / CMS349v8</h3>
+        <p>MVP M1368 · Infectious disease subgroup · current rate 0.0% with 428 near-miss patients one criterion away from numerator satisfaction.</p>
+      </div>
+      <div class="vision-status-row"><strong>Primary blocker</strong><span>External lab evidence exists, but source and LOINC mappings are not accepted by the calculation feed.</span></div>
+    </article>
+    <div class="vision-grid-5">
+      <article class="vision-card"><span class="vision-kicker">IPP</span><strong class="vision-metric">4,366</strong><p>Initial population</p></article>
+      <article class="vision-card"><span class="vision-kicker">Denominator</span><strong class="vision-metric">4,366</strong><p>Performance denominator</p></article>
+      <article class="vision-card"><span class="vision-kicker">Numerator</span><strong class="vision-metric danger">0</strong><p>No satisfied evidence</p></article>
+      <article class="vision-card"><span class="vision-kicker">Near misses</span><strong class="vision-metric">428</strong><p>One criterion away</p></article>
+      <article class="vision-card"><span class="vision-kicker">Lift</span><strong class="vision-metric">+3.4</strong>${visionBadge("Highest opportunity", "bad")}</article>
+    </div>
+    <div class="vision-grid-2 spaced">
+      <article class="vision-card">
+        <h2>Why Patients Did Not Meet</h2>
+        <div class="vision-bar-row"><span>Missing screening result</span><div><b style="width:86%"></b></div><strong>2,140</strong></div>
+        <div class="vision-bar-row"><span>Lab interface mapping gap</span><div><b style="width:52%"></b></div><strong>1,284</strong></div>
+        <div class="vision-bar-row"><span>Documentation not coded</span><div><b style="width:38%"></b></div><strong>936</strong></div>
+        <button class="vision-btn secondary" data-vision-jump="validation:patient-evidence" type="button">Validate patient sample</button>
+      </article>
+      <article class="vision-soft-card">
+        <h2>Top Priority Cohort</h2>
+        <p><strong>428 patients appear to have screening evidence outside the measure result.</strong></p>
+        <div class="vision-status-row"><strong>Potential score improvement</strong><strong>+3.4 points</strong></div>
+        <div class="vision-status-row"><strong>Recommended route</strong>${visionBadge("Chart chase + mapping", "warn")}</div>
+        <div class="vision-status-row"><strong>Expected owner</strong><span>Quality analyst with interface review</span></div>
+        <button class="vision-btn" data-vision-jump="validation:patient-evidence" type="button">Review evidence sample</button>
+      </article>
+    </div>
+    <div class="vision-grid-4 spaced">
+      <article class="vision-card"><h2>Evidence Status</h2><div class="vision-donut"><span>428<br><em>found</em></span></div></article>
+      <article class="vision-card"><h2>Data Gaps</h2><div class="vision-donut amber"><span>3<br><em>feeds</em></span></div></article>
+      <article class="vision-card"><h2>Exceptions</h2><div class="vision-donut blue"><span>37<br><em>review</em></span></div></article>
+      <article class="vision-card"><h2>Opportunity Summary</h2><div class="vision-status-row"><strong>Score</strong>${visionBadge("+3.4 pts", "good")}</div><div class="vision-status-row"><strong>Impact</strong><strong>+$116K</strong></div><div class="vision-status-row"><strong>Patients</strong><strong>428</strong></div></article>
+    </div>
+  `;
+}
+
+function renderVisionValidationScreen() {
+  const tabs = [
+    { id: "plan", label: "Validation Plan" },
+    { id: "outcomes", label: "Outcome Changes" },
+    { id: "patient-evidence", label: "Patient Evidence" },
+    { id: "deploys", label: "Deploy Baseline" },
+    { id: "ai-review", label: "AI Review" },
+  ];
+  const activeTab = state.visionValidationTab || "plan";
+  const tabContent = activeTab === "outcomes"
+    ? renderVisionOutcomeChangesTab()
+    : activeTab === "patient-evidence"
+      ? renderVisionPatientEvidenceTab()
+      : activeTab === "deploys"
+        ? renderVisionDeployBaselineTab()
+        : activeTab === "ai-review"
+          ? renderVisionAiReviewTab()
+          : renderVisionValidationPlanTab();
+  return renderVisionScreenFrame({
+    id: "validation",
+    crumb: "Measure Validation",
+    title: "Measure Validation Workbench",
+    subtitle: "Freeze a defensible sample, track outcome changes, explain shifts, and reconcile only the records that need judgment.",
+    filters: `<span>Validation round: Round 1 frozen</span><span>Snapshot cadence: Every 2 weeks</span>`,
+    body: `
+      ${renderVisionTabs(tabs, "visionValidationTab")}
+      ${tabContent}
     `,
   });
+}
+
+function renderVisionValidationPlanTab() {
+  return `
+    <div class="vision-grid-4">
+      <article class="vision-card"><span class="vision-kicker">Measures sampled</span><strong class="vision-metric">12</strong><p>Across the selected MVP mix</p></article>
+      <article class="vision-card"><span class="vision-kicker">Required minimum</span><strong class="vision-metric">5 / 5 / 5</strong><p>Numerator, denominator, exclusion</p></article>
+      <article class="vision-card"><span class="vision-kicker">Frozen population</span><strong class="vision-metric">1,240</strong><p>Round 1 validation set</p></article>
+      <article class="vision-card"><span class="vision-kicker">Fall-outs queued</span><strong class="vision-metric danger">109</strong><p>Denominator patients likely missed</p></article>
+    </div>
+    <div class="validation-method-grid spaced">
+      <article class="vision-card">
+        <div class="vision-section-title">
+          <span class="vision-kicker">Sample plan</span>
+          <h3>Validate the records most likely to prove or challenge the result</h3>
+          <p>The system builds a frozen review packet per measure, then lets the customer reconcile the same records after logic, concept, or data changes.</p>
+        </div>
+        <table class="vision-table">
+          <thead><tr><th>Measure</th><th>Numerator</th><th>Denominator</th><th>Exclusion</th><th>Fall-outs</th><th>Freeze</th><th>Status</th></tr></thead>
+          <tbody>
+            ${visionValidationSampleRows.map((row) => `
+              <tr>
+                <td><strong>${row.measure}</strong></td>
+                <td>${row.numerator}</td>
+                <td>${row.denominator}</td>
+                <td>${row.exclusion}</td>
+                <td>${row.fallouts}</td>
+                <td>${row.frozen}</td>
+                <td>${visionBadge(row.status, row.status === "Ready" ? "good" : "warn")}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </article>
+      <aside class="vision-soft-card">
+        <h2>Recommended Validation Design</h2>
+        <p><strong>Start with high-evidence patients, then force coverage across every outcome type.</strong></p>
+        <div class="vision-status-row"><strong>Baseline sample</strong><span>Patients with the most supporting data sources</span></div>
+        <div class="vision-status-row"><strong>Minimum guardrail</strong><span>5 numerator, 5 denominator, 5 exclusion per measure</span></div>
+        <div class="vision-status-row"><strong>Customer focus</strong><span>Fall-outs and outcome-changed patients</span></div>
+        <div class="vision-status-row"><strong>Reconciliation</strong><span>Reopen frozen packets after logic stabilizes</span></div>
+        <div class="vision-action-row">
+          <button class="vision-btn" data-toast="Validation population frozen" type="button">Freeze population</button>
+          <button class="vision-btn secondary" data-vision-jump="validation:outcomes" type="button">Track changes</button>
+        </div>
+      </aside>
+    </div>
+  `;
+}
+
+function renderVisionOutcomeChangesTab() {
+  return `
+    <div class="vision-grid-4">
+      <article class="vision-card"><span class="vision-kicker">Snapshot cadence</span><strong class="vision-metric">14 days</strong><p>Current vs prior round</p></article>
+      <article class="vision-card"><span class="vision-kicker">Outcome shifts</span><strong class="vision-metric">269</strong><p>Since last baseline</p></article>
+      <article class="vision-card"><span class="vision-kicker">Large swings</span><strong class="vision-metric danger">3</strong><p>Require explanation</p></article>
+      <article class="vision-card"><span class="vision-kicker">Explainable</span><strong class="vision-metric">84%</strong><p>Matched to data or logic changes</p></article>
+    </div>
+    <div class="vision-grid-2 spaced">
+      <article class="vision-card">
+        <div class="vision-section-title">
+          <span class="vision-kicker">Detect, explain, resolve</span>
+          <h3>Outcome state changes that need attention</h3>
+          <p>Every shift keeps measure, context, and outcome version history so the customer can see what changed and why.</p>
+        </div>
+        <table class="vision-table">
+          <thead><tr><th>Patient</th><th>Measure</th><th>Prior</th><th>Current</th><th>Likely cause</th><th>Action</th></tr></thead>
+          <tbody>
+            ${visionOutcomeShiftRows.map((row) => `
+              <tr>
+                <td><strong>${row.patient}</strong></td>
+                <td>${row.measure}<span class="subline">${row.version}</span></td>
+                <td>${row.prior}</td>
+                <td>${row.current}</td>
+                <td>${visionBadge(row.cause, row.cause === "Data change" ? "info" : row.cause === "Concept change" ? "warn" : "good")}</td>
+                <td><button class="vision-row-button" data-vision-jump="validation:patient-evidence" type="button">${row.action}</button></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </article>
+      <article class="vision-soft-card">
+        <h2>Outcome Versioning</h2>
+        <div class="validation-flow">
+          <div><span class="vision-kicker">1 Detect</span><strong>269 shifts</strong><p>Find changes in numerator, denominator, exclusion, and not-met state.</p></div>
+          <div><span class="vision-kicker">2 Explain</span><strong>226 matched</strong><p>Classify as data change, concept change, measure logic, or attribution.</p></div>
+          <div><span class="vision-kicker">3 Resolve</span><strong>43 queued</strong><p>Send only unresolved shifts to the appropriate reviewer.</p></div>
+        </div>
+        <div class="version-stack">
+          <div><strong>Measure version</strong><span>CMS349v8 quarterly spec update</span></div>
+          <div><strong>Context version</strong><span>Roster, subgroup, value set, and customer configuration</span></div>
+          <div><strong>Outcome version</strong><span>Patient state and supporting facts at each snapshot</span></div>
+        </div>
+      </article>
+    </div>
+  `;
+}
+
+function renderVisionPatientEvidenceTab() {
+  return `
+    <div class="vision-grid-3">
+      <article class="vision-card"><h2>Patient HY-10482</h2><p>Age 49 / Infectious disease cohort / attributed to subgroup SG-00000004.</p><button class="vision-btn secondary" data-toast="Patient chart opened" type="button">View chart</button></article>
+      <article class="vision-card"><h2>Measure</h2><strong class="vision-metric">CMS349v8</strong><p>HIV Screening</p></article>
+      <article class="vision-card"><h2>Outcome State</h2><strong class="vision-metric danger">NEAR MISS</strong><p>Denominator patient, one criterion away from numerator.</p></article>
+    </div>
+    <div class="vision-wide-left spaced">
+      <article class="vision-card">
+        ${renderVisionTabs([
+          { id: "evaluation", label: "Measure Evaluation" },
+          { id: "timeline", label: "Timeline" },
+          { id: "logic", label: "CQL Logic Map" },
+          { id: "source", label: "Source Evidence" },
+        ], "visionEvidenceTab")}
+        <h2>Initial Population ${visionBadge("Satisfied", "good")}</h2>
+        <table class="vision-table">
+          <thead><tr><th>Specification criteria</th><th>Patient evidence</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td>Age is 15 to 65</td><td>DOB 1977-06-17, age 49 in 2026</td><td>${visionBadge("Satisfied", "good")}</td></tr>
+            <tr><td>Qualifying encounter</td><td>Office visit on 2026-04-03</td><td>${visionBadge("Satisfied", "good")}</td></tr>
+            <tr><td>Attributed to MVP subgroup</td><td>SG-00000004 infectious disease subgroup</td><td>${visionBadge("Satisfied", "good")}</td></tr>
+          </tbody>
+        </table>
+        <h2 class="section-gap">Numerator ${visionBadge("Not satisfied", "bad")}</h2>
+        <table class="vision-table">
+          <thead><tr><th>Specification criteria</th><th>Patient evidence</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td>HIV screening result during eligible period</td><td>External lab result present, missing LOINC mapping</td><td>${visionBadge("Not satisfied", "bad")}</td></tr>
+            <tr><td>Result linked to supported data source</td><td>Result source is not attached to the measure calculation feed</td><td>${visionBadge("Not evidenced", "warn")}</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <aside class="vision-stack">
+        <article class="vision-soft-card">
+          <h2>AI Validation Answer</h2>
+          <p><strong>Why is this patient not in the numerator?</strong></p>
+          <p>The patient is in the denominator and has external lab evidence, but the lab result is not mapped to the supported LOINC/source feed used by CMS349v8. This should be routed to mapping review before chart chase.</p>
+        </article>
+        <article class="vision-card"><h2>Closeness</h2><div class="near-miss-meter"><span style="width:83%"></span></div><p><strong>83% close.</strong> One source-linking criterion blocks numerator satisfaction.</p></article>
+        <article class="vision-card"><h2>Validation Actions</h2><div class="vision-status-row"><strong>Assign to</strong><span>Interface analyst</span></div><div class="vision-status-row"><strong>Registry check</strong><span>Cross-check face-up registry record</span></div><div class="vision-status-row"><strong>Claim attribution</strong><span>Confirm billing provider on non-Hyperion encounter</span></div></article>
+      </aside>
+    </div>
+  `;
+}
+
+function renderVisionDeployBaselineTab() {
+  return `
+    <div class="vision-grid-2">
+      <article class="vision-card">
+        <div class="vision-section-title">
+          <span class="vision-kicker">Deploy impact</span>
+          <h3>Explain score movement after fixes and redeploys</h3>
+          <p>Each deploy produces a baseline summary so outcome shifts are explainable before customers re-review frozen validation packets.</p>
+        </div>
+        <table class="vision-table">
+          <thead><tr><th>Deploy</th><th>Change</th><th>Outcome movement</th><th>Status</th></tr></thead>
+          <tbody>
+            ${visionDeployChangeRows.map((row) => `
+              <tr><td><strong>${row.deploy}</strong></td><td>${row.change}</td><td>${row.outcomes}</td><td>${visionBadge(row.status, row.status === "Explainable" || row.status === "Reconciled" ? "good" : "warn")}</td></tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </article>
+      <article class="vision-soft-card">
+        <h2>Current Baseline Summary</h2>
+        <p><strong>Deploy changed 269 patient outcomes.</strong> Most movement is explainable by lab mapping and roster attribution changes.</p>
+        <div class="vision-bar-row"><span>Lab mapping</span><div><b style="width:80%"></b></div><strong>214</strong></div>
+        <div class="vision-bar-row"><span>Roster attribution</span><div><b style="width:38%"></b></div><strong>37</strong></div>
+        <div class="vision-bar-row"><span>Measure logic</span><div><b style="width:20%"></b></div><strong>18</strong></div>
+        <button class="vision-btn" data-vision-jump="validation:outcomes" type="button">Review shifted outcomes</button>
+      </article>
+    </div>
+  `;
+}
+
+function renderVisionAiReviewTab() {
+  return `
+    <div class="vision-grid-2">
+      <article class="vision-card">
+        <div class="vision-section-title">
+          <span class="vision-kicker">AI review</span>
+          <h3>Ask questions over validation reporting</h3>
+          <p>The fastest path is not another giant report. It is a guided explanation of exactly why an outcome did or did not calculate.</p>
+        </div>
+        <div class="ai-chat">
+          <div class="ai-message user"><strong>Quality manager</strong><p>Why isn't HY-10482 in the numerator for HIV Screening?</p></div>
+          <div class="ai-message agent"><strong>Oracle validation assistant</strong><p>HY-10482 satisfies denominator criteria and has external HIV lab evidence, but the source is not mapped into the CMS349v8 numerator feed. I would route this to interface mapping, then re-run the frozen validation packet.</p></div>
+          <div class="ai-message user"><strong>Quality manager</strong><p>Show me whether this is isolated or a population issue.</p></div>
+          <div class="ai-message agent"><strong>Oracle validation assistant</strong><p>There are 428 similar fall-outs. 274 have evidence in another source, and 112 look like documentation workflow gaps. Closing the mapping issue is modeled at +3.4 quality points.</p></div>
+        </div>
+      </article>
+      <aside class="vision-soft-card">
+        <h2>High-value Prompts</h2>
+        <div class="ai-suggestion-grid">
+          <button data-toast="Outcome-change query opened" type="button">Show fall-outs that changed since the last snapshot</button>
+          <button data-toast="Reviewer packet split" type="button">Split validation packet by reviewer</button>
+          <button data-toast="Registry reconciliation export queued" type="button">Export registry reconciliation list</button>
+        </div>
+        <div class="vision-status-row"><strong>Best use case</strong><span>Why is this patient not in the numerator?</span></div>
+        <div class="vision-status-row"><strong>Human role</strong><span>Judge exceptions, approve evidence, and sign off on submission readiness</span></div>
+      </aside>
+    </div>
+  `;
 }
 
 function renderVisionMeasureDetailScreen() {
@@ -3300,7 +3693,7 @@ function renderVisionMeasureDetailScreen() {
           <div class="vision-bar-row"><span>Missing screening result</span><div><b style="width:86%"></b></div><strong>2,140</strong></div>
           <div class="vision-bar-row"><span>Lab interface mapping gap</span><div><b style="width:52%"></b></div><strong>1,284</strong></div>
           <div class="vision-bar-row"><span>Documentation not coded</span><div><b style="width:38%"></b></div><strong>936</strong></div>
-          <button class="vision-btn secondary" data-vision-screen="patient-evidence" type="button">View patient evidence</button>
+          <button class="vision-btn secondary" data-vision-jump="validation:patient-evidence" type="button">View patient evidence</button>
         </article>
         <article class="vision-soft-card">
           <h2>Top Priority Cohort</h2>
@@ -3308,7 +3701,7 @@ function renderVisionMeasureDetailScreen() {
           <div class="vision-status-row"><strong>Potential score improvement</strong><strong>+3.4 points</strong></div>
           <div class="vision-status-row"><strong>Recommended route</strong>${visionBadge("Chart chase + mapping", "warn")}</div>
           <div class="vision-status-row"><strong>Expected owner</strong><span>Quality analyst with interface review</span></div>
-          <button class="vision-btn" data-vision-screen="patient-evidence" type="button">Review evidence sample</button>
+          <button class="vision-btn" data-vision-jump="validation:patient-evidence" type="button">Review evidence sample</button>
         </article>
       </div>
       <div class="vision-grid-4 spaced">
@@ -3400,7 +3793,7 @@ function renderVisionReadinessScreen() {
             <tbody>
               <tr><td><strong>Subgroup registration</strong></td><td>${visionBadge("Warning", "warn")}</td><td>Mental health narrative needs customer confirmation</td><td><button class="vision-row-button" data-vision-screen="strategy" type="button">Review</button></td></tr>
               <tr><td><strong>Personnel</strong></td><td>${visionBadge("Blocked", "bad")}</td><td>14 clinicians missing valid aliases for attribution</td><td><button class="vision-row-button" data-toast="Personnel worklist opened" type="button">Fix</button></td></tr>
-              <tr><td><strong>Data sources</strong></td><td>${visionBadge("Warning", "warn")}</td><td>HIV lab feed mapping affects numerator confidence</td><td><button class="vision-row-button" data-vision-screen="measure-detail" type="button">Open</button></td></tr>
+              <tr><td><strong>Data sources</strong></td><td>${visionBadge("Warning", "warn")}</td><td>HIV lab feed mapping affects numerator confidence</td><td><button class="vision-row-button" data-vision-jump="performance:measure-detail" type="button">Open</button></td></tr>
               <tr><td><strong>Security</strong></td><td>${visionBadge("Ready", "good")}</td><td>CMS QPP OAuth connection available</td><td><button class="vision-row-button" data-vision-screen="submissions" type="button">View</button></td></tr>
               <tr><td><strong>QRDA package</strong></td><td>${visionBadge("Ready", "good")}</td><td>Export can be generated after package approval</td><td><button class="vision-row-button" data-vision-screen="qrda" type="button">View</button></td></tr>
             </tbody>
@@ -3456,7 +3849,7 @@ function renderVisionSubmissionScreen() {
             </tbody>
           </table>
           <div class="vision-action-row">
-            <button class="vision-btn secondary" data-vision-screen="readiness" type="button">Review readiness</button>
+            <button class="vision-btn secondary" data-vision-jump="validation:plan" type="button">Review readiness</button>
             <button class="vision-btn" data-toast="Submission package approved" type="button">Approve package</button>
           </div>
         </article>
@@ -4164,6 +4557,22 @@ function renderDesignLab() {
     button.addEventListener("click", () => {
       state.labMode = button.dataset.switchLab;
       state.visionRoute = "home";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-vision-jump]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const [screenId, tabId] = button.dataset.visionJump.split(":");
+      state.visionRoute = screenId;
+      if (screenId === "performance" && tabId) {
+        state.visionPerformanceTab = tabId;
+      }
+      if (screenId === "validation" && tabId) {
+        state.visionValidationTab = tabId;
+      }
+      const stageId = visionStageIdForScreen(screenId);
+      const stageIndex = visionStages.findIndex((stage) => stage.id === stageId);
+      state.labStep = stageIndex >= 0 ? stageIndex : state.labStep;
       render();
     });
   });

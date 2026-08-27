@@ -1,5 +1,12 @@
 # Changelog
 
+## v40
+
+- Consolidated Performance, Measure Detail, Patient Evidence, and Readiness into two operational panes: Performance Workbench and Measure Validation.
+- Added a validation sampling plan with 5 numerator / 5 denominator / 5 exclusion guardrails, fall-out focus, frozen populations, and reconciliation passes.
+- Added near-miss scoring, population closeness, outcome shift tracking, deploy baseline summaries, and an AI validation review concept.
+- Rewired click-through paths so measure opportunities, patient evidence, readiness review, and submission preparation stay inside the streamlined workflow.
+
 ## v39
 
 - Reworked the Vision Platform into a cleaner desktop-app shell inspired by the attached redesign reference.
