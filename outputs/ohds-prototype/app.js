@@ -22,6 +22,8 @@ const state = {
   selectedValidationMeasure: "cms349",
   selectedValidationPatient: "HY-10482",
   patientValidationSearch: "",
+  patientValidationFilter: "work-queue",
+  patientValidationRound: "round-1",
   qualityTargets: {
     cms349: 85,
     cms2: 85,
@@ -3404,8 +3406,9 @@ function visionScreenForStage(stageId) {
 
 function activeVisionScreenId() {
   if (state.visionRoute === "phase-faq") return "phase-faq";
+  if (state.visionRoute === "patient-evidence") return "patient-evidence";
   if (state.visionRoute === "measure-detail") return "performance";
-  if (state.visionRoute === "validation" || state.visionRoute === "patient-evidence" || state.visionRoute === "readiness") return "performance";
+  if (state.visionRoute === "validation" || state.visionRoute === "readiness") return "performance";
   if (visionScreens.some((screen) => screen.id === state.visionRoute)) return state.visionRoute;
   return visionScreenForStage(currentVisionStage().stage.id);
 }
@@ -3632,6 +3635,7 @@ function renderVisionPlatform() {
 
 function renderVisionNavigation() {
   const active = activeVisionScreenId();
+  const activeNav = ["patient-evidence", "validation", "measure-detail", "readiness"].includes(active) ? "performance" : active;
   const activeStage = visionStageForActiveScreen();
   return `
     <aside class="vision-nav-pane" aria-label="Quality operating system navigation">
@@ -3649,7 +3653,7 @@ function renderVisionNavigation() {
       </div>
       <nav class="vision-left-nav" aria-label="Workflow areas">
         ${visionScreens.map((screen) => `
-          <button class="${active === screen.id ? "active" : ""}" data-vision-screen="${screen.id}" type="button" aria-label="${screen.label}">
+          <button class="${activeNav === screen.id ? "active" : ""}" data-vision-screen="${screen.id}" type="button" aria-label="${screen.label}">
             <strong>${screen.label}</strong>
             <span>${screen.detail}</span>
           </button>
@@ -3698,6 +3702,7 @@ function renderVisionActiveScreen(activeScreen) {
     });
   }
   if (activeScreen === "strategy") return renderVisionStrategyScreen();
+  if (activeScreen === "patient-evidence") return renderVisionPatientEvidenceScreen();
   if (activeScreen === "performance") return renderVisionPerformanceScreen();
   if (activeScreen === "validation") return renderVisionPerformanceScreen();
   if (activeScreen === "submissions") return renderVisionSubmissionScreen();
@@ -4076,7 +4081,6 @@ function patientOutcomeRows(patient, measure) {
 }
 
 function renderVisionPatientOutcomePanel(measure, patient, options = {}) {
-  const closenessLabel = patient.closeness === "N/A" ? "Control record" : `${patient.closeness} close`;
   return `
     <aside class="patient-outcome-panel ${options.standalone ? "standalone" : ""}">
       <div class="patient-outcome-header">
@@ -4086,8 +4090,8 @@ function renderVisionPatientOutcomePanel(measure, patient, options = {}) {
       </div>
       <div class="patient-outcome-metrics">
         <div><span>Current state</span><strong>${patient.currentState}</strong></div>
-        <div><span>Satisfaction</span><strong>${patient.satisfaction}</strong></div>
-        <div><span>Closeness</span><strong>${closenessLabel}</strong></div>
+        <div><span>Prior state</span><strong>${patient.priorState}</strong></div>
+        <div><span>Change</span><strong>${patient.change}</strong></div>
       </div>
       <div class="patient-outcome-answer">
         <strong>Why is this patient in this outcome state?</strong>
@@ -4113,89 +4117,179 @@ function renderVisionPatientOutcomePanel(measure, patient, options = {}) {
   `;
 }
 
+function patientValidationStatus(patient) {
+  if (patient.review === "Validated") return { label: "Validated", tone: "good" };
+  if (patient.change !== "No change") return { label: "Reconcile", tone: "warn" };
+  if (patient.currentState === "Near miss" || patient.currentState === "Denominator") return { label: "Needs review", tone: "bad" };
+  return { label: "Queued", tone: "warn" };
+}
+
+function patientValidationWorkstream(patient) {
+  const workstreamMap = {
+    "Mapping review": "Data mapping",
+    "Data review": "Data mapping",
+    "Chart chase": "Quality analyst",
+    "Customer review": "Client reviewer",
+    "Clinical review": "Clinical operations",
+    "Note review": "Documentation review",
+    "Reviewer needed": "Quality reviewer",
+    "Reconcile criteria": "Measure analyst",
+    "Date review": "Measure analyst",
+    "Claim review": "Attribution review",
+    "Registry check": "Registry reconciliation",
+    Validated: "Complete",
+  };
+  return workstreamMap[patient.review] || "Quality reviewer";
+}
+
+function isFalloutPatient(patient) {
+  return patient.currentState === "Near miss" || patient.currentState === "Denominator";
+}
+
+function isControlPatient(patient) {
+  return patient.currentState === "Numerator" || patient.currentState === "Exclusion";
+}
+
+function patientValidationRowsForMeasure(measure) {
+  const filter = state.patientValidationFilter || "work-queue";
+  return measure.patients.filter((patient) => {
+    if (filter === "changed") return patient.change !== "No change";
+    if (filter === "fallouts") return isFalloutPatient(patient);
+    if (filter === "controls") return isControlPatient(patient);
+    if (filter === "work-queue") return patient.review !== "Validated";
+    return true;
+  });
+}
+
+function patientValidationFilterCounts(measure) {
+  return {
+    "work-queue": measure.patients.filter((patient) => patient.review !== "Validated").length,
+    changed: measure.patients.filter((patient) => patient.change !== "No change").length,
+    fallouts: measure.patients.filter(isFalloutPatient).length,
+    controls: measure.patients.filter(isControlPatient).length,
+    all: measure.patients.length,
+  };
+}
+
+function renderPatientValidationFilterButton(filter, label, count) {
+  const active = state.patientValidationFilter === filter;
+  return `<button class="${active ? "active" : ""}" data-validation-filter="${filter}" type="button">${label}<strong>${count}</strong></button>`;
+}
+
 function renderVisionSelectedPatientsTab() {
   const selected = selectedValidationMeasure();
-  const trend = attestationTrendFor(selected.id);
-  const activePatient = selectedValidationPatient(selected);
   const totalSelected = visionValidationPatientMeasures.reduce((sum, measure) => sum + measure.selected, 0);
   const totalChanged = visionValidationPatientMeasures.reduce((sum, measure) => sum + measure.changed, 0);
   const searchValue = escapeHtml(state.patientValidationSearch);
+  const visiblePatients = patientValidationRowsForMeasure(selected);
+  const filterCounts = patientValidationFilterCounts(selected);
+  const reviewRemaining = filterCounts["work-queue"];
   return `
-    <div class="vision-grid-4">
-      <article class="vision-card"><span class="vision-kicker">Selected population</span><strong class="vision-metric">${totalSelected}</strong><p>Shown across active submission measures</p></article>
-      <article class="vision-card"><span class="vision-kicker">Measures represented</span><strong class="vision-metric">${visionValidationPatientMeasures.length}</strong><p>Sample detail available now</p></article>
-      <article class="vision-card"><span class="vision-kicker">Changed outcomes</span><strong class="vision-metric danger">${totalChanged}</strong><p>Since the prior snapshot</p></article>
-      <article class="vision-card"><span class="vision-kicker">Current quality</span><strong class="vision-metric">${trend.current}</strong><p>${trend.wowChange} WoW for ${selected.measure}</p></article>
-    </div>
-    <div class="patient-validation-layout spaced">
-      <aside class="vision-card measure-patient-rail">
-        <div class="vision-section-title">
+    <article class="vision-card patient-validation-workspace">
+      <div class="validation-worklist-header">
+        <div>
           <span class="vision-kicker">Patient level validation</span>
-          <h3>Validation patients by measure</h3>
-          <p>Each measure keeps the 5/5/5 guardrail while prioritizing fall-outs and changed outcomes.</p>
+          <h3>Review selected validation patients</h3>
+          <p>Freeze a representative sample, review changed outcomes and fall-outs, then reconcile the same population in later passes.</p>
         </div>
-        ${visionValidationPatientMeasures.map((measure) => `
-          <button class="${measure.id === selected.id ? "active" : ""}" data-validation-measure="${measure.id}" type="button">
-            <span>
-              <strong>${measure.measure}</strong>
-              <em>${measure.code} / ${measure.mvp}</em>
-            </span>
-            <span>
-              <strong>${measure.selected}</strong>
-              <em>${measure.changed} changed</em>
-            </span>
-          </button>
-        `).join("")}
-      </aside>
-      <article class="vision-card selected-patient-pane">
-        <div class="selected-patient-header">
+        <div class="patient-search-bar">
+          <label>
+            <span>Open patient</span>
+            <input type="search" data-patient-search value="${searchValue}" placeholder="HY-10482, provider, specialty..." />
+          </label>
+          <button class="vision-btn secondary" data-patient-search-action type="button">Search</button>
+        </div>
+      </div>
+      <div class="patient-validation-summary">
+        <div><span>Validation population</span><strong>${totalSelected}</strong><em>Selected across submitted measures</em></div>
+        <div><span>Changed outcomes</span><strong>${totalChanged}</strong><em>Review against prior snapshot</em></div>
+        <div><span>Sample rule</span><strong>5 / 5 / 5</strong><em>Numerator, denominator, exclusion</em></div>
+        <div><span>Current round</span><strong>Round 1</strong><em>Frozen sample</em></div>
+      </div>
+      <div class="patient-validation-measure-table-wrap">
+        <table class="vision-table patient-validation-measure-table">
+          <thead><tr><th>Measure</th><th>Program</th><th>Sample coverage</th><th>Selected</th><th>Changed</th><th>Review remaining</th><th></th></tr></thead>
+          <tbody>
+            ${visionValidationPatientMeasures.map((measure) => {
+              const counts = patientValidationFilterCounts(measure);
+              return `
+                <tr class="${measure.id === selected.id ? "selected" : ""}">
+                  <td><strong>${measure.measure}</strong><span class="subline">${measure.code}</span></td>
+                  <td>${measure.mvp}</td>
+                  <td><strong>${Math.min(measure.mix.numerator, 5)}/5 Num · ${Math.min(measure.mix.denominator, 5)}/5 Den · ${Math.min(measure.mix.exclusion, 5)}/5 Excl</strong></td>
+                  <td>${measure.selected}</td>
+                  <td>${measure.changed}</td>
+                  <td>${counts["work-queue"]}</td>
+                  <td><button class="vision-row-button" data-validation-measure="${measure.id}" type="button">${measure.id === selected.id ? "Open" : "Open worklist"}</button></td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    </article>
+    <article class="vision-card spaced selected-patient-pane">
+      <div class="selected-patient-header">
           <div>
-            <span class="vision-kicker">Patient level validation</span>
+            <span class="vision-kicker">Measure worklist</span>
             <h3>${selected.measure}</h3>
-            <p>${selected.code} · ${selected.mvp} · ${selected.subgroup}</p>
+            <p>${selected.code} · ${selected.mvp} · ${state.patientValidationRound === "final" ? "Final reconciliation" : state.patientValidationRound === "november" ? "November pass" : "Round 1 frozen"}</p>
           </div>
-          <div class="patient-search-bar">
+          <div class="validation-round-control">
             <label>
-              <span>Search patient</span>
-              <input type="search" data-patient-search value="${searchValue}" placeholder="HY-10482, provider, specialty..." />
+              <span>Validation round</span>
+              <select data-validation-round>
+                <option value="round-1" ${state.patientValidationRound === "round-1" ? "selected" : ""}>Round 1 frozen</option>
+                <option value="november" ${state.patientValidationRound === "november" ? "selected" : ""}>November pass</option>
+                <option value="final" ${state.patientValidationRound === "final" ? "selected" : ""}>Final reconciliation</option>
+              </select>
             </label>
-            <button class="vision-btn secondary" data-patient-search-action type="button">Search</button>
           </div>
+      </div>
+      <div class="validation-worklist-controls">
+        <div class="validation-filter-group" aria-label="Patient validation filters">
+          ${renderPatientValidationFilterButton("work-queue", "Review queue", filterCounts["work-queue"])}
+          ${renderPatientValidationFilterButton("changed", "Changed outcomes", filterCounts.changed)}
+          ${renderPatientValidationFilterButton("fallouts", "Fall-outs", filterCounts.fallouts)}
+          ${renderPatientValidationFilterButton("controls", "Controls", filterCounts.controls)}
+          ${renderPatientValidationFilterButton("all", "All selected", filterCounts.all)}
         </div>
-        <div class="selected-patient-overview">
-          <div>
-            ${renderOutcomeMix(selected.mix)}
-            <div class="population-validation-toolbar">
-              <span>${selected.coverage}</span>
-              <span>${selected.reviewComplete} review complete</span>
-            </div>
-          </div>
-          ${renderAttestationTrendChart(selected)}
+        <div class="validation-sample-strip">
+          <div><span>Numerator</span><strong>${Math.min(selected.mix.numerator, 5)}/5</strong></div>
+          <div><span>Denominator</span><strong>${Math.min(selected.mix.denominator, 5)}/5</strong></div>
+          <div><span>Exclusion</span><strong>${Math.min(selected.mix.exclusion, 5)}/5</strong></div>
+          <div><span>Fall-outs</span><strong>${selected.mix.fallout}</strong></div>
+          <div><span>Remaining</span><strong>${reviewRemaining}</strong></div>
         </div>
-        <p class="population-validation-note">Round 1 frozen · Prior snapshot compared · Outcome explainability available from every patient row</p>
-        <div class="patient-workbench-grid">
-          <div class="patient-list-panel">
-            <table class="vision-table selected-patient-table">
-              <thead><tr><th>Patient</th><th>Provider / specialty</th><th>Measure satisfaction</th><th>Prior state and change</th><th>Why selected</th><th>Review focus</th><th></th></tr></thead>
-              <tbody>
-                ${selected.patients.map((row) => `
-                  <tr class="${row.patient === activePatient.patient ? "selected" : ""}">
-                    <td><strong>${row.patient}</strong><span class="subline">${selected.code}</span></td>
-                    <td><strong>${row.provider}</strong><span class="subline">${row.specialty}</span></td>
-                    <td><strong>${row.currentState}</strong><span class="subline">${visionBadge(row.satisfaction, row.satisfactionTone)} ${row.closeness === "N/A" ? "Control record" : `${row.closeness} close`}</span></td>
-                    <td><strong>${row.priorState}</strong><span class="subline">${visionBadge(row.change, row.changeTone)}</span></td>
-                    <td>${row.whySelected}</td>
-                    <td>${row.review}</td>
-                    <td><button class="vision-row-button" data-validation-patient="${row.patient}" type="button">Explain outcome</button></td>
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          </div>
-          ${renderVisionPatientOutcomePanel(selected, activePatient)}
-        </div>
-      </article>
-    </div>
+      </div>
+      <table class="vision-table selected-patient-table validation-queue-table">
+        <thead><tr><th>Patient</th><th>Provider / specialty</th><th>Current outcome</th><th>Prior state / change</th><th>Why selected</th><th>Assigned workstream</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          ${visiblePatients.length ? visiblePatients.map((row) => {
+            const status = patientValidationStatus(row);
+            return `
+              <tr>
+                <td><strong>${row.patient}</strong><span class="subline">${selected.code}</span></td>
+                <td><strong>${row.provider}</strong><span class="subline">${row.specialty}</span></td>
+                <td><strong>${row.currentState}</strong></td>
+                <td><strong>${row.priorState}</strong><span class="subline">${visionBadge(row.change, row.changeTone)}</span></td>
+                <td>${row.whySelected}</td>
+                <td><strong>${patientValidationWorkstream(row)}</strong><span class="subline">${row.review}</span></td>
+                <td>${visionBadge(status.label, status.tone)}</td>
+                <td><button class="vision-row-button" data-open-patient-explanation="${row.patient}" type="button">Open explanation</button></td>
+              </tr>
+            `;
+          }).join("") : `
+            <tr><td colspan="8"><div class="empty-state">No patients match this validation filter.</div></td></tr>
+          `}
+        </tbody>
+      </table>
+      <div class="validation-worklist-footer">
+        <button class="vision-btn secondary" data-toast="Reviewer packet split by workstream" type="button">Assign reviewer packets</button>
+        <button class="vision-btn secondary" data-toast="Changed-outcome reconciliation queued" type="button">Queue reconciliation pass</button>
+        <button class="vision-btn" data-toast="Patient validation progress saved" type="button">Save validation progress</button>
+      </div>
+    </article>
   `;
 }
 
@@ -5351,16 +5445,24 @@ function renderDesignLab() {
       state.selectedValidationMeasure = nextMeasure?.id || button.dataset.validationMeasure;
       state.selectedValidationPatient = nextMeasure?.patients[0]?.patient || state.selectedValidationPatient;
       state.patientValidationSearch = "";
+      state.patientValidationFilter = "work-queue";
       state.visionValidationTab = "patient-level";
       state.visionPerformanceTab = "patient-level";
       state.visionRoute = "performance";
       render();
     });
   });
-  content.querySelectorAll("[data-validation-patient]").forEach((button) => {
+  content.querySelectorAll("[data-validation-filter]").forEach((button) => {
     button.addEventListener("click", () => {
-      state.selectedValidationPatient = button.dataset.validationPatient;
-      state.patientValidationSearch = button.dataset.validationPatient;
+      state.patientValidationFilter = button.dataset.validationFilter;
+      state.visionPerformanceTab = "patient-level";
+      state.visionRoute = "performance";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-validation-round]").forEach((select) => {
+    select.addEventListener("change", () => {
+      state.patientValidationRound = select.value;
       state.visionPerformanceTab = "patient-level";
       state.visionRoute = "performance";
       render();
@@ -5375,12 +5477,13 @@ function renderDesignLab() {
       if (match) {
         state.selectedValidationMeasure = match.measure.id;
         state.selectedValidationPatient = match.patient.patient;
-        showToast(`${match.patient.patient} opened in patient level validation`);
+        state.visionRoute = "patient-evidence";
+        showToast(`${match.patient.patient} opened`);
       } else {
+        state.visionRoute = "performance";
         showToast("No matching patient found");
       }
       state.visionPerformanceTab = "patient-level";
-      state.visionRoute = "performance";
       render();
     });
   });
@@ -5390,6 +5493,15 @@ function renderDesignLab() {
         event.preventDefault();
         input.closest(".patient-search-bar")?.querySelector("[data-patient-search-action]")?.click();
       }
+    });
+  });
+  content.querySelectorAll("[data-open-patient-explanation]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.selectedValidationPatient = button.dataset.openPatientExplanation;
+      state.patientValidationSearch = button.dataset.openPatientExplanation;
+      state.visionPerformanceTab = "patient-level";
+      state.visionRoute = "patient-evidence";
+      render();
     });
   });
   content.querySelectorAll("[data-quality-target]").forEach((input) => {

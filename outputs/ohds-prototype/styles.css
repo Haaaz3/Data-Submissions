@@ -105,6 +105,33 @@
   justify-content: flex-end;
 }
 
+.patient-validation-workspace,
+.selected-patient-pane {
+  overflow-x: auto;
+}
+
+.validation-worklist-header {
+  align-items: start;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.validation-worklist-header h3 {
+  color: var(--vision-ink);
+  font-size: 24px;
+  line-height: 1.2;
+  margin: 2px 0 6px;
+}
+
+.validation-worklist-header p {
+  color: var(--vision-muted);
+  line-height: 1.45;
+  margin: 0;
+  max-width: 780px;
+}
+
 .patient-search-bar {
   align-items: end;
   display: grid;
@@ -135,6 +162,169 @@
   min-width: 0;
   padding: 0 12px;
   width: 100%;
+}
+
+.patient-validation-summary {
+  background: #f7f9fc;
+  border: 1px solid var(--vision-line);
+  border-radius: 14px;
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.patient-validation-summary div {
+  background: #fff;
+  min-width: 0;
+  padding: 13px 14px;
+}
+
+.patient-validation-summary span,
+.validation-sample-strip span,
+.validation-round-control span {
+  color: var(--vision-muted);
+  display: block;
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.patient-validation-summary strong {
+  color: var(--vision-ink);
+  display: block;
+  font-size: 24px;
+  line-height: 1.1;
+  margin-top: 4px;
+}
+
+.patient-validation-summary em {
+  color: var(--vision-muted);
+  display: block;
+  font-style: normal;
+  margin-top: 4px;
+}
+
+.patient-validation-measure-table-wrap {
+  border: 1px solid var(--vision-line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.patient-validation-measure-table {
+  border: 0;
+}
+
+.validation-worklist-controls {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin: 14px 0 16px;
+}
+
+.validation-filter-group {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.validation-filter-group button {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d8e1eb;
+  border-radius: 999px;
+  color: #37322e;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 850;
+  gap: 8px;
+  min-height: 34px;
+  padding: 7px 12px;
+}
+
+.validation-filter-group button.active {
+  background: #eef6ff;
+  border-color: #5da8e8;
+  color: var(--vision-blue);
+}
+
+.validation-filter-group strong {
+  background: #f1f4f8;
+  border-radius: 999px;
+  color: #4c5667;
+  min-width: 24px;
+  padding: 2px 7px;
+  text-align: center;
+}
+
+.validation-filter-group button.active strong {
+  background: #fff;
+  color: var(--vision-blue);
+}
+
+.validation-sample-strip {
+  align-items: stretch;
+  border: 1px solid var(--vision-line);
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(70px, 1fr));
+  min-width: 520px;
+  overflow: hidden;
+}
+
+.validation-sample-strip div {
+  background: #fff;
+  border-left: 1px solid #eef2f7;
+  padding: 9px 11px;
+}
+
+.validation-sample-strip div:first-child {
+  border-left: 0;
+}
+
+.validation-sample-strip strong {
+  color: var(--vision-ink);
+  display: block;
+  font-size: 18px;
+  line-height: 1.1;
+  margin-top: 4px;
+}
+
+.validation-round-control label {
+  display: block;
+}
+
+.validation-round-control select {
+  background: #fff;
+  border: 1px solid #cfd8e3;
+  border-radius: 8px;
+  color: #201f1e;
+  font: inherit;
+  height: 38px;
+  margin-top: 6px;
+  min-width: 190px;
+  padding: 0 10px;
+}
+
+.validation-queue-table {
+  min-width: 1180px;
+}
+
+.validation-queue-table th:nth-child(5),
+.validation-queue-table td:nth-child(5) {
+  min-width: 260px;
+}
+
+.validation-worklist-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 
 .selected-patient-overview {
@@ -200,28 +390,11 @@
   vertical-align: top;
 }
 
-.selected-patient-table tr.selected td {
-  background: #f7faff;
-  box-shadow: inset 0 1px 0 #d7e9ff, inset 0 -1px 0 #d7e9ff;
-}
-
 .selected-patient-table th:nth-child(5),
 .selected-patient-table td:nth-child(5),
 .selected-patient-table th:nth-child(6),
 .selected-patient-table td:nth-child(6) {
   min-width: 210px;
-}
-
-.patient-workbench-grid {
-  align-items: start;
-  display: grid;
-  gap: 16px;
-  grid-template-columns: minmax(0, 1.35fr) minmax(420px, 0.65fr);
-}
-
-.patient-list-panel {
-  min-width: 0;
-  overflow-x: auto;
 }
 
 .patient-outcome-panel {

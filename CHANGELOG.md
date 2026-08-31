@@ -1,5 +1,13 @@
 # Changelog
 
+## v48
+
+- Rebuilt Patient Level Validation as a full-width validation work queue instead of a split table/detail layout.
+- Added measure-level worklist selection with 5/5/5 sample coverage, selected population, changed outcomes, and remaining review counts.
+- Added validation round selection for Round 1, November pass, and final reconciliation.
+- Added patient filters for review queue, changed outcomes, fall-outs, controls, and all selected patients.
+- Removed satisfaction/closeness language from the patient validation table and moved outcome detail into a full-page drill-in.
+
 ## v47
 
 - Made Trending Quality Over Time the first/default Quality Workbench view.
