@@ -1,17 +1,25 @@
 # Changelog
 
+## v50
+
+- Removed remaining sampled-minimum language from Patient Level Validation and Validation Plan.
+- Removed numerator/denominator/exclusion counts from the measure selector so the app does not imply fixed component population sizes.
+- Defaulted the patient population table to the full selected population for the chosen measure.
+- Tightened Patient Level Validation table density and reduced row height.
+- Kept numerator, denominator, and exclusion as outcome filters on the selected patient table.
+
 ## v49
 
 - Rebuilt Patient Level Validation around outcome populations instead of task tracking.
 - Made the measure selector a compact table with selected count, satisfaction rate, WoW change, and numerator/denominator/exclusion counts.
 - Defaulted the lower table to all selected validation patients for the chosen measure.
 - Replaced review queue/workstream fields with patient, provider, specialty, current state, prior state, state change, evidence summary, and source columns.
-- Removed the 5/5/5 sample strip, review remaining column, and task-management footer actions.
+- Removed the sampled-minimum strip, review remaining column, and task-management footer actions.
 
 ## v48
 
 - Rebuilt Patient Level Validation as a full-width validation work queue instead of a split table/detail layout.
-- Added measure-level worklist selection with 5/5/5 sample coverage, selected population, changed outcomes, and remaining review counts.
+- Added measure-level worklist selection with sample coverage, selected population, changed outcomes, and remaining review counts.
 - Added validation round selection for Round 1, November pass, and final reconciliation.
 - Added patient filters for review queue, changed outcomes, fall-outs, controls, and all selected patients.
 - Removed satisfaction/closeness language from the patient validation table and moved outcome detail into a full-page drill-in.

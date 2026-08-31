@@ -91,7 +91,7 @@
   display: flex;
   gap: 18px;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .selected-patient-header h3 {
@@ -108,6 +108,14 @@
 .patient-validation-workspace,
 .selected-patient-pane {
   overflow-x: auto;
+}
+
+.patient-validation-workspace {
+  padding: 14px;
+}
+
+.selected-patient-pane {
+  padding: 14px;
 }
 
 .validation-worklist-header {
@@ -130,12 +138,13 @@
 }
 
 .validation-worklist-header.compact h3 {
-  font-size: 21px;
+  font-size: 20px;
 }
 
 .validation-worklist-header p {
   color: var(--vision-muted);
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.35;
   margin: 0;
   max-width: 780px;
 }
@@ -185,7 +194,7 @@
 .patient-validation-measure-table.compact th,
 .patient-validation-measure-table.compact td {
   font-size: 12px;
-  padding: 7px 9px;
+  padding: 6px 8px;
   vertical-align: middle;
 }
 
@@ -203,7 +212,7 @@
   display: flex;
   gap: 18px;
   justify-content: space-between;
-  margin: 14px 0 16px;
+  margin: 10px 0 12px;
 }
 
 .validation-filter-group {
@@ -222,10 +231,11 @@
   cursor: pointer;
   display: inline-flex;
   font: inherit;
+  font-size: 12px;
   font-weight: 850;
   gap: 8px;
-  min-height: 34px;
-  padding: 7px 12px;
+  min-height: 28px;
+  padding: 5px 10px;
 }
 
 .validation-filter-group button.active {
@@ -238,8 +248,9 @@
   background: #f1f4f8;
   border-radius: 999px;
   color: #4c5667;
+  font-size: 11px;
   min-width: 24px;
-  padding: 2px 7px;
+  padding: 1px 6px;
   text-align: center;
 }
 
@@ -273,18 +284,33 @@
 }
 
 .validation-queue-table {
-  min-width: 1440px;
+  min-width: 1180px;
 }
 
-.validation-queue-table th:nth-child(8),
-.validation-queue-table td:nth-child(8) {
-  min-width: 310px;
+.validation-queue-table th:nth-child(7),
+.validation-queue-table td:nth-child(7) {
+  min-width: 270px;
 }
 
 .validation-queue-table th,
 .validation-queue-table td {
-  font-size: 13px;
-  padding: 10px 11px;
+  font-size: 12px;
+  line-height: 1.2;
+  padding: 5px 7px;
+  vertical-align: middle;
+}
+
+.validation-queue-table .vision-badge,
+.patient-validation-measure-table .vision-badge {
+  font-size: 11px;
+  padding: 3px 7px;
+}
+
+.validation-queue-table .vision-row-button,
+.patient-validation-measure-table .vision-row-button {
+  font-size: 12px;
+  min-height: 26px;
+  padding: 4px 7px;
 }
 
 .selected-patient-overview {
@@ -293,36 +319,6 @@
   gap: 16px;
   grid-template-columns: minmax(360px, 0.74fr) minmax(420px, 1fr);
   margin-bottom: 12px;
-}
-
-.outcome-mix-strip {
-  background: #f7f9fc;
-  border: 1px solid var(--vision-line);
-  border-radius: 16px;
-  display: grid;
-  gap: 1px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 14px;
-  overflow: hidden;
-}
-
-.outcome-mix-strip div {
-  background: #fff;
-  padding: 13px 14px;
-}
-
-.outcome-mix-strip span {
-  color: var(--vision-muted);
-  display: block;
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.outcome-mix-strip strong {
-  display: block;
-  font-size: 24px;
-  margin-top: 4px;
 }
 
 .population-validation-toolbar {
