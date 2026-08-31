@@ -605,8 +605,7 @@ const visionStages = [
 const visionScreens = [
   { id: "home", label: "Home", stage: "strategy", detail: "Score, strategy, blockers" },
   { id: "strategy", label: "Strategy", stage: "strategy", detail: "Forecast and choose" },
-  { id: "performance", label: "Performance Workbench", stage: "improve", detail: "Improve scores" },
-  { id: "validation", label: "Measure Validation", stage: "validate", detail: "Prove outcomes" },
+  { id: "performance", label: "Performance & Validation", stage: "improve", detail: "Improve and prove outcomes" },
   { id: "submissions", label: "Submissions", stage: "submit", detail: "Approve and submit" },
   { id: "qrda", label: "QRDA Export", stage: "submit", detail: "Generate file package" },
   { id: "audit", label: "Audit", stage: "submit", detail: "Approvals and traceability" },
@@ -1354,6 +1353,87 @@ const visionValidationPatientMeasures = [
     ],
   },
 ];
+
+const visionAttestationTrends = {
+  cms349: {
+    current: "74%",
+    change: "+22 pts",
+    target: 85,
+    note: "Improving after lab-source review, but still below sign-off target.",
+    trend: [
+      { label: "Round 1", value: 52 },
+      { label: "Round 2", value: 58 },
+      { label: "Aug", value: 63 },
+      { label: "Sep", value: 69 },
+      { label: "Current", value: 74 },
+    ],
+  },
+  cms2: {
+    current: "81%",
+    change: "+15 pts",
+    target: 85,
+    note: "Steady validation lift as documentation and follow-up-plan issues are resolved.",
+    trend: [
+      { label: "Round 1", value: 66 },
+      { label: "Round 2", value: 70 },
+      { label: "Aug", value: 73 },
+      { label: "Sep", value: 78 },
+      { label: "Current", value: 81 },
+    ],
+  },
+  cms153: {
+    current: "88%",
+    change: "+11 pts",
+    target: 85,
+    note: "Above target, with remaining validation focused on small-stratum fall-outs.",
+    trend: [
+      { label: "Round 1", value: 77 },
+      { label: "Round 2", value: 80 },
+      { label: "Aug", value: 82 },
+      { label: "Sep", value: 85 },
+      { label: "Current", value: 88 },
+    ],
+  },
+  cms165: {
+    current: "79%",
+    change: "+18 pts",
+    target: 85,
+    note: "Vitals-feed deploy moved attestation materially; attribution issues still need review.",
+    trend: [
+      { label: "Round 1", value: 61 },
+      { label: "Round 2", value: 64 },
+      { label: "Aug", value: 72 },
+      { label: "Sep", value: 76 },
+      { label: "Current", value: 79 },
+    ],
+  },
+  cms130: {
+    current: "69%",
+    change: "+7 pts",
+    target: 85,
+    note: "Registry reconciliation is the primary limiter for customer confidence.",
+    trend: [
+      { label: "Round 1", value: 62 },
+      { label: "Round 2", value: 63 },
+      { label: "Aug", value: 65 },
+      { label: "Sep", value: 68 },
+      { label: "Current", value: 69 },
+    ],
+  },
+  cms122: {
+    current: "58%",
+    change: "+9 pts",
+    target: 85,
+    note: "Lab-value mapping moved the trend, but this measure still needs focused validation.",
+    trend: [
+      { label: "Round 1", value: 49 },
+      { label: "Round 2", value: 52 },
+      { label: "Aug", value: 53 },
+      { label: "Sep", value: 57 },
+      { label: "Current", value: 58 },
+    ],
+  },
+};
 
 const visionOutcomeShiftRows = [
   { patient: "HY-10482", measure: "CMS349v8 HIV Screening", prior: "Denominator only", current: "Near miss", cause: "Data change", version: "outcome v42 -> v43", action: "Map lab result" },
@@ -3302,14 +3382,12 @@ function currentVisionStage() {
 }
 
 function visionStageIdForScreen(screenId) {
-  if (screenId === "measure-detail") return "improve";
-  if (screenId === "patient-evidence" || screenId === "readiness") return "validate";
+  if (["performance", "validation", "measure-detail", "patient-evidence", "readiness"].includes(screenId)) return "improve";
   return visionScreens.find((screen) => screen.id === screenId)?.stage || "strategy";
 }
 
 function visionScreenForStage(stageId) {
-  if (stageId === "improve") return "performance";
-  if (stageId === "validate") return "validation";
+  if (["improve", "monitor", "validate"].includes(stageId)) return "performance";
   if (stageId === "submit") return "submissions";
   return "strategy";
 }
@@ -3317,7 +3395,7 @@ function visionScreenForStage(stageId) {
 function activeVisionScreenId() {
   if (state.visionRoute === "phase-faq") return "phase-faq";
   if (state.visionRoute === "measure-detail") return "performance";
-  if (state.visionRoute === "patient-evidence" || state.visionRoute === "readiness") return "validation";
+  if (state.visionRoute === "validation" || state.visionRoute === "patient-evidence" || state.visionRoute === "readiness") return "performance";
   if (visionScreens.some((screen) => screen.id === state.visionRoute)) return state.visionRoute;
   return visionScreenForStage(currentVisionStage().stage.id);
 }
@@ -3354,6 +3432,52 @@ function renderOutcomeMix(mix) {
       <div><span>Exclusion</span><strong>${mix.exclusion}</strong></div>
       <div><span>Fall-outs</span><strong>${mix.fallout}</strong></div>
     </div>
+  `;
+}
+
+function attestationTrendFor(measureId) {
+  return visionAttestationTrends[measureId] || visionAttestationTrends.cms349;
+}
+
+function renderAttestationTrendChart(measure, options = {}) {
+  const trend = attestationTrendFor(measure.id);
+  const width = 420;
+  const height = options.compact ? 154 : 190;
+  const pad = { left: 30, right: 18, top: 18, bottom: 34 };
+  const plotWidth = width - pad.left - pad.right;
+  const plotHeight = height - pad.top - pad.bottom;
+  const points = trend.trend.map((point, index) => {
+    const x = pad.left + (plotWidth * index) / Math.max(trend.trend.length - 1, 1);
+    const y = pad.top + plotHeight - (plotHeight * point.value) / 100;
+    return { ...point, x, y };
+  });
+  const polyline = points.map((point) => `${point.x},${point.y}`).join(" ");
+  const targetY = pad.top + plotHeight - (plotHeight * trend.target) / 100;
+  return `
+    <section class="attestation-chart-card ${options.compact ? "compact" : ""}">
+      <div class="attestation-chart-header">
+        <div>
+          <span class="vision-kicker">Attestation rate over time</span>
+          <h4>${measure.measure}</h4>
+          <p>${trend.note}</p>
+        </div>
+        <div>
+          <strong>${trend.current}</strong>
+          <span>${trend.change}</span>
+        </div>
+      </div>
+      <svg class="attestation-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${measure.measure} attestation trend">
+        <line x1="${pad.left}" y1="${targetY}" x2="${width - pad.right}" y2="${targetY}" class="target-line" />
+        <text x="${width - pad.right - 48}" y="${targetY - 6}" class="target-label">85% target</text>
+        <line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${height - pad.bottom}" class="axis-line" />
+        <line x1="${pad.left}" y1="${height - pad.bottom}" x2="${width - pad.right}" y2="${height - pad.bottom}" class="axis-line" />
+        <polyline points="${polyline}" class="attestation-line" />
+        ${points.map((point) => `
+          <circle cx="${point.x}" cy="${point.y}" r="4.5" class="attestation-point" />
+          <text x="${point.x}" y="${height - 12}" class="axis-label">${point.label}</text>
+        `).join("")}
+      </svg>
+    </section>
   `;
 }
 
@@ -3464,7 +3588,7 @@ function renderVisionActiveScreen(activeScreen) {
   }
   if (activeScreen === "strategy") return renderVisionStrategyScreen();
   if (activeScreen === "performance") return renderVisionPerformanceScreen();
-  if (activeScreen === "validation") return renderVisionValidationScreen();
+  if (activeScreen === "validation") return renderVisionPerformanceScreen();
   if (activeScreen === "submissions") return renderVisionSubmissionScreen();
   if (activeScreen === "qrda") return renderVisionQrdaScreen();
   if (activeScreen === "audit") return renderVisionAuditScreen();
@@ -3726,19 +3850,45 @@ function renderVisionStrategyAssumptionsTab() {
 function renderVisionPerformanceScreen() {
   const tabs = [
     { id: "summary", label: "Opportunity Summary" },
-    { id: "near-misses", label: "Near Misses" },
+    { id: "near-misses", label: "Patient Opportunities" },
     { id: "measure-detail", label: "Measure Detail" },
+    { id: "validation-plan", label: "Validation Plan" },
+    { id: "selected-patients", label: "Selected Patients" },
+    { id: "attestation-trends", label: "Attestation Trends" },
+    { id: "outcomes", label: "Outcome Changes" },
+    { id: "patient-evidence", label: "Patient Evidence" },
+    { id: "deploys", label: "Deploy Baseline" },
+    { id: "ai-review", label: "AI Review" },
   ];
   const activeTab = state.visionPerformanceTab || "summary";
+  const tabContent = activeTab === "near-misses"
+    ? renderVisionNearMissTab()
+    : activeTab === "measure-detail"
+      ? renderVisionMeasureOpportunityDetail()
+      : activeTab === "validation-plan"
+        ? renderVisionValidationPlanTab()
+        : activeTab === "selected-patients"
+          ? renderVisionSelectedPatientsTab()
+          : activeTab === "attestation-trends"
+            ? renderVisionAttestationTrendsTab()
+            : activeTab === "outcomes"
+              ? renderVisionOutcomeChangesTab()
+              : activeTab === "patient-evidence"
+                ? renderVisionPatientEvidenceTab()
+                : activeTab === "deploys"
+                  ? renderVisionDeployBaselineTab()
+                  : activeTab === "ai-review"
+                    ? renderVisionAiReviewTab()
+                    : renderVisionOpportunitySummaryTab();
   return renderVisionScreenFrame({
     id: "performance",
-    crumb: "Performance",
-    title: "Performance Workbench",
-    subtitle: "Prioritize the highest-impact measure work and route issues to the team that can actually move the outcome.",
-    filters: `<span>Program: MVP specialty subgroups</span><span>Score refresh: Today 6:10 AM</span>`,
+    crumb: "Performance & Validation",
+    title: "Performance & Validation Workbench",
+    subtitle: "Find patient opportunities, prove measure outcomes, and resolve data or mapping issues from one operating workspace.",
+    filters: `<span>Program: MVP specialty subgroups + APP Plus</span><span>Score refresh: Today 6:10 AM</span><span>Validation round: Round 1 frozen</span>`,
     body: `
       ${renderVisionTabs(tabs, "visionPerformanceTab")}
-      ${activeTab === "near-misses" ? renderVisionNearMissTab() : activeTab === "measure-detail" ? renderVisionMeasureOpportunityDetail() : renderVisionOpportunitySummaryTab()}
+      ${tabContent}
     `,
   });
 }
@@ -3876,41 +4026,12 @@ function renderVisionMeasureOpportunityDetail() {
 }
 
 function renderVisionValidationScreen() {
-  const tabs = [
-    { id: "selected-patients", label: "Selected Patients" },
-    { id: "plan", label: "Validation Plan" },
-    { id: "outcomes", label: "Outcome Changes" },
-    { id: "patient-evidence", label: "Patient Evidence" },
-    { id: "deploys", label: "Deploy Baseline" },
-    { id: "ai-review", label: "AI Review" },
-  ];
-  const activeTab = state.visionValidationTab || "selected-patients";
-  const tabContent = activeTab === "outcomes"
-    ? renderVisionOutcomeChangesTab()
-    : activeTab === "patient-evidence"
-      ? renderVisionPatientEvidenceTab()
-      : activeTab === "deploys"
-        ? renderVisionDeployBaselineTab()
-        : activeTab === "ai-review"
-          ? renderVisionAiReviewTab()
-          : activeTab === "plan"
-            ? renderVisionValidationPlanTab()
-            : renderVisionSelectedPatientsTab();
-  return renderVisionScreenFrame({
-    id: "validation",
-    crumb: "Measure Validation",
-    title: "Measure Validation Workbench",
-    subtitle: "Freeze a defensible sample, track outcome changes, explain shifts, and reconcile only the records that need judgment.",
-    filters: `<span>Validation round: Round 1 frozen</span><span>Snapshot cadence: Every 2 weeks</span>`,
-    body: `
-      ${renderVisionTabs(tabs, "visionValidationTab")}
-      ${tabContent}
-    `,
-  });
+  return renderVisionPerformanceScreen();
 }
 
 function renderVisionSelectedPatientsTab() {
   const selected = selectedValidationMeasure();
+  const trend = attestationTrendFor(selected.id);
   const totalSelected = visionValidationPatientMeasures.reduce((sum, measure) => sum + measure.selected, 0);
   const totalChanged = visionValidationPatientMeasures.reduce((sum, measure) => sum + measure.changed, 0);
   return `
@@ -3918,7 +4039,7 @@ function renderVisionSelectedPatientsTab() {
       <article class="vision-card"><span class="vision-kicker">Selected population</span><strong class="vision-metric">${totalSelected}</strong><p>Shown across active submission measures</p></article>
       <article class="vision-card"><span class="vision-kicker">Measures represented</span><strong class="vision-metric">${visionValidationPatientMeasures.length}</strong><p>Sample detail available now</p></article>
       <article class="vision-card"><span class="vision-kicker">Changed outcomes</span><strong class="vision-metric danger">${totalChanged}</strong><p>Since the prior snapshot</p></article>
-      <article class="vision-card"><span class="vision-kicker">Review complete</span><strong class="vision-metric">${selected.reviewComplete}</strong><p>${selected.measure}</p></article>
+      <article class="vision-card"><span class="vision-kicker">Attestation rate</span><strong class="vision-metric">${trend.current}</strong><p>${trend.change} for ${selected.measure}</p></article>
     </div>
     <div class="patient-validation-layout spaced">
       <aside class="vision-card measure-patient-rail">
@@ -3953,11 +4074,17 @@ function renderVisionSelectedPatientsTab() {
             <button class="vision-btn" data-toast="Validation packet exported" type="button">Export packet</button>
           </div>
         </div>
-        ${renderOutcomeMix(selected.mix)}
-        <div class="population-validation-toolbar">
-          <span>${selected.coverage}</span>
-          <span>Round 1 frozen · Prior snapshot compared · Patient evidence available</span>
+        <div class="selected-patient-overview">
+          <div>
+            ${renderOutcomeMix(selected.mix)}
+            <div class="population-validation-toolbar">
+              <span>${selected.coverage}</span>
+              <span>${selected.reviewComplete} review complete</span>
+            </div>
+          </div>
+          ${renderAttestationTrendChart(selected)}
         </div>
+        <p class="population-validation-note">Round 1 frozen · Prior snapshot compared · Patient evidence available · Attestation trend updates by selected measure</p>
         <table class="vision-table selected-patient-table">
           <thead><tr><th>Patient</th><th>Provider / specialty</th><th>Measure satisfaction</th><th>Prior state and change</th><th>Why selected</th><th>Evidence / action</th><th>Review</th></tr></thead>
           <tbody>
@@ -3995,6 +4122,38 @@ function renderVisionSelectedPatientsTab() {
           <li><span class="vision-dot warn"></span><span>Reconcile only patients whose outcome changed after deploys or logic updates.</span></li>
         </ul>
       </article>
+    </div>
+  `;
+}
+
+function renderVisionAttestationTrendsTab() {
+  return `
+    <div class="vision-grid-4">
+      <article class="vision-card"><span class="vision-kicker">Average attestation</span><strong class="vision-metric">74%</strong><p>Across selected validation packets</p></article>
+      <article class="vision-card"><span class="vision-kicker">Measures above target</span><strong class="vision-metric">1 / 6</strong><p>85% sign-off target</p></article>
+      <article class="vision-card"><span class="vision-kicker">Trending up</span><strong class="vision-metric">6</strong><p>No measure is deteriorating</p></article>
+      <article class="vision-card"><span class="vision-kicker">Needs focus</span><strong class="vision-metric danger">2</strong><p>Registry and lab-value confidence</p></article>
+    </div>
+    <div class="attestation-trend-grid spaced">
+      ${visionValidationPatientMeasures.map((measure) => {
+        const trend = attestationTrendFor(measure.id);
+        const underTarget = Number.parseInt(trend.current, 10) < trend.target;
+        return `
+          <article class="vision-card attestation-measure-card">
+            <div class="attestation-measure-top">
+              <div>
+                <h3>${measure.measure}</h3>
+                <p>${measure.code} · ${measure.mvp}</p>
+              </div>
+              ${visionBadge(underTarget ? "Below target" : "At target", underTarget ? "warn" : "good")}
+            </div>
+            ${renderAttestationTrendChart(measure, { compact: true })}
+            <div class="vision-status-row"><strong>Selected patients</strong><span>${measure.selected}</span></div>
+            <div class="vision-status-row"><strong>Changed outcomes</strong><span>${measure.changed}</span></div>
+            <button class="vision-row-button" data-validation-measure="${measure.id}" type="button">Open patient population</button>
+          </article>
+        `;
+      }).join("")}
     </div>
   `;
 }
@@ -5092,12 +5251,14 @@ function renderDesignLab() {
   content.querySelectorAll("[data-vision-jump]").forEach((button) => {
     button.addEventListener("click", () => {
       const [screenId, tabId] = button.dataset.visionJump.split(":");
-      state.visionRoute = screenId;
-      if (screenId === "performance" && tabId) {
-        state.visionPerformanceTab = tabId;
+      const routeId = ["validation", "measure-detail", "patient-evidence", "readiness"].includes(screenId) ? "performance" : screenId;
+      const normalizedTabId = screenId === "validation" && tabId === "plan" ? "validation-plan" : tabId;
+      state.visionRoute = routeId;
+      if (routeId === "performance" && normalizedTabId) {
+        state.visionPerformanceTab = normalizedTabId;
       }
-      if (screenId === "validation" && tabId) {
-        state.visionValidationTab = tabId;
+      if (screenId === "validation" && normalizedTabId) {
+        state.visionValidationTab = normalizedTabId;
       }
       const stageId = visionStageIdForScreen(screenId);
       const stageIndex = visionStages.findIndex((stage) => stage.id === stageId);
@@ -5108,7 +5269,7 @@ function renderDesignLab() {
   content.querySelectorAll("[data-vision-screen]").forEach((button) => {
     button.addEventListener("click", () => {
       const screenId = button.dataset.visionScreen;
-      state.visionRoute = screenId;
+      state.visionRoute = screenId === "validation" ? "performance" : screenId;
       const stageId = visionStageIdForScreen(screenId);
       const stageIndex = visionStages.findIndex((stage) => stage.id === stageId);
       state.labStep = stageIndex >= 0 ? stageIndex : state.labStep;
@@ -5228,7 +5389,8 @@ function renderDesignLab() {
     button.addEventListener("click", () => {
       state.selectedValidationMeasure = button.dataset.validationMeasure;
       state.visionValidationTab = "selected-patients";
-      state.visionRoute = "validation";
+      state.visionPerformanceTab = "selected-patients";
+      state.visionRoute = "performance";
       render();
     });
   });

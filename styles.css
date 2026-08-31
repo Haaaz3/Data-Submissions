@@ -105,6 +105,14 @@
   justify-content: flex-end;
 }
 
+.selected-patient-overview {
+  align-items: stretch;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(360px, 0.74fr) minmax(420px, 1fr);
+  margin-bottom: 12px;
+}
+
 .outcome-mix-strip {
   background: #f7f9fc;
   border: 1px solid var(--vision-line);
@@ -145,6 +153,16 @@
   margin-bottom: 12px;
 }
 
+.population-validation-note {
+  background: #fbfaf8;
+  border: 1px solid #e4ddd6;
+  border-radius: 12px;
+  color: #5f5853;
+  font-weight: 700;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+}
+
 .selected-patient-table th,
 .selected-patient-table td {
   vertical-align: top;
@@ -170,6 +188,132 @@
   border-radius: inherit;
   display: block;
   height: 100%;
+}
+
+.attestation-chart-card {
+  background: #fff;
+  border: 1px solid var(--vision-line);
+  border-radius: 16px;
+  display: grid;
+  gap: 8px;
+  min-height: 100%;
+  padding: 14px 16px 10px;
+}
+
+.attestation-chart-card.compact {
+  border-color: #eef1f5;
+  padding: 12px 12px 8px;
+}
+
+.attestation-chart-header {
+  align-items: start;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.attestation-chart-header h4 {
+  color: #201f1e;
+  font-size: 18px;
+  margin: 2px 0 4px;
+}
+
+.attestation-chart-header p {
+  color: #6a625d;
+  font-size: 13px;
+  margin: 0;
+  max-width: 560px;
+}
+
+.attestation-chart-header > div:last-child {
+  text-align: right;
+}
+
+.attestation-chart-header > div:last-child strong {
+  color: var(--vision-blue);
+  display: block;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.attestation-chart-header > div:last-child span {
+  color: var(--vision-green);
+  display: block;
+  font-size: 12px;
+  font-weight: 850;
+  margin-top: 5px;
+}
+
+.attestation-chart {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.attestation-line {
+  fill: none;
+  stroke: var(--vision-blue);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+.attestation-point {
+  fill: #fff;
+  stroke: var(--vision-blue);
+  stroke-width: 3;
+}
+
+.axis-line {
+  stroke: #dfe5ec;
+  stroke-width: 1.5;
+}
+
+.axis-label {
+  fill: #697386;
+  font-size: 11px;
+  font-weight: 750;
+  text-anchor: middle;
+}
+
+.target-line {
+  stroke: #f0a43b;
+  stroke-dasharray: 5 5;
+  stroke-width: 1.8;
+}
+
+.target-label {
+  fill: #8a5a00;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.attestation-trend-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.attestation-measure-card {
+  display: grid;
+  gap: 12px;
+}
+
+.attestation-measure-top {
+  align-items: start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.attestation-measure-top h3 {
+  margin: 0 0 4px;
+}
+
+.attestation-measure-top p {
+  color: var(--vision-muted);
+  font-size: 13px;
+  margin: 0;
 }
 
 .validation-method-grid {
@@ -878,6 +1022,7 @@
 .vision-tabs {
   border-bottom: 1px solid var(--vision-line);
   display: flex;
+  flex-wrap: wrap;
   gap: 18px;
   margin: 0 0 18px;
 }
