@@ -16,9 +16,10 @@ const state = {
   visionRoute: "home",
   visionStrategyTab: "recommended",
   visionPerformanceTab: "summary",
-  visionValidationTab: "plan",
+  visionValidationTab: "selected-patients",
   visionSubmissionTab: "cms",
   visionEvidenceTab: "evaluation",
+  selectedValidationMeasure: "cms349",
   visionStrategyLocked: false,
   visionStrategyEditMode: false,
   visionSubgroupSelections: {
@@ -932,6 +933,426 @@ const visionValidationSampleRows = [
   { measure: "HIV Screening", numerator: "5/5", denominator: "5/5", exclusion: "5/5", fallouts: "50 selected", frozen: "Round 1 frozen", status: "Ready" },
   { measure: "Depression Screening and Follow-Up", numerator: "5/5", denominator: "5/5", exclusion: "4/5", fallouts: "32 selected", frozen: "Needs 1 exclusion", status: "Review" },
   { measure: "Chlamydia Screening in Women", numerator: "5/5", denominator: "5/5", exclusion: "5/5", fallouts: "27 selected", frozen: "Round 1 frozen", status: "Ready" },
+  { measure: "Controlling High Blood Pressure", numerator: "12/5", denominator: "8/5", exclusion: "5/5", fallouts: "44 selected", frozen: "Round 1 frozen", status: "Ready" },
+  { measure: "Colorectal Cancer Screening", numerator: "9/5", denominator: "7/5", exclusion: "5/5", fallouts: "41 selected", frozen: "Round 1 frozen", status: "Ready" },
+  { measure: "Diabetes: Glycemic Status Assessment Greater Than 9%", numerator: "8/5", denominator: "5/5", exclusion: "5/5", fallouts: "36 selected", frozen: "Needs reviewer", status: "Review" },
+];
+
+const visionValidationPatientMeasures = [
+  {
+    id: "cms349",
+    measure: "HIV Screening",
+    code: "CMS349v8",
+    mvp: "M1368",
+    subgroup: "Infectious disease and immunology subgroup",
+    selected: 50,
+    reviewComplete: "62%",
+    changed: 18,
+    coverage: "High evidence density with focused fall-out review",
+    mix: { numerator: 5, denominator: 5, exclusion: 5, fallout: 35 },
+    patients: [
+      {
+        patient: "HY-10482",
+        provider: "Jane Coleman, MD",
+        specialty: "Infectious Disease",
+        currentState: "Near miss",
+        satisfaction: "Not satisfied",
+        satisfactionTone: "warn",
+        priorState: "Denominator only",
+        change: "External lab evidence found",
+        changeTone: "info",
+        closeness: "83%",
+        whySelected: "Fall-out with the most supporting source evidence",
+        evidence: "LOINC mapping missing from supported lab feed",
+        review: "Mapping review",
+      },
+      {
+        patient: "HY-10731",
+        provider: "Marcus Bell, NP",
+        specialty: "Infectious Disease",
+        currentState: "Numerator",
+        satisfaction: "Satisfied",
+        satisfactionTone: "good",
+        priorState: "Numerator",
+        change: "No change",
+        changeTone: "info",
+        closeness: "100%",
+        whySelected: "Clean numerator control with complete source trail",
+        evidence: "Screening result, encounter, and attribution all evidenced",
+        review: "Validated",
+      },
+      {
+        patient: "HY-11106",
+        provider: "Rita Holmes, PA",
+        specialty: "Immunology",
+        currentState: "Denominator",
+        satisfaction: "Not satisfied",
+        satisfactionTone: "bad",
+        priorState: "Not in population",
+        change: "New denominator",
+        changeTone: "warn",
+        closeness: "48%",
+        whySelected: "Newly attributed denominator patient after roster refresh",
+        evidence: "Claim attribution changed; screening evidence absent",
+        review: "Chart chase",
+      },
+      {
+        patient: "HY-11645",
+        provider: "Jane Coleman, MD",
+        specialty: "Infectious Disease",
+        currentState: "Exclusion",
+        satisfaction: "Excluded",
+        satisfactionTone: "info",
+        priorState: "Denominator",
+        change: "Exclusion added",
+        changeTone: "good",
+        closeness: "N/A",
+        whySelected: "Representative exclusion record required for 5/5/5 sample",
+        evidence: "Documented exclusion found in EHR problem list",
+        review: "Validated",
+      },
+      {
+        patient: "HY-12214",
+        provider: "Marcus Bell, NP",
+        specialty: "Infectious Disease",
+        currentState: "Near miss",
+        satisfaction: "Not satisfied",
+        satisfactionTone: "warn",
+        priorState: "Near miss",
+        change: "No change",
+        changeTone: "info",
+        closeness: "76%",
+        whySelected: "Fall-out with registry evidence that needs EMR confirmation",
+        evidence: "Registry says screened; EMR source event not linked",
+        review: "Customer review",
+      },
+    ],
+  },
+  {
+    id: "cms2",
+    measure: "Depression Screening and Follow-Up Plan",
+    code: "CMS2v15",
+    mvp: "M1368 / M1369",
+    subgroup: "Infectious disease and mental health subgroups",
+    selected: 32,
+    reviewComplete: "71%",
+    changed: 7,
+    coverage: "Balanced controls plus changed-outcome patients",
+    mix: { numerator: 5, denominator: 5, exclusion: 4, fallout: 18 },
+    patients: [
+      {
+        patient: "HY-11790",
+        provider: "Elena Morales, MD",
+        specialty: "Psychiatry",
+        currentState: "Denominator",
+        satisfaction: "Not satisfied",
+        satisfactionTone: "bad",
+        priorState: "Numerator",
+        change: "Follow-up concept changed",
+        changeTone: "warn",
+        closeness: "67%",
+        whySelected: "Outcome changed after context version update",
+        evidence: "Screening present; follow-up plan code no longer qualifies",
+        review: "Clinical review",
+      },
+      {
+        patient: "HY-11903",
+        provider: "Caroline Meyer, LCSW",
+        specialty: "Behavioral Health",
+        currentState: "Numerator",
+        satisfaction: "Satisfied",
+        satisfactionTone: "good",
+        priorState: "Denominator",
+        change: "Documentation recovered",
+        changeTone: "good",
+        closeness: "100%",
+        whySelected: "Recovered numerator validates documentation logic",
+        evidence: "Screening and follow-up plan both coded",
+        review: "Validated",
+      },
+      {
+        patient: "HY-12372",
+        provider: "Avery Nelson, NP",
+        specialty: "Mental Health",
+        currentState: "Near miss",
+        satisfaction: "Not satisfied",
+        satisfactionTone: "warn",
+        priorState: "Denominator",
+        change: "One criterion improved",
+        changeTone: "info",
+        closeness: "79%",
+        whySelected: "Fall-out near benchmark threshold",
+        evidence: "Screening present; follow-up plan in note text only",
+        review: "AI abstraction",
+      },
+      {
+        patient: "HY-12944",
+        provider: "Jane Coleman, MD",
+        specialty: "Infectious Disease",
+        currentState: "Exclusion candidate",
+        satisfaction: "Needs review",
+        satisfactionTone: "warn",
+        priorState: "Not met",
+        change: "Potential exclusion found",
+        changeTone: "warn",
+        closeness: "N/A",
+        whySelected: "Completes missing exclusion sample for this measure",
+        evidence: "Documented reason appears in unstructured note",
+        review: "Reviewer needed",
+      },
+    ],
+  },
+  {
+    id: "cms153",
+    measure: "Chlamydia Screening in Women",
+    code: "CMS153v14",
+    mvp: "M1366",
+    subgroup: "Women's health clinicians",
+    selected: 27,
+    reviewComplete: "81%",
+    changed: 5,
+    coverage: "Small-stratum validation with high-risk fall-outs",
+    mix: { numerator: 5, denominator: 5, exclusion: 5, fallout: 12 },
+    patients: [
+      {
+        patient: "HY-12104",
+        provider: "Priya Shah, CNM",
+        specialty: "Women's Health",
+        currentState: "Denominator",
+        satisfaction: "Not satisfied",
+        satisfactionTone: "bad",
+        priorState: "Excluded",
+        change: "Measure logic change",
+        changeTone: "warn",
+        closeness: "58%",
+        whySelected: "Outcome shifted from exclusion to denominator",
+        evidence: "Exclusion criteria no longer satisfied after spec update",
+        review: "Reconcile criteria",
+      },
+      {
+        patient: "HY-12466",
+        provider: "Megan Park, MD",
+        specialty: "Gynecology",
+        currentState: "Numerator",
+        satisfaction: "Satisfied",
+        satisfactionTone: "good",
+        priorState: "Numerator",
+        change: "No change",
+        changeTone: "info",
+        closeness: "100%",
+        whySelected: "Clean numerator record for small-volume stratum",
+        evidence: "Screening lab result and encounter confirmed",
+        review: "Validated",
+      },
+      {
+        patient: "HY-12812",
+        provider: "Lena Ortiz, NP",
+        specialty: "Obstetrics",
+        currentState: "Near miss",
+        satisfaction: "Not satisfied",
+        satisfactionTone: "warn",
+        priorState: "Denominator",
+        change: "Lab source added",
+        changeTone: "info",
+        closeness: "74%",
+        whySelected: "Fall-out with a newly arrived lab source",
+        evidence: "Lab present; result date outside accepted window",
+        review: "Date review",
+      },
+      {
+        patient: "HY-13077",
+        provider: "Megan Park, MD",
+        specialty: "Gynecology",
+        currentState: "Exclusion",
+        satisfaction: "Excluded",
+        satisfactionTone: "info",
+        priorState: "Exclusion",
+        change: "No change",
+        changeTone: "info",
+        closeness: "N/A",
+        whySelected: "Representative exclusion control",
+        evidence: "Hospice exclusion documented and coded",
+        review: "Validated",
+      },
+    ],
+  },
+  {
+    id: "cms165",
+    measure: "Controlling High Blood Pressure",
+    code: "CMS165v14",
+    mvp: "APP Plus",
+    subgroup: "APM Entity quality package",
+    selected: 44,
+    reviewComplete: "76%",
+    changed: 6,
+    coverage: "High-volume outcome controls with attribution checks",
+    mix: { numerator: 12, denominator: 8, exclusion: 5, fallout: 19 },
+    patients: [
+      {
+        patient: "HY-13218",
+        provider: "Thomas Riley, MD",
+        specialty: "Family Medicine",
+        currentState: "Numerator",
+        satisfaction: "Satisfied",
+        satisfactionTone: "good",
+        priorState: "Denominator",
+        change: "BP evidence recovered",
+        changeTone: "good",
+        closeness: "100%",
+        whySelected: "Outcome changed after vitals feed redeploy",
+        evidence: "Most recent controlled BP now linked to qualifying encounter",
+        review: "Validated",
+      },
+      {
+        patient: "HY-13540",
+        provider: "Nadia Singh, MD",
+        specialty: "Cardiology",
+        currentState: "Denominator",
+        satisfaction: "Not satisfied",
+        satisfactionTone: "bad",
+        priorState: "Denominator",
+        change: "No change",
+        changeTone: "info",
+        closeness: "54%",
+        whySelected: "High-volume denominator control with low evidence ambiguity",
+        evidence: "BP values remain above numerator threshold",
+        review: "Validated",
+      },
+      {
+        patient: "HY-13822",
+        provider: "Robert Kane, PA",
+        specialty: "Cardiology",
+        currentState: "Near miss",
+        satisfaction: "Not satisfied",
+        satisfactionTone: "warn",
+        priorState: "Not in population",
+        change: "New attribution",
+        changeTone: "warn",
+        closeness: "88%",
+        whySelected: "Potential miss tied to billing-provider attribution",
+        evidence: "Controlled BP appears under non-Hyperion encounter",
+        review: "Claim review",
+      },
+    ],
+  },
+  {
+    id: "cms130",
+    measure: "Colorectal Cancer Screening",
+    code: "CMS130v14",
+    mvp: "APP Plus",
+    subgroup: "APM Entity quality package",
+    selected: 41,
+    reviewComplete: "69%",
+    changed: 9,
+    coverage: "Registry reconciliation sample with changed outcomes",
+    mix: { numerator: 9, denominator: 7, exclusion: 5, fallout: 20 },
+    patients: [
+      {
+        patient: "HY-14013",
+        provider: "Thomas Riley, MD",
+        specialty: "Family Medicine",
+        currentState: "Near miss",
+        satisfaction: "Not satisfied",
+        satisfactionTone: "warn",
+        priorState: "Denominator",
+        change: "Registry evidence found",
+        changeTone: "info",
+        closeness: "82%",
+        whySelected: "Registry indicates screening, calculation lacks accepted source",
+        evidence: "Colonoscopy record needs source reconciliation",
+        review: "Registry check",
+      },
+      {
+        patient: "HY-14355",
+        provider: "Alicia Nguyen, NP",
+        specialty: "Primary Care",
+        currentState: "Numerator",
+        satisfaction: "Satisfied",
+        satisfactionTone: "good",
+        priorState: "Numerator",
+        change: "No change",
+        changeTone: "info",
+        closeness: "100%",
+        whySelected: "Stable numerator control across registry and EHR",
+        evidence: "FIT-DNA result and date confirmed",
+        review: "Validated",
+      },
+      {
+        patient: "HY-14729",
+        provider: "Alicia Nguyen, NP",
+        specialty: "Primary Care",
+        currentState: "Exclusion",
+        satisfaction: "Excluded",
+        satisfactionTone: "info",
+        priorState: "Denominator",
+        change: "Hospice exclusion added",
+        changeTone: "good",
+        closeness: "N/A",
+        whySelected: "Representative exclusion changed since last snapshot",
+        evidence: "Hospice record now available in EHR source",
+        review: "Validated",
+      },
+    ],
+  },
+  {
+    id: "cms122",
+    measure: "Diabetes: Glycemic Status Assessment Greater Than 9%",
+    code: "CMS122v14",
+    mvp: "APP Plus",
+    subgroup: "APM Entity quality package",
+    selected: 36,
+    reviewComplete: "58%",
+    changed: 8,
+    coverage: "Fall-outs weighted by benchmark proximity and lab-source density",
+    mix: { numerator: 8, denominator: 5, exclusion: 5, fallout: 18 },
+    patients: [
+      {
+        patient: "HY-15086",
+        provider: "Alicia Nguyen, NP",
+        specialty: "Primary Care",
+        currentState: "Numerator",
+        satisfaction: "Satisfied",
+        satisfactionTone: "good",
+        priorState: "Near miss",
+        change: "A1c result mapped",
+        changeTone: "good",
+        closeness: "100%",
+        whySelected: "Outcome changed after lab value mapping fix",
+        evidence: "A1c result now mapped to accepted lab concept",
+        review: "Validated",
+      },
+      {
+        patient: "HY-15319",
+        provider: "Thomas Riley, MD",
+        specialty: "Family Medicine",
+        currentState: "Near miss",
+        satisfaction: "Not satisfied",
+        satisfactionTone: "warn",
+        priorState: "Denominator",
+        change: "One criterion improved",
+        changeTone: "info",
+        closeness: "77%",
+        whySelected: "Fall-out one criterion away from satisfying numerator logic",
+        evidence: "Assessment present; result value missing from feed",
+        review: "Data review",
+      },
+      {
+        patient: "HY-15602",
+        provider: "Marcus Bell, NP",
+        specialty: "Infectious Disease",
+        currentState: "Denominator",
+        satisfaction: "Not satisfied",
+        satisfactionTone: "bad",
+        priorState: "Denominator",
+        change: "No change",
+        changeTone: "info",
+        closeness: "42%",
+        whySelected: "Low-confidence denominator control for cross-specialty attribution",
+        evidence: "Diabetes diagnosis present; glycemic assessment absent",
+        review: "Chart chase",
+      },
+    ],
+  },
 ];
 
 const visionOutcomeShiftRows = [
@@ -2921,6 +3342,21 @@ function renderVisionTabs(tabs, stateKey) {
   `;
 }
 
+function selectedValidationMeasure() {
+  return visionValidationPatientMeasures.find((measure) => measure.id === state.selectedValidationMeasure) || visionValidationPatientMeasures[0];
+}
+
+function renderOutcomeMix(mix) {
+  return `
+    <div class="outcome-mix-strip" aria-label="Selected patient outcome mix">
+      <div><span>Numerator</span><strong>${mix.numerator}</strong></div>
+      <div><span>Denominator</span><strong>${mix.denominator}</strong></div>
+      <div><span>Exclusion</span><strong>${mix.exclusion}</strong></div>
+      <div><span>Fall-outs</span><strong>${mix.fallout}</strong></div>
+    </div>
+  `;
+}
+
 function renderVisionScreenFrame({ id, crumb, title, subtitle, filters = "", actions = "", body }) {
   return `
     <section class="vision-screen-card" id="vision-${id}">
@@ -3343,7 +3779,7 @@ function renderVisionOpportunitySummaryTab() {
           <div class="vision-status-row"><strong>Owner</strong><span>Interface + chart chase</span></div>
           <div class="vision-action-row">
             <button class="vision-btn" data-vision-jump="performance:measure-detail" type="button">Open measure detail</button>
-            <button class="vision-btn secondary" data-vision-jump="validation:patient-evidence" type="button">Validate sample</button>
+            <button class="vision-btn secondary" data-vision-jump="validation:selected-patients" type="button">Validate sample</button>
           </div>
         </article>
       </div>
@@ -3390,7 +3826,7 @@ function renderVisionNearMissTab() {
         <div class="vision-bar-row"><span>One criterion missing</span><div><b style="width:72%"></b></div><strong>428</strong></div>
         <div class="vision-bar-row"><span>Evidence likely exists</span><div><b style="width:58%"></b></div><strong>274</strong></div>
         <div class="vision-bar-row"><span>Workflow documentation</span><div><b style="width:31%"></b></div><strong>112</strong></div>
-        <button class="vision-btn" data-vision-jump="validation:patient-evidence" type="button">Open evidence review</button>
+        <button class="vision-btn" data-vision-jump="validation:selected-patients" type="button">Open selected patients</button>
       </article>
     </div>
   `;
@@ -3419,7 +3855,7 @@ function renderVisionMeasureOpportunityDetail() {
         <div class="vision-bar-row"><span>Missing screening result</span><div><b style="width:86%"></b></div><strong>2,140</strong></div>
         <div class="vision-bar-row"><span>Lab interface mapping gap</span><div><b style="width:52%"></b></div><strong>1,284</strong></div>
         <div class="vision-bar-row"><span>Documentation not coded</span><div><b style="width:38%"></b></div><strong>936</strong></div>
-        <button class="vision-btn secondary" data-vision-jump="validation:patient-evidence" type="button">Validate patient sample</button>
+        <button class="vision-btn secondary" data-vision-jump="validation:selected-patients" type="button">Validate patient sample</button>
       </article>
       <article class="vision-soft-card">
         <h2>Top Priority Cohort</h2>
@@ -3441,13 +3877,14 @@ function renderVisionMeasureOpportunityDetail() {
 
 function renderVisionValidationScreen() {
   const tabs = [
+    { id: "selected-patients", label: "Selected Patients" },
     { id: "plan", label: "Validation Plan" },
     { id: "outcomes", label: "Outcome Changes" },
     { id: "patient-evidence", label: "Patient Evidence" },
     { id: "deploys", label: "Deploy Baseline" },
     { id: "ai-review", label: "AI Review" },
   ];
-  const activeTab = state.visionValidationTab || "plan";
+  const activeTab = state.visionValidationTab || "selected-patients";
   const tabContent = activeTab === "outcomes"
     ? renderVisionOutcomeChangesTab()
     : activeTab === "patient-evidence"
@@ -3456,7 +3893,9 @@ function renderVisionValidationScreen() {
         ? renderVisionDeployBaselineTab()
         : activeTab === "ai-review"
           ? renderVisionAiReviewTab()
-          : renderVisionValidationPlanTab();
+          : activeTab === "plan"
+            ? renderVisionValidationPlanTab()
+            : renderVisionSelectedPatientsTab();
   return renderVisionScreenFrame({
     id: "validation",
     crumb: "Measure Validation",
@@ -3470,10 +3909,100 @@ function renderVisionValidationScreen() {
   });
 }
 
+function renderVisionSelectedPatientsTab() {
+  const selected = selectedValidationMeasure();
+  const totalSelected = visionValidationPatientMeasures.reduce((sum, measure) => sum + measure.selected, 0);
+  const totalChanged = visionValidationPatientMeasures.reduce((sum, measure) => sum + measure.changed, 0);
+  return `
+    <div class="vision-grid-4">
+      <article class="vision-card"><span class="vision-kicker">Selected population</span><strong class="vision-metric">${totalSelected}</strong><p>Shown across active submission measures</p></article>
+      <article class="vision-card"><span class="vision-kicker">Measures represented</span><strong class="vision-metric">${visionValidationPatientMeasures.length}</strong><p>Sample detail available now</p></article>
+      <article class="vision-card"><span class="vision-kicker">Changed outcomes</span><strong class="vision-metric danger">${totalChanged}</strong><p>Since the prior snapshot</p></article>
+      <article class="vision-card"><span class="vision-kicker">Review complete</span><strong class="vision-metric">${selected.reviewComplete}</strong><p>${selected.measure}</p></article>
+    </div>
+    <div class="patient-validation-layout spaced">
+      <aside class="vision-card measure-patient-rail">
+        <div class="vision-section-title">
+          <span class="vision-kicker">Measure population</span>
+          <h3>Selected patients by measure</h3>
+          <p>Each measure keeps the 5/5/5 guardrail while prioritizing fall-outs and changed outcomes.</p>
+        </div>
+        ${visionValidationPatientMeasures.map((measure) => `
+          <button class="${measure.id === selected.id ? "active" : ""}" data-validation-measure="${measure.id}" type="button">
+            <span>
+              <strong>${measure.measure}</strong>
+              <em>${measure.code} / ${measure.mvp}</em>
+            </span>
+            <span>
+              <strong>${measure.selected}</strong>
+              <em>${measure.changed} changed</em>
+            </span>
+          </button>
+        `).join("")}
+      </aside>
+      <article class="vision-card selected-patient-pane">
+        <div class="selected-patient-header">
+          <div>
+            <span class="vision-kicker">Selected validation population</span>
+            <h3>${selected.measure}</h3>
+            <p>${selected.code} · ${selected.mvp} · ${selected.subgroup}</p>
+          </div>
+          <div class="selected-patient-actions">
+            <button class="vision-btn secondary" data-toast="Changed-outcome filter applied" type="button">Show changed only</button>
+            <button class="vision-btn secondary" data-toast="Reviewer packet split" type="button">Assign reviewers</button>
+            <button class="vision-btn" data-toast="Validation packet exported" type="button">Export packet</button>
+          </div>
+        </div>
+        ${renderOutcomeMix(selected.mix)}
+        <div class="population-validation-toolbar">
+          <span>${selected.coverage}</span>
+          <span>Round 1 frozen · Prior snapshot compared · Patient evidence available</span>
+        </div>
+        <table class="vision-table selected-patient-table">
+          <thead><tr><th>Patient</th><th>Provider / specialty</th><th>Measure satisfaction</th><th>Prior state and change</th><th>Why selected</th><th>Evidence / action</th><th>Review</th></tr></thead>
+          <tbody>
+            ${selected.patients.map((row) => `
+              <tr>
+                <td><strong>${row.patient}</strong><span class="subline">${selected.code}</span></td>
+                <td><strong>${row.provider}</strong><span class="subline">${row.specialty}</span></td>
+                <td><strong>${row.currentState}</strong><span class="subline">${visionBadge(row.satisfaction, row.satisfactionTone)} ${row.closeness === "N/A" ? "No closeness score" : `${row.closeness} close`}</span></td>
+                <td><strong>${row.priorState}</strong><span class="subline">${visionBadge(row.change, row.changeTone)}</span></td>
+                <td>${row.whySelected}</td>
+                <td>${row.evidence}</td>
+                <td><button class="vision-row-button" data-vision-jump="validation:patient-evidence" type="button">${row.review}</button></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </article>
+    </div>
+    <div class="vision-grid-3 spaced">
+      <article class="vision-soft-card">
+        <h2>Selection Logic</h2>
+        <p><strong>Representative first, not random first.</strong> The validation population favors patients with rich source evidence, outcome changes, fall-outs, and coverage across numerator, denominator, and exclusion states.</p>
+      </article>
+      <article class="vision-card">
+        <h2>Population Coverage</h2>
+        <div class="vision-bar-row"><span>Outcome-type coverage</span><div><b style="width:92%"></b></div><strong>92%</strong></div>
+        <div class="vision-bar-row"><span>Provider spread</span><div><b style="width:78%"></b></div><strong>78%</strong></div>
+        <div class="vision-bar-row"><span>Evidence-source density</span><div><b style="width:86%"></b></div><strong>86%</strong></div>
+      </article>
+      <article class="vision-card">
+        <h2>Validation Focus</h2>
+        <ul class="vision-list">
+          <li><span class="vision-dot warn"></span><span>Review denominator patients that look like numerator misses.</span></li>
+          <li><span class="vision-dot good"></span><span>Keep stable numerator and exclusion controls in every measure packet.</span></li>
+          <li><span class="vision-dot warn"></span><span>Reconcile only patients whose outcome changed after deploys or logic updates.</span></li>
+        </ul>
+      </article>
+    </div>
+  `;
+}
+
 function renderVisionValidationPlanTab() {
   return `
     <div class="vision-grid-4">
-      <article class="vision-card"><span class="vision-kicker">Measures sampled</span><strong class="vision-metric">12</strong><p>Across the selected MVP mix</p></article>
+      <article class="vision-card"><span class="vision-kicker">Measures sampled</span><strong class="vision-metric">6</strong><p>Across the selected MVP + APP Plus mix</p></article>
       <article class="vision-card"><span class="vision-kicker">Required minimum</span><strong class="vision-metric">5 / 5 / 5</strong><p>Numerator, denominator, exclusion</p></article>
       <article class="vision-card"><span class="vision-kicker">Frozen population</span><strong class="vision-metric">1,240</strong><p>Round 1 validation set</p></article>
       <article class="vision-card"><span class="vision-kicker">Fall-outs queued</span><strong class="vision-metric danger">109</strong><p>Denominator patients likely missed</p></article>
@@ -4692,6 +5221,14 @@ function renderDesignLab() {
     button.addEventListener("click", () => {
       state.selectedVisionSubgroup = button.dataset.visionSubgroup;
       state.visionRoute = "strategy";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-validation-measure]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.selectedValidationMeasure = button.dataset.validationMeasure;
+      state.visionValidationTab = "selected-patients";
+      state.visionRoute = "validation";
       render();
     });
   });
