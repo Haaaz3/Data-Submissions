@@ -940,15 +940,6 @@ const visionMeasureOpportunityRows = [
   },
 ];
 
-const visionValidationSampleRows = [
-  { measure: "HIV Screening", numerator: "5/5", denominator: "5/5", exclusion: "5/5", fallouts: "50 selected", frozen: "Round 1 frozen", status: "Ready" },
-  { measure: "Depression Screening and Follow-Up", numerator: "5/5", denominator: "5/5", exclusion: "4/5", fallouts: "32 selected", frozen: "Needs 1 exclusion", status: "Review" },
-  { measure: "Chlamydia Screening in Women", numerator: "5/5", denominator: "5/5", exclusion: "5/5", fallouts: "27 selected", frozen: "Round 1 frozen", status: "Ready" },
-  { measure: "Controlling High Blood Pressure", numerator: "12/5", denominator: "8/5", exclusion: "5/5", fallouts: "44 selected", frozen: "Round 1 frozen", status: "Ready" },
-  { measure: "Colorectal Cancer Screening", numerator: "9/5", denominator: "7/5", exclusion: "5/5", fallouts: "41 selected", frozen: "Round 1 frozen", status: "Ready" },
-  { measure: "Diabetes: Glycemic Status Assessment Greater Than 9%", numerator: "8/5", denominator: "5/5", exclusion: "5/5", fallouts: "36 selected", frozen: "Needs reviewer", status: "Review" },
-];
-
 const visionValidationPatientMeasures = [
   {
     id: "cms349",
@@ -960,7 +951,6 @@ const visionValidationPatientMeasures = [
     reviewComplete: "62%",
     changed: 18,
     coverage: "High evidence density with focused fall-out review",
-    mix: { numerator: 5, denominator: 5, exclusion: 5, fallout: 35 },
     patients: [
       {
         patient: "HY-10482",
@@ -1018,7 +1008,7 @@ const visionValidationPatientMeasures = [
         change: "Exclusion added",
         changeTone: "good",
         closeness: "N/A",
-        whySelected: "Representative exclusion record required for 5/5/5 sample",
+        whySelected: "Representative exclusion record",
         evidence: "Documented exclusion found in EHR problem list",
         review: "Validated",
       },
@@ -1049,7 +1039,6 @@ const visionValidationPatientMeasures = [
     reviewComplete: "71%",
     changed: 7,
     coverage: "Balanced controls plus changed-outcome patients",
-    mix: { numerator: 5, denominator: 5, exclusion: 4, fallout: 18 },
     patients: [
       {
         patient: "HY-11790",
@@ -1123,7 +1112,6 @@ const visionValidationPatientMeasures = [
     reviewComplete: "81%",
     changed: 5,
     coverage: "Small-stratum validation with high-risk fall-outs",
-    mix: { numerator: 5, denominator: 5, exclusion: 5, fallout: 12 },
     patients: [
       {
         patient: "HY-12104",
@@ -1197,7 +1185,6 @@ const visionValidationPatientMeasures = [
     reviewComplete: "76%",
     changed: 6,
     coverage: "High-volume outcome controls with attribution checks",
-    mix: { numerator: 12, denominator: 8, exclusion: 5, fallout: 19 },
     patients: [
       {
         patient: "HY-13218",
@@ -1256,7 +1243,6 @@ const visionValidationPatientMeasures = [
     reviewComplete: "69%",
     changed: 9,
     coverage: "Registry reconciliation sample with changed outcomes",
-    mix: { numerator: 9, denominator: 7, exclusion: 5, fallout: 20 },
     patients: [
       {
         patient: "HY-14013",
@@ -1315,7 +1301,6 @@ const visionValidationPatientMeasures = [
     reviewComplete: "58%",
     changed: 8,
     coverage: "Fall-outs weighted by benchmark proximity and lab-source density",
-    mix: { numerator: 8, denominator: 5, exclusion: 5, fallout: 18 },
     patients: [
       {
         patient: "HY-15086",
@@ -3477,17 +3462,6 @@ function patientValidationSearchMatch(query) {
   );
 }
 
-function renderOutcomeMix(mix) {
-  return `
-    <div class="outcome-mix-strip" aria-label="Selected patient outcome mix">
-      <div><span>Numerator</span><strong>${mix.numerator}</strong></div>
-      <div><span>Denominator</span><strong>${mix.denominator}</strong></div>
-      <div><span>Exclusion</span><strong>${mix.exclusion}</strong></div>
-      <div><span>Fall-outs</span><strong>${mix.fallout}</strong></div>
-    </div>
-  `;
-}
-
 function attestationTrendFor(measureId) {
   return visionAttestationTrends[measureId] || visionAttestationTrends.cms349;
 }
@@ -3498,14 +3472,6 @@ function qualityTargetFor(measureId) {
 
 function currentTrendValue(measureId) {
   return Number.parseInt(attestationTrendFor(measureId).current, 10);
-}
-
-function measureValidationOutcomeCounts(measure) {
-  return {
-    numerator: measure.mix.numerator,
-    denominator: measure.mix.denominator + measure.mix.fallout,
-    exclusion: measure.mix.exclusion,
-  };
 }
 
 function patientOutcomeCategory(patient) {
@@ -3542,7 +3508,14 @@ function patientDataSources(patient) {
   return [...new Set(sources)].join(", ") || "EHR";
 }
 
-function generatedPatientForMeasure(measure, category, index) {
+function generatedOutcomeCategoryForMeasure(index) {
+  if (index % 11 === 0) return "exclusion";
+  if (index % 3 === 0 || index % 7 === 0) return "denominator";
+  return "numerator";
+}
+
+function generatedPatientForMeasure(measure, index) {
+  const category = generatedOutcomeCategoryForMeasure(index);
   const measureIndex = Math.max(0, visionValidationPatientMeasures.findIndex((candidate) => candidate.id === measure.id));
   const categoryOffsets = { numerator: 100, denominator: 300, exclusion: 700 };
   const base = measure.patients[index % measure.patients.length] || {
@@ -3598,17 +3571,10 @@ function generatedPatientForMeasure(measure, category, index) {
 }
 
 function validationPatientsForMeasure(measure) {
-  const targetCounts = measureValidationOutcomeCounts(measure);
   const seededPatients = measure.patients.map((patient) => ({ ...patient, generated: false }));
-  const counts = { numerator: 0, denominator: 0, exclusion: 0 };
-  seededPatients.forEach((patient) => {
-    counts[patientOutcomeCategory(patient)] += 1;
-  });
-  const generatedPatients = Object.keys(targetCounts).flatMap((category) => {
-    const needed = Math.max(0, targetCounts[category] - counts[category]);
-    return Array.from({ length: needed }, (_, index) => generatedPatientForMeasure(measure, category, index));
-  });
-  return [...seededPatients, ...generatedPatients].sort((first, second) => {
+  const needed = Math.max(0, measure.selected - seededPatients.length);
+  const generatedPatients = Array.from({ length: needed }, (_, index) => generatedPatientForMeasure(measure, index));
+  return [...seededPatients, ...generatedPatients].slice(0, measure.selected).sort((first, second) => {
     const order = { numerator: 0, denominator: 1, exclusion: 2 };
     return order[patientOutcomeCategory(first)] - order[patientOutcomeCategory(second)]
       || first.patient.localeCompare(second.patient);
@@ -4245,9 +4211,9 @@ function patientValidationFilterCounts(measure) {
   };
 }
 
-function renderPatientValidationFilterButton(filter, label, count) {
+function renderPatientValidationFilterButton(filter, label, count, showCount = false) {
   const active = state.patientValidationFilter === filter;
-  return `<button class="${active ? "active" : ""}" data-validation-filter="${filter}" type="button">${label}<strong>${count}</strong></button>`;
+  return `<button class="${active ? "active" : ""}" data-validation-filter="${filter}" type="button">${label}${showCount ? `<strong>${count}</strong>` : ""}</button>`;
 }
 
 function renderVisionSelectedPatientsTab() {
@@ -4256,6 +4222,7 @@ function renderVisionSelectedPatientsTab() {
   const visiblePatients = patientValidationRowsForMeasure(selected);
   const filterCounts = patientValidationFilterCounts(selected);
   const activeFilter = state.patientValidationFilter || "all";
+  const selectedTotal = validationPatientsForMeasure(selected).length;
   return `
     <article class="vision-card patient-validation-workspace compact-patient-validation">
       <div class="validation-worklist-header compact">
@@ -4274,21 +4241,19 @@ function renderVisionSelectedPatientsTab() {
       </div>
       <div class="patient-validation-measure-table-wrap">
         <table class="vision-table patient-validation-measure-table compact">
-          <thead><tr><th>Measure</th><th>Program</th><th>Selected</th><th>Satisfaction rate</th><th>WoW change</th><th>Numerator</th><th>Denominator</th><th>Exclusion</th><th></th></tr></thead>
+          <thead><tr><th>Measure</th><th>Program</th><th>Selected patients</th><th>Satisfaction rate</th><th>WoW change</th><th>Target</th><th></th></tr></thead>
           <tbody>
             ${visionValidationPatientMeasures.map((measure) => {
-              const counts = measureValidationOutcomeCounts(measure);
               const trend = attestationTrendFor(measure.id);
+              const target = qualityTargetFor(measure.id);
               return `
                 <tr class="${measure.id === selected.id ? "selected" : ""}">
                   <td><strong>${measure.measure}</strong><span class="subline">${measure.code}</span></td>
                   <td>${measure.mvp}</td>
-                  <td>${measure.selected}</td>
+                  <td><strong>${validationPatientsForMeasure(measure).length}</strong></td>
                   <td><strong>${trend.current}</strong></td>
                   <td>${visionBadge(trend.wowChange, trend.wowTone)}<span class="subline">${validationPriorSnapshotLabel} -> ${validationCurrentSnapshotLabel}</span></td>
-                  <td>${counts.numerator}</td>
-                  <td>${counts.denominator}</td>
-                  <td>${counts.exclusion}</td>
+                  <td>${target}%</td>
                   <td><button class="vision-row-button" data-validation-measure="${measure.id}" type="button">${measure.id === selected.id ? "Open" : "Open population"}</button></td>
                 </tr>
               `;
@@ -4302,7 +4267,7 @@ function renderVisionSelectedPatientsTab() {
           <div>
             <span class="vision-kicker">Selected patient population</span>
             <h3>${selected.measure}</h3>
-            <p>${selected.code} · ${selected.mvp} · showing ${visiblePatients.length} ${patientOutcomeCategoryName(activeFilter).toLowerCase()} patients from the validation population.</p>
+            <p>${selected.code} · ${selected.mvp} · showing ${visiblePatients.length} of ${selectedTotal} selected patients${activeFilter === "all" ? "" : ` filtered to ${patientOutcomeCategoryName(activeFilter).toLowerCase()}`}</p>
           </div>
           <div class="validation-snapshot-note">
             <span>Comparison window</span>
@@ -4311,30 +4276,29 @@ function renderVisionSelectedPatientsTab() {
       </div>
       <div class="validation-worklist-controls">
         <div class="validation-filter-group" aria-label="Patient validation filters">
-          ${renderPatientValidationFilterButton("all", "All selected", filterCounts.all)}
+          ${renderPatientValidationFilterButton("all", "All selected", filterCounts.all, true)}
           ${renderPatientValidationFilterButton("numerator", "Numerator", filterCounts.numerator)}
           ${renderPatientValidationFilterButton("denominator", "Denominator", filterCounts.denominator)}
           ${renderPatientValidationFilterButton("exclusion", "Exclusion", filterCounts.exclusion)}
         </div>
       </div>
       <table class="vision-table selected-patient-table validation-queue-table">
-        <thead><tr><th>Patient</th><th>Provider</th><th>Specialty</th><th>Outcome population</th><th>Current state (${validationCurrentSnapshotLabel})</th><th>Prior state (${validationPriorSnapshotLabel})</th><th>State change</th><th>Evidence summary</th><th>Sources</th><th></th></tr></thead>
+        <thead><tr><th>Patient</th><th>Provider / specialty</th><th>Outcome</th><th>Current (${validationCurrentSnapshotLabel})</th><th>Prior (${validationPriorSnapshotLabel})</th><th>State change</th><th>Evidence summary</th><th>Sources</th><th></th></tr></thead>
         <tbody>
           ${visiblePatients.length ? visiblePatients.map((row) => `
               <tr>
                 <td><strong>${row.patient}</strong><span class="subline">${selected.code}</span></td>
-                <td>${row.provider}</td>
-                <td>${row.specialty}</td>
+                <td><strong>${row.provider}</strong><span class="subline">${row.specialty}</span></td>
                 <td>${patientOutcomeBadge(row)}</td>
                 <td><strong>${row.currentState}</strong></td>
                 <td>${row.priorState}</td>
                 <td>${visionBadge(row.change, row.changeTone)}</td>
                 <td>${row.evidence}</td>
                 <td>${patientDataSources(row)}</td>
-                <td><button class="vision-row-button" data-open-patient-explanation="${row.patient}" type="button">Open explanation</button></td>
+                <td><button class="vision-row-button" data-open-patient-explanation="${row.patient}" type="button">Explain</button></td>
               </tr>
           `).join("") : `
-            <tr><td colspan="10"><div class="empty-state">No patients match this outcome filter.</div></td></tr>
+            <tr><td colspan="9"><div class="empty-state">No patients match this outcome filter.</div></td></tr>
           `}
         </tbody>
       </table>
@@ -4409,43 +4373,50 @@ function renderVisionAttestationTrendsTab() {
 }
 
 function renderVisionValidationPlanTab() {
+  const totalSelected = visionValidationPatientMeasures.reduce((sum, measure) => sum + validationPatientsForMeasure(measure).length, 0);
+  const belowTarget = visionValidationPatientMeasures.filter((measure) => currentTrendValue(measure.id) < qualityTargetFor(measure.id)).length;
   return `
     <div class="vision-grid-4">
-      <article class="vision-card"><span class="vision-kicker">Measures sampled</span><strong class="vision-metric">6</strong><p>Across the selected MVP + APP Plus mix</p></article>
-      <article class="vision-card"><span class="vision-kicker">Required minimum</span><strong class="vision-metric">5 / 5 / 5</strong><p>Numerator, denominator, exclusion</p></article>
-      <article class="vision-card"><span class="vision-kicker">Frozen population</span><strong class="vision-metric">1,240</strong><p>Round 1 validation set</p></article>
-      <article class="vision-card"><span class="vision-kicker">Fall-outs queued</span><strong class="vision-metric danger">109</strong><p>Denominator patients likely missed</p></article>
+      <article class="vision-card"><span class="vision-kicker">Submitted measures</span><strong class="vision-metric">6</strong><p>Across the selected MVP + APP Plus mix</p></article>
+      <article class="vision-card"><span class="vision-kicker">Selected patients</span><strong class="vision-metric">${totalSelected}</strong><p>Frozen validation population</p></article>
+      <article class="vision-card"><span class="vision-kicker">Comparison window</span><strong class="vision-metric">${validationPriorSnapshotLabel} -> ${validationCurrentSnapshotLabel}</strong><p>Prior state vs. current state</p></article>
+      <article class="vision-card"><span class="vision-kicker">Below target</span><strong class="vision-metric danger">${belowTarget}</strong><p>Measures needing closer review</p></article>
     </div>
     <div class="validation-method-grid spaced">
       <article class="vision-card">
         <div class="vision-section-title">
-          <span class="vision-kicker">Sample plan</span>
-          <h3>Validate the records most likely to prove or challenge the result</h3>
-          <p>The system builds a frozen review packet per measure, then lets the customer reconcile the same records after logic, concept, or data changes.</p>
+          <span class="vision-kicker">Validation plan</span>
+          <h3>Freeze the selected population and reconcile outcome movement</h3>
+          <p>The customer validates the selected patients for each submitted measure, then uses the same population to review changes after data, mapping, or logic updates.</p>
         </div>
         <table class="vision-table">
-          <thead><tr><th>Measure</th><th>Numerator</th><th>Denominator</th><th>Exclusion</th><th>Fall-outs</th><th>Freeze</th><th>Status</th></tr></thead>
+          <thead><tr><th>Measure</th><th>Program</th><th>Selected patients</th><th>Satisfaction rate</th><th>WoW change</th><th>Target</th><th>Status</th></tr></thead>
           <tbody>
-            ${visionValidationSampleRows.map((row) => `
+            ${visionValidationPatientMeasures.map((measure) => {
+              const trend = attestationTrendFor(measure.id);
+              const target = qualityTargetFor(measure.id);
+              const status = currentTrendValue(measure.id) >= target ? "On target" : "Needs review";
+              return `
               <tr>
-                <td><strong>${row.measure}</strong></td>
-                <td>${row.numerator}</td>
-                <td>${row.denominator}</td>
-                <td>${row.exclusion}</td>
-                <td>${row.fallouts}</td>
-                <td>${row.frozen}</td>
-                <td>${visionBadge(row.status, row.status === "Ready" ? "good" : "warn")}</td>
+                <td><strong>${measure.measure}</strong><span class="subline">${measure.code}</span></td>
+                <td>${measure.mvp}</td>
+                <td>${validationPatientsForMeasure(measure).length}</td>
+                <td><strong>${trend.current}</strong></td>
+                <td>${visionBadge(trend.wowChange, trend.wowTone)}<span class="subline">${validationPriorSnapshotLabel} -> ${validationCurrentSnapshotLabel}</span></td>
+                <td>${target}%</td>
+                <td>${visionBadge(status, status === "On target" ? "good" : "warn")}</td>
               </tr>
-            `).join("")}
+            `;
+            }).join("")}
           </tbody>
         </table>
       </article>
       <aside class="vision-soft-card">
         <h2>Recommended Validation Design</h2>
-        <p><strong>Start with high-evidence patients, then force coverage across every outcome type.</strong></p>
-        <div class="vision-status-row"><strong>Baseline sample</strong><span>Patients with the most supporting data sources</span></div>
-        <div class="vision-status-row"><strong>Minimum guardrail</strong><span>5 numerator, 5 denominator, 5 exclusion per measure</span></div>
-        <div class="vision-status-row"><strong>Customer focus</strong><span>Fall-outs and outcome-changed patients</span></div>
+        <p><strong>Keep validation anchored to selected patients, outcome state, and explainability.</strong></p>
+        <div class="vision-status-row"><strong>Selected population</strong><span>Frozen patients for each submitted measure</span></div>
+        <div class="vision-status-row"><strong>Outcome view</strong><span>Filter patients by numerator, denominator, or exclusion</span></div>
+        <div class="vision-status-row"><strong>Comparison</strong><span>Review prior state against current state</span></div>
         <div class="vision-status-row"><strong>Reconciliation</strong><span>Reopen frozen packets after logic stabilizes</span></div>
         <div class="vision-action-row">
           <button class="vision-btn" data-toast="Validation population frozen" type="button">Freeze population</button>
