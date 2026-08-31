@@ -6,6 +6,7 @@
   "scripts": {
     "start": "python3 -m http.server 4173 --directory outputs/ohds-prototype",
     "package": "tar -czf hdids-design-lab-prototype.tar.gz -C outputs/ohds-prototype index.html styles.css app.js flow-map.md",
-    "check": "node --check outputs/ohds-prototype/app.js"
+    "check": "node --check outputs/ohds-prototype/app.js",
+    "export:html": "node scripts/export_standalone_html.js"
   }
 }

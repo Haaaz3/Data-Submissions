@@ -6,6 +6,7 @@
 - Added per-measure attestation-rate trends that update with the selected validation measure.
 - Added an Attestation Trends sub-tab for comparing validation confidence across all submitted measures.
 - Rewired validation, patient opportunity, readiness, and evidence links into the combined operational workspace.
+- Added a standalone editable HTML export containing the full clickable prototype in one file.
 
 ## v41
 
