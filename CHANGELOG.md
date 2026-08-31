@@ -1,5 +1,13 @@
 # Changelog
 
+## v47
+
+- Made Trending Quality Over Time the first/default Quality Workbench view.
+- Removed average quality scoring from the trend page so measures are evaluated independently.
+- Simplified the trend table measure column to show measure and program only.
+- Updated trend charts with narrower measure-specific percent scales and visible Y-axis percentage labels.
+- Rebalanced trend data to look like realistic quality movement rather than smooth demo curves.
+
 ## v46
 
 - Removed Patient Evidence as a primary Quality Workbench tab.

@@ -15,7 +15,7 @@ const state = {
   practiceComposition: "multi",
   visionRoute: "home",
   visionStrategyTab: "recommended",
-  visionPerformanceTab: "patient-opportunities",
+  visionPerformanceTab: "trending-quality",
   visionValidationTab: "patient-level",
   visionSubmissionTab: "package",
   visionEvidenceTab: "evaluation",
@@ -1372,9 +1372,9 @@ const visionAttestationTrends = {
     target: 85,
     action: "Review HIV lab-source mapping",
     trend: [
-      { label: "07/06", value: 52 },
-      { label: "07/20", value: 58 },
-      { label: "08/03", value: 63 },
+      { label: "07/06", value: 68 },
+      { label: "07/20", value: 69 },
+      { label: "08/03", value: 70 },
       { label: "08/17", value: 69 },
       { label: "08/31", value: 74 },
     ],
@@ -1386,9 +1386,9 @@ const visionAttestationTrends = {
     target: 85,
     action: "Confirm follow-up-plan documentation",
     trend: [
-      { label: "07/06", value: 66 },
-      { label: "07/20", value: 70 },
-      { label: "08/03", value: 73 },
+      { label: "07/06", value: 77 },
+      { label: "07/20", value: 78 },
+      { label: "08/03", value: 77 },
       { label: "08/17", value: 78 },
       { label: "08/31", value: 81 },
     ],
@@ -1400,9 +1400,9 @@ const visionAttestationTrends = {
     target: 85,
     action: "Maintain sample coverage",
     trend: [
-      { label: "07/06", value: 77 },
-      { label: "07/20", value: 80 },
-      { label: "08/03", value: 82 },
+      { label: "07/06", value: 85 },
+      { label: "07/20", value: 86 },
+      { label: "08/03", value: 84 },
       { label: "08/17", value: 85 },
       { label: "08/31", value: 88 },
     ],
@@ -1414,9 +1414,9 @@ const visionAttestationTrends = {
     target: 85,
     action: "Review attribution and vitals feed",
     trend: [
-      { label: "07/06", value: 61 },
-      { label: "07/20", value: 64 },
-      { label: "08/03", value: 72 },
+      { label: "07/06", value: 76 },
+      { label: "07/20", value: 75 },
+      { label: "08/03", value: 77 },
       { label: "08/17", value: 76 },
       { label: "08/31", value: 79 },
     ],
@@ -1428,9 +1428,9 @@ const visionAttestationTrends = {
     target: 85,
     action: "Reconcile registry evidence",
     trend: [
-      { label: "07/06", value: 62 },
-      { label: "07/20", value: 63 },
-      { label: "08/03", value: 65 },
+      { label: "07/06", value: 66 },
+      { label: "07/20", value: 67 },
+      { label: "08/03", value: 66 },
       { label: "08/17", value: 68 },
       { label: "08/31", value: 69 },
     ],
@@ -1442,9 +1442,9 @@ const visionAttestationTrends = {
     target: 85,
     action: "Review A1c lab-value mapping",
     trend: [
-      { label: "07/06", value: 49 },
-      { label: "07/20", value: 52 },
-      { label: "08/03", value: 53 },
+      { label: "07/06", value: 55 },
+      { label: "07/20", value: 56 },
+      { label: "08/03", value: 56 },
       { label: "08/17", value: 57 },
       { label: "08/31", value: 58 },
     ],
@@ -3499,6 +3499,15 @@ function qualityTargetGapBadge(measureId) {
   return visionBadge(gap >= 0 ? `+${gap}%` : `${gap}%`, gap >= 0 ? "good" : "warn");
 }
 
+function trendChartScale(trend, target) {
+  const values = trend.trend.map((point) => point.value);
+  values.push(target);
+  const yMin = Math.max(0, Math.floor((Math.min(...values) - 4) / 5) * 5);
+  const yMax = Math.min(100, Math.ceil((Math.max(...values) + 4) / 5) * 5);
+  const fallbackMax = Math.min(100, yMin + 10);
+  return { yMin, yMax: yMax > yMin ? yMax : fallbackMax };
+}
+
 function normalizeVisionPerformanceTab(tabId) {
   const tabMap = {
     summary: "patient-opportunities",
@@ -3510,28 +3519,36 @@ function normalizeVisionPerformanceTab(tabId) {
     outcomes: "trending-quality",
     "patient-evidence": "patient-level",
   };
-  return tabMap[tabId] || tabId || "patient-opportunities";
+  return tabMap[tabId] || tabId || "trending-quality";
 }
 
 function renderAttestationTrendChart(measure, options = {}) {
   const trend = attestationTrendFor(measure.id);
   const target = qualityTargetFor(measure.id);
-  const width = options.table ? 340 : 420;
-  const height = options.table ? 118 : options.compact ? 154 : 190;
-  const pad = { left: 30, right: 18, top: 18, bottom: 34 };
+  const width = options.table ? 390 : 420;
+  const height = options.table ? 132 : options.compact ? 154 : 190;
+  const pad = { left: 48, right: 18, top: 16, bottom: 34 };
+  const { yMin, yMax } = trendChartScale(trend, target);
+  const yRange = Math.max(yMax - yMin, 1);
   const plotWidth = width - pad.left - pad.right;
   const plotHeight = height - pad.top - pad.bottom;
+  const yForValue = (value) => pad.top + plotHeight - (plotHeight * (value - yMin)) / yRange;
   const points = trend.trend.map((point, index) => {
     const x = pad.left + (plotWidth * index) / Math.max(trend.trend.length - 1, 1);
-    const y = pad.top + plotHeight - (plotHeight * point.value) / 100;
+    const y = yForValue(point.value);
     return { ...point, x, y };
   });
+  const yTicks = [yMax, Math.round((yMin + yMax) / 2), yMin];
   const polyline = points.map((point) => `${point.x},${point.y}`).join(" ");
-  const targetY = pad.top + plotHeight - (plotHeight * target) / 100;
+  const targetY = yForValue(target);
   if (options.table) {
     return `
       <div class="attestation-chart-cell">
         <svg class="attestation-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${measure.measure} quality trend">
+          ${yTicks.map((tick) => `
+            <line x1="${pad.left}" y1="${yForValue(tick)}" x2="${width - pad.right}" y2="${yForValue(tick)}" class="grid-line" />
+            <text x="${pad.left - 10}" y="${yForValue(tick) + 4}" class="y-axis-label">${tick}%</text>
+          `).join("")}
           <line x1="${pad.left}" y1="${targetY}" x2="${width - pad.right}" y2="${targetY}" class="target-line" />
           <line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${height - pad.bottom}" class="axis-line" />
           <line x1="${pad.left}" y1="${height - pad.bottom}" x2="${width - pad.right}" y2="${height - pad.bottom}" class="axis-line" />
@@ -3557,6 +3574,10 @@ function renderAttestationTrendChart(measure, options = {}) {
         </div>
       </div>
       <svg class="attestation-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${measure.measure} attestation trend">
+        ${yTicks.map((tick) => `
+          <line x1="${pad.left}" y1="${yForValue(tick)}" x2="${width - pad.right}" y2="${yForValue(tick)}" class="grid-line" />
+          <text x="${pad.left - 10}" y="${yForValue(tick) + 4}" class="y-axis-label">${tick}%</text>
+        `).join("")}
         <line x1="${pad.left}" y1="${targetY}" x2="${width - pad.right}" y2="${targetY}" class="target-line" />
         <text x="${width - pad.right - 48}" y="${targetY - 6}" class="target-label">${target}% target</text>
         <line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${height - pad.bottom}" class="axis-line" />
@@ -3939,8 +3960,8 @@ function renderVisionStrategyAssumptionsTab() {
 
 function renderVisionPerformanceScreen() {
   const tabs = [
-    { id: "patient-opportunities", label: "Patient Opportunities" },
     { id: "trending-quality", label: "Trending Quality Over Time" },
+    { id: "patient-opportunities", label: "Patient Opportunities" },
     { id: "patient-level", label: "Patient Level Validation" },
   ];
   const activeTab = normalizeVisionPerformanceTab(state.visionPerformanceTab);
@@ -3950,7 +3971,7 @@ function renderVisionPerformanceScreen() {
       ? renderVisionTrendingQualityTab()
       : activeTab === "patient-level"
         ? renderVisionSelectedPatientsTab()
-        : renderVisionNearMissTab();
+        : renderVisionTrendingQualityTab();
   return renderVisionScreenFrame({
     id: "performance",
     crumb: "Quality Workbench",
@@ -4179,15 +4200,20 @@ function renderVisionSelectedPatientsTab() {
 }
 
 function renderVisionTrendingQualityTab() {
-  const averageCurrent = Math.round(visionValidationPatientMeasures.reduce((sum, measure) => sum + currentTrendValue(measure.id), 0) / visionValidationPatientMeasures.length);
   const belowTarget = visionValidationPatientMeasures.filter((measure) => currentTrendValue(measure.id) < qualityTargetFor(measure.id)).length;
   const totalChanged = visionValidationPatientMeasures.reduce((sum, measure) => sum + measure.changed, 0);
+  const largestMove = visionValidationPatientMeasures.reduce((largest, measure) => {
+    const currentChange = Math.abs(Number.parseFloat(attestationTrendFor(measure.id).wowChange));
+    const largestChange = Math.abs(Number.parseFloat(attestationTrendFor(largest.id).wowChange));
+    return currentChange > largestChange ? measure : largest;
+  }, visionValidationPatientMeasures[0]);
+  const largestMoveTrend = attestationTrendFor(largestMove.id);
   return `
     <div class="vision-grid-4">
-      <article class="vision-card"><span class="vision-kicker">Average quality</span><strong class="vision-metric">${averageCurrent}%</strong><p>Across active measures</p></article>
+      <article class="vision-card"><span class="vision-kicker">Measures tracked</span><strong class="vision-metric">${visionValidationPatientMeasures.length}</strong><p>Each measure evaluated separately</p></article>
       <article class="vision-card"><span class="vision-kicker">Below target</span><strong class="vision-metric danger">${belowTarget}</strong><p>Measures need review</p></article>
+      <article class="vision-card"><span class="vision-kicker">Largest WoW change</span><strong class="vision-metric">${largestMoveTrend.wowChange}</strong><p>${largestMove.measure}</p></article>
       <article class="vision-card"><span class="vision-kicker">Changed outcomes</span><strong class="vision-metric">${totalChanged}</strong><p>Since prior week</p></article>
-      <article class="vision-card"><span class="vision-kicker">Customer target</span><strong class="vision-metric">${qualityTargetFor("cms349")}%</strong><p>Editable by measure</p></article>
     </div>
     <article class="vision-card spaced quality-trend-workspace">
       <div class="vision-section-title compact">
@@ -4210,11 +4236,10 @@ function renderVisionTrendingQualityTab() {
         <tbody>
       ${visionValidationPatientMeasures.map((measure) => {
         const trend = attestationTrendFor(measure.id);
-        const current = currentTrendValue(measure.id);
         const target = qualityTargetFor(measure.id);
         return `
           <tr>
-            <td><strong>${measure.measure}</strong><span class="subline">${measure.code} / ${measure.mvp} / ${measure.subgroup}</span></td>
+            <td><strong>${measure.measure}</strong><span class="subline">${measure.code} / ${measure.mvp}</span></td>
             <td><strong>${trend.current}</strong><span class="subline">${measure.reviewComplete} patient review complete</span></td>
             <td><span class="wow-change-badge ${trend.wowTone}">${trend.wowChange}</span></td>
             <td>
@@ -5377,14 +5402,9 @@ function renderDesignLab() {
       if (gapCell) {
         gapCell.innerHTML = qualityTargetGapBadge(input.dataset.qualityTarget);
       }
-      const targetLine = row?.querySelector(".target-line");
-      if (targetLine) {
-        const targetY = 18 + 66 - (66 * value) / 100;
-        targetLine.setAttribute("y1", targetY);
-        targetLine.setAttribute("y2", targetY);
-      }
       if (showMessage) {
         showToast(`Quality target updated to ${value}%`);
+        render();
       }
     };
     input.addEventListener("input", () => {
@@ -5396,7 +5416,7 @@ function renderDesignLab() {
       }
     });
     input.addEventListener("change", () => updateQualityTarget(true));
-    input.addEventListener("blur", () => updateQualityTarget(true));
+    input.addEventListener("blur", () => updateQualityTarget(false));
   });
   content.querySelectorAll("[data-lab-program]").forEach((button) => {
     button.addEventListener("click", () => {
