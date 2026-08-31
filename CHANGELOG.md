@@ -1,5 +1,13 @@
 # Changelog
 
+## v45
+
+- Renamed the combined operational area to Quality Workbench.
+- Reduced the workbench to patient opportunities, trending quality over time, patient-level validation, and patient evidence.
+- Moved Validation Plan into the Submissions workflow.
+- Rebuilt the quality trend view as a table with dated trend charts, WoW percent change, editable customer targets, target gap, and patient drill-in.
+- Removed the separate Deploy Baseline and AI Review workflow surfaces.
+
 ## v42
 
 - Merged Performance Workbench and Measure Validation into one top-level Performance & Validation workspace.
