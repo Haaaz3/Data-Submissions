@@ -1,5 +1,12 @@
 # Changelog
 
+## v42
+
+- Merged Performance Workbench and Measure Validation into one top-level Performance & Validation workspace.
+- Added per-measure attestation-rate trends that update with the selected validation measure.
+- Added an Attestation Trends sub-tab for comparing validation confidence across all submitted measures.
+- Rewired validation, patient opportunity, readiness, and evidence links into the combined operational workspace.
+
 ## v41
 
 - Added a Selected Patients tab to the Measure Validation Workbench as the first validation view.
