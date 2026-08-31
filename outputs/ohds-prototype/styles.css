@@ -42,6 +42,121 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.patient-validation-layout {
+  align-items: start;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 310px minmax(0, 1fr);
+}
+
+.measure-patient-rail {
+  display: grid;
+  gap: 10px;
+}
+
+.measure-patient-rail button {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--vision-line);
+  border-radius: 14px;
+  color: #312d2a;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 14px;
+  text-align: left;
+}
+
+.measure-patient-rail button.active {
+  background: #eef6ff;
+  border-color: #5da8e8;
+  box-shadow: inset 4px 0 0 var(--vision-blue);
+}
+
+.measure-patient-rail strong,
+.measure-patient-rail em {
+  display: block;
+}
+
+.measure-patient-rail em {
+  color: var(--vision-muted);
+  font-style: normal;
+  margin-top: 3px;
+}
+
+.selected-patient-header {
+  align-items: start;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.selected-patient-header h3 {
+  margin: 0;
+}
+
+.selected-patient-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.outcome-mix-strip {
+  background: #f7f9fc;
+  border: 1px solid var(--vision-line);
+  border-radius: 16px;
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.outcome-mix-strip div {
+  background: #fff;
+  padding: 13px 14px;
+}
+
+.outcome-mix-strip span {
+  color: var(--vision-muted);
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.outcome-mix-strip strong {
+  display: block;
+  font-size: 24px;
+  margin-top: 4px;
+}
+
+.population-validation-toolbar {
+  color: #5f5853;
+  display: flex;
+  font-size: 13px;
+  font-weight: 750;
+  gap: 14px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.selected-patient-table th,
+.selected-patient-table td {
+  vertical-align: top;
+}
+
+.selected-patient-table th:nth-child(5),
+.selected-patient-table td:nth-child(5),
+.selected-patient-table th:nth-child(6),
+.selected-patient-table td:nth-child(6) {
+  min-width: 210px;
+}
+
 .near-miss-meter {
   background: #edf1f7;
   border-radius: 999px;

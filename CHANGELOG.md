@@ -1,5 +1,12 @@
 # Changelog
 
+## v41
+
+- Added a Selected Patients tab to the Measure Validation Workbench as the first validation view.
+- Built a measure-by-measure validation population UI showing selected patients, measure satisfaction, prior outcome state, outcome change, selection rationale, evidence/action, and review status.
+- Added an interactive measure selector for HIV Screening, Depression Screening, and Chlamydia Screening validation packets.
+- Rewired general validation entry points so sample validation opens the selected-patient population before patient-level evidence drill-in.
+
 ## v40
 
 - Consolidated Performance, Measure Detail, Patient Evidence, and Readiness into two operational panes: Performance Workbench and Measure Validation.
