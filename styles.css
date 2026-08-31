@@ -118,11 +118,19 @@
   margin-bottom: 16px;
 }
 
+.validation-worklist-header.compact {
+  margin-bottom: 10px;
+}
+
 .validation-worklist-header h3 {
   color: var(--vision-ink);
   font-size: 24px;
   line-height: 1.2;
   margin: 2px 0 6px;
+}
+
+.validation-worklist-header.compact h3 {
+  font-size: 21px;
 }
 
 .validation-worklist-header p {
@@ -164,48 +172,6 @@
   width: 100%;
 }
 
-.patient-validation-summary {
-  background: #f7f9fc;
-  border: 1px solid var(--vision-line);
-  border-radius: 14px;
-  display: grid;
-  gap: 1px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 16px;
-  overflow: hidden;
-}
-
-.patient-validation-summary div {
-  background: #fff;
-  min-width: 0;
-  padding: 13px 14px;
-}
-
-.patient-validation-summary span,
-.validation-sample-strip span,
-.validation-round-control span {
-  color: var(--vision-muted);
-  display: block;
-  font-size: 11px;
-  font-weight: 850;
-  text-transform: uppercase;
-}
-
-.patient-validation-summary strong {
-  color: var(--vision-ink);
-  display: block;
-  font-size: 24px;
-  line-height: 1.1;
-  margin-top: 4px;
-}
-
-.patient-validation-summary em {
-  color: var(--vision-muted);
-  display: block;
-  font-style: normal;
-  margin-top: 4px;
-}
-
 .patient-validation-measure-table-wrap {
   border: 1px solid var(--vision-line);
   border-radius: 14px;
@@ -214,6 +180,22 @@
 
 .patient-validation-measure-table {
   border: 0;
+}
+
+.patient-validation-measure-table.compact th,
+.patient-validation-measure-table.compact td {
+  font-size: 12px;
+  padding: 7px 9px;
+  vertical-align: middle;
+}
+
+.patient-validation-measure-table.compact th:first-child,
+.patient-validation-measure-table.compact td:first-child {
+  min-width: 260px;
+}
+
+.patient-validation-measure-table.compact .vision-badge {
+  font-size: 11px;
 }
 
 .validation-worklist-controls {
@@ -266,65 +248,43 @@
   color: var(--vision-blue);
 }
 
-.validation-sample-strip {
-  align-items: stretch;
-  border: 1px solid var(--vision-line);
-  border-radius: 12px;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(70px, 1fr));
-  min-width: 520px;
-  overflow: hidden;
+.validation-snapshot-note {
+  background: #f7f9fc;
+  border: 1px solid #e1e7ef;
+  border-radius: 10px;
+  min-width: 190px;
+  padding: 8px 11px;
+  text-align: right;
 }
 
-.validation-sample-strip div {
-  background: #fff;
-  border-left: 1px solid #eef2f7;
-  padding: 9px 11px;
+.validation-snapshot-note span {
+  color: var(--vision-muted);
+  display: block;
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
 }
 
-.validation-sample-strip div:first-child {
-  border-left: 0;
-}
-
-.validation-sample-strip strong {
+.validation-snapshot-note strong {
   color: var(--vision-ink);
   display: block;
-  font-size: 18px;
-  line-height: 1.1;
-  margin-top: 4px;
-}
-
-.validation-round-control label {
-  display: block;
-}
-
-.validation-round-control select {
-  background: #fff;
-  border: 1px solid #cfd8e3;
-  border-radius: 8px;
-  color: #201f1e;
-  font: inherit;
-  height: 38px;
-  margin-top: 6px;
-  min-width: 190px;
-  padding: 0 10px;
+  font-size: 14px;
+  margin-top: 3px;
 }
 
 .validation-queue-table {
-  min-width: 1180px;
+  min-width: 1440px;
 }
 
-.validation-queue-table th:nth-child(5),
-.validation-queue-table td:nth-child(5) {
-  min-width: 260px;
+.validation-queue-table th:nth-child(8),
+.validation-queue-table td:nth-child(8) {
+  min-width: 310px;
 }
 
-.validation-worklist-footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: flex-end;
-  margin-top: 16px;
+.validation-queue-table th,
+.validation-queue-table td {
+  font-size: 13px;
+  padding: 10px 11px;
 }
 
 .selected-patient-overview {
