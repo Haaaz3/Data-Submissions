@@ -250,6 +250,17 @@
   width: 100%;
 }
 
+.attestation-chart-cell {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-width: 330px;
+}
+
+.attestation-chart-cell .attestation-chart {
+  max-width: 340px;
+}
+
 .attestation-line {
   fill: none;
   stroke: var(--vision-blue);
@@ -314,6 +325,68 @@
   color: var(--vision-muted);
   font-size: 13px;
   margin: 0;
+}
+
+.quality-trend-workspace {
+  overflow-x: auto;
+}
+
+.quality-trend-table th,
+.quality-trend-table td {
+  vertical-align: middle;
+}
+
+.quality-trend-table th:nth-child(6),
+.quality-trend-table td:nth-child(6) {
+  text-align: center;
+  width: 360px;
+}
+
+.quality-target-control {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+}
+
+.quality-target-control input {
+  background: #fff;
+  border: 1px solid #cfd8e3;
+  border-radius: 8px;
+  color: #201f1e;
+  font: inherit;
+  font-weight: 800;
+  padding: 8px 10px;
+  width: 74px;
+}
+
+.quality-target-control span {
+  color: var(--vision-muted);
+  font-weight: 800;
+}
+
+.wow-change-badge {
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 18px;
+  font-weight: 900;
+  justify-content: center;
+  min-width: 86px;
+  padding: 8px 12px;
+}
+
+.wow-change-badge.good {
+  background: #e7f4ea;
+  color: #1f6d35;
+}
+
+.wow-change-badge.warn {
+  background: #fff4df;
+  color: #8a5a00;
+}
+
+.wow-change-badge.bad {
+  background: #fdecea;
+  color: #b3311f;
 }
 
 .validation-method-grid {
@@ -3936,6 +4009,14 @@ th.numeric {
   color: var(--muted);
   line-height: 1.4;
   margin: 0;
+}
+
+.vision-section-title.compact {
+  margin-bottom: 12px;
+}
+
+.vision-section-title.compact h3 {
+  font-size: 22px;
 }
 
 .strategy-workbench {
