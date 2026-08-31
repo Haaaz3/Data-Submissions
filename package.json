@@ -7,6 +7,7 @@
     "start": "python3 -m http.server 4173 --directory outputs/ohds-prototype",
     "package": "tar -czf hdids-design-lab-prototype.tar.gz -C outputs/ohds-prototype index.html styles.css app.js flow-map.md",
     "check": "node --check outputs/ohds-prototype/app.js",
-    "export:html": "node scripts/export_standalone_html.js"
+    "export:html": "node scripts/export_standalone_html.js",
+    "export:download": "npm run export:html && zip -j outputs/ohds-prototype/oracle-health-data-submissions-editable.zip outputs/ohds-prototype/oracle-health-data-submissions-editable.html && zip -j docs/oracle-health-data-submissions-editable.zip docs/oracle-health-data-submissions-editable.html"
   }
 }

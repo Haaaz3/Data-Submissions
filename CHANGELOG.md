@@ -7,6 +7,7 @@
 - Added an Attestation Trends sub-tab for comparing validation confidence across all submitted measures.
 - Rewired validation, patient opportunity, readiness, and evidence links into the combined operational workspace.
 - Added a standalone editable HTML export containing the full clickable prototype in one file.
+- Added a downloadable offline zip package so reviewers can unzip and run the UI locally.
 
 ## v41
 
