@@ -1,5 +1,12 @@
 # Changelog
 
+## v46
+
+- Removed Patient Evidence as a primary Quality Workbench tab.
+- Converted patient evidence into an Outcome Explainability pane opened from patient search or patient rows.
+- Removed the CQL Logic Map label and replaced the detail with measure outcome validation questions.
+- Simplified Patient Level Validation so selected patients and their outcome explanation are the central task.
+
 ## v45
 
 - Renamed the combined operational area to Quality Workbench.

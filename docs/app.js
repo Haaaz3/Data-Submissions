@@ -20,6 +20,8 @@ const state = {
   visionSubmissionTab: "package",
   visionEvidenceTab: "evaluation",
   selectedValidationMeasure: "cms349",
+  selectedValidationPatient: "HY-10482",
+  patientValidationSearch: "",
   qualityTargets: {
     cms349: 85,
     cms2: 85,
@@ -3417,6 +3419,15 @@ function visionBadge(label, tone = "info") {
   return `<span class="vision-badge ${tone}">${label}</span>`;
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 function renderVisionTabs(tabs, stateKey) {
   const rawActiveValue = state[stateKey] || tabs[0]?.id;
   const activeValue = stateKey === "visionPerformanceTab" ? normalizeVisionPerformanceTab(rawActiveValue) : rawActiveValue;
@@ -3431,6 +3442,33 @@ function renderVisionTabs(tabs, stateKey) {
 
 function selectedValidationMeasure() {
   return visionValidationPatientMeasures.find((measure) => measure.id === state.selectedValidationMeasure) || visionValidationPatientMeasures[0];
+}
+
+function selectedValidationPatient(measure = selectedValidationMeasure()) {
+  return measure.patients.find((patient) => patient.patient === state.selectedValidationPatient) || measure.patients[0];
+}
+
+function allValidationPatients() {
+  return visionValidationPatientMeasures.flatMap((measure) =>
+    measure.patients.map((patient) => ({ measure, patient })),
+  );
+}
+
+function patientValidationSearchMatch(query) {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) return null;
+  return allValidationPatients().find(({ patient, measure }) =>
+    [
+      patient.patient,
+      patient.provider,
+      patient.specialty,
+      patient.currentState,
+      patient.evidence,
+      measure.measure,
+      measure.code,
+      measure.subgroup,
+    ].some((value) => String(value).toLowerCase().includes(normalizedQuery)),
+  );
 }
 
 function renderOutcomeMix(mix) {
@@ -3470,6 +3508,7 @@ function normalizeVisionPerformanceTab(tabId) {
     "selected-patients": "patient-level",
     "attestation-trends": "trending-quality",
     outcomes: "trending-quality",
+    "patient-evidence": "patient-level",
   };
   return tabMap[tabId] || tabId || "patient-opportunities";
 }
@@ -3903,7 +3942,6 @@ function renderVisionPerformanceScreen() {
     { id: "patient-opportunities", label: "Patient Opportunities" },
     { id: "trending-quality", label: "Trending Quality Over Time" },
     { id: "patient-level", label: "Patient Level Validation" },
-    { id: "patient-evidence", label: "Patient Evidence" },
   ];
   const activeTab = normalizeVisionPerformanceTab(state.visionPerformanceTab);
   const tabContent = activeTab === "patient-opportunities"
@@ -3912,9 +3950,7 @@ function renderVisionPerformanceScreen() {
       ? renderVisionTrendingQualityTab()
       : activeTab === "patient-level"
         ? renderVisionSelectedPatientsTab()
-        : activeTab === "patient-evidence"
-          ? renderVisionPatientEvidenceTab()
-          : renderVisionNearMissTab();
+        : renderVisionNearMissTab();
   return renderVisionScreenFrame({
     id: "performance",
     crumb: "Quality Workbench",
@@ -3965,11 +4001,104 @@ function renderVisionValidationScreen() {
   return renderVisionPerformanceScreen();
 }
 
+function patientOutcomeAnswer(patient, measure) {
+  if (patient.satisfaction === "Satisfied") {
+    return `This patient satisfies ${measure.code}. The numerator evidence, qualifying encounter, and attribution are all present in the active calculation.`;
+  }
+  if (patient.satisfaction === "Excluded") {
+    return `This patient is excluded from ${measure.code}. The exclusion evidence is present and should be kept in the validation sample as a control record.`;
+  }
+  if (patient.currentState.toLowerCase().includes("near miss")) {
+    return `This patient is close to satisfying ${measure.code}, but one evidence or mapping condition is still blocking the numerator.`;
+  }
+  return `This patient is included in the denominator for ${measure.code}, but the numerator evidence is not currently sufficient.`;
+}
+
+function patientOutcomeRows(patient, measure) {
+  const numeratorTone = patient.satisfaction === "Satisfied"
+    ? "good"
+    : patient.satisfaction === "Excluded"
+      ? "info"
+      : patient.satisfactionTone;
+  const numeratorResult = patient.satisfaction === "Satisfied"
+    ? "Satisfied"
+    : patient.satisfaction === "Excluded"
+      ? "Not applicable"
+      : "Not satisfied";
+  return [
+    {
+      check: "Patient attribution",
+      detail: `${patient.provider} / ${patient.specialty}`,
+      result: visionBadge("Confirmed", "good"),
+    },
+    {
+      check: "Submission population",
+      detail: `${measure.subgroup}; current state is ${patient.currentState.toLowerCase()}.`,
+      result: visionBadge(patient.currentState, patient.satisfactionTone),
+    },
+    {
+      check: "Numerator or exclusion evidence",
+      detail: patient.evidence,
+      result: visionBadge(numeratorResult, numeratorTone),
+    },
+    {
+      check: "Prior snapshot comparison",
+      detail: `Prior state was ${patient.priorState.toLowerCase()}.`,
+      result: visionBadge(patient.change, patient.changeTone),
+    },
+    {
+      check: "Review focus",
+      detail: patient.whySelected,
+      result: visionBadge(patient.review, patient.review === "Validated" ? "good" : "warn"),
+    },
+  ];
+}
+
+function renderVisionPatientOutcomePanel(measure, patient, options = {}) {
+  const closenessLabel = patient.closeness === "N/A" ? "Control record" : `${patient.closeness} close`;
+  return `
+    <aside class="patient-outcome-panel ${options.standalone ? "standalone" : ""}">
+      <div class="patient-outcome-header">
+        <span class="vision-kicker">Outcome explainability</span>
+        <h3>${patient.patient} / ${measure.code}</h3>
+        <p>${measure.measure} · ${measure.mvp}</p>
+      </div>
+      <div class="patient-outcome-metrics">
+        <div><span>Current state</span><strong>${patient.currentState}</strong></div>
+        <div><span>Satisfaction</span><strong>${patient.satisfaction}</strong></div>
+        <div><span>Closeness</span><strong>${closenessLabel}</strong></div>
+      </div>
+      <div class="patient-outcome-answer">
+        <strong>Why is this patient in this outcome state?</strong>
+        <p>${patientOutcomeAnswer(patient, measure)}</p>
+      </div>
+      <table class="vision-table compact outcome-explainability-table">
+        <thead><tr><th>Validation question</th><th>Evidence found</th><th>Outcome</th></tr></thead>
+        <tbody>
+          ${patientOutcomeRows(patient, measure).map((row) => `
+            <tr>
+              <td><strong>${row.check}</strong></td>
+              <td>${row.detail}</td>
+              <td>${row.result}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      <div class="vision-action-row">
+        <button class="vision-btn secondary" data-toast="Patient chart opened" type="button">View chart</button>
+        <button class="vision-btn secondary" data-toast="Outcome explanation exported" type="button">Export explanation</button>
+      </div>
+    </aside>
+  `;
+}
+
 function renderVisionSelectedPatientsTab() {
   const selected = selectedValidationMeasure();
   const trend = attestationTrendFor(selected.id);
+  const activePatient = selectedValidationPatient(selected);
   const totalSelected = visionValidationPatientMeasures.reduce((sum, measure) => sum + measure.selected, 0);
   const totalChanged = visionValidationPatientMeasures.reduce((sum, measure) => sum + measure.changed, 0);
+  const searchValue = escapeHtml(state.patientValidationSearch);
   return `
     <div class="vision-grid-4">
       <article class="vision-card"><span class="vision-kicker">Selected population</span><strong class="vision-metric">${totalSelected}</strong><p>Shown across active submission measures</p></article>
@@ -4004,10 +4133,12 @@ function renderVisionSelectedPatientsTab() {
             <h3>${selected.measure}</h3>
             <p>${selected.code} · ${selected.mvp} · ${selected.subgroup}</p>
           </div>
-          <div class="selected-patient-actions">
-            <button class="vision-btn secondary" data-toast="Changed-outcome filter applied" type="button">Show changed only</button>
-            <button class="vision-btn secondary" data-toast="Reviewer packet split" type="button">Assign reviewers</button>
-            <button class="vision-btn" data-toast="Validation packet exported" type="button">Export packet</button>
+          <div class="patient-search-bar">
+            <label>
+              <span>Search patient</span>
+              <input type="search" data-patient-search value="${searchValue}" placeholder="HY-10482, provider, specialty..." />
+            </label>
+            <button class="vision-btn secondary" data-patient-search-action type="button">Search</button>
           </div>
         </div>
         <div class="selected-patient-overview">
@@ -4020,43 +4151,28 @@ function renderVisionSelectedPatientsTab() {
           </div>
           ${renderAttestationTrendChart(selected)}
         </div>
-        <p class="population-validation-note">Round 1 frozen · Prior snapshot compared · Patient evidence available · Attestation trend updates by selected measure</p>
-        <table class="vision-table selected-patient-table">
-          <thead><tr><th>Patient</th><th>Provider / specialty</th><th>Measure satisfaction</th><th>Prior state and change</th><th>Why selected</th><th>Evidence / action</th><th>Review</th></tr></thead>
-          <tbody>
-            ${selected.patients.map((row) => `
-              <tr>
-                <td><strong>${row.patient}</strong><span class="subline">${selected.code}</span></td>
-                <td><strong>${row.provider}</strong><span class="subline">${row.specialty}</span></td>
-                <td><strong>${row.currentState}</strong><span class="subline">${visionBadge(row.satisfaction, row.satisfactionTone)} ${row.closeness === "N/A" ? "No closeness score" : `${row.closeness} close`}</span></td>
-                <td><strong>${row.priorState}</strong><span class="subline">${visionBadge(row.change, row.changeTone)}</span></td>
-                <td>${row.whySelected}</td>
-                <td>${row.evidence}</td>
-                <td><button class="vision-row-button" data-vision-jump="validation:patient-evidence" type="button">${row.review}</button></td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </article>
-    </div>
-    <div class="vision-grid-3 spaced">
-      <article class="vision-soft-card">
-        <h2>Selection Logic</h2>
-        <p><strong>Representative first, not random first.</strong> The validation population favors patients with rich source evidence, outcome changes, fall-outs, and coverage across numerator, denominator, and exclusion states.</p>
-      </article>
-      <article class="vision-card">
-        <h2>Population Coverage</h2>
-        <div class="vision-bar-row"><span>Outcome-type coverage</span><div><b style="width:92%"></b></div><strong>92%</strong></div>
-        <div class="vision-bar-row"><span>Provider spread</span><div><b style="width:78%"></b></div><strong>78%</strong></div>
-        <div class="vision-bar-row"><span>Evidence-source density</span><div><b style="width:86%"></b></div><strong>86%</strong></div>
-      </article>
-      <article class="vision-card">
-        <h2>Validation Focus</h2>
-        <ul class="vision-list">
-          <li><span class="vision-dot warn"></span><span>Review denominator patients that look like numerator misses.</span></li>
-          <li><span class="vision-dot good"></span><span>Keep stable numerator and exclusion controls in every measure packet.</span></li>
-          <li><span class="vision-dot warn"></span><span>Reconcile only patients whose outcome changed after data or logic updates.</span></li>
-        </ul>
+        <p class="population-validation-note">Round 1 frozen · Prior snapshot compared · Outcome explainability available from every patient row</p>
+        <div class="patient-workbench-grid">
+          <div class="patient-list-panel">
+            <table class="vision-table selected-patient-table">
+              <thead><tr><th>Patient</th><th>Provider / specialty</th><th>Measure satisfaction</th><th>Prior state and change</th><th>Why selected</th><th>Review focus</th><th></th></tr></thead>
+              <tbody>
+                ${selected.patients.map((row) => `
+                  <tr class="${row.patient === activePatient.patient ? "selected" : ""}">
+                    <td><strong>${row.patient}</strong><span class="subline">${selected.code}</span></td>
+                    <td><strong>${row.provider}</strong><span class="subline">${row.specialty}</span></td>
+                    <td><strong>${row.currentState}</strong><span class="subline">${visionBadge(row.satisfaction, row.satisfactionTone)} ${row.closeness === "N/A" ? "Control record" : `${row.closeness} close`}</span></td>
+                    <td><strong>${row.priorState}</strong><span class="subline">${visionBadge(row.change, row.changeTone)}</span></td>
+                    <td>${row.whySelected}</td>
+                    <td>${row.review}</td>
+                    <td><button class="vision-row-button" data-validation-patient="${row.patient}" type="button">Explain outcome</button></td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+          ${renderVisionPatientOutcomePanel(selected, activePatient)}
+        </div>
       </article>
     </div>
   `;
@@ -4173,104 +4289,23 @@ function renderVisionValidationPlanTab() {
 }
 
 function renderVisionPatientEvidenceTab() {
-  return `
-    <div class="vision-grid-3">
-      <article class="vision-card"><h2>Patient HY-10482</h2><p>Age 49 / Infectious disease cohort / attributed to subgroup SG-00000004.</p><button class="vision-btn secondary" data-toast="Patient chart opened" type="button">View chart</button></article>
-      <article class="vision-card"><h2>Measure</h2><strong class="vision-metric">CMS349v8</strong><p>HIV Screening</p></article>
-      <article class="vision-card"><h2>Outcome State</h2><strong class="vision-metric danger">NEAR MISS</strong><p>Denominator patient, one criterion away from numerator.</p></article>
-    </div>
-    <div class="vision-wide-left spaced">
-      <article class="vision-card">
-        ${renderVisionTabs([
-          { id: "evaluation", label: "Measure Evaluation" },
-          { id: "timeline", label: "Timeline" },
-          { id: "logic", label: "CQL Logic Map" },
-          { id: "source", label: "Source Evidence" },
-        ], "visionEvidenceTab")}
-        <h2>Initial Population ${visionBadge("Satisfied", "good")}</h2>
-        <table class="vision-table">
-          <thead><tr><th>Specification criteria</th><th>Patient evidence</th><th>Result</th></tr></thead>
-          <tbody>
-            <tr><td>Age is 15 to 65</td><td>DOB 1977-06-17, age 49 in 2026</td><td>${visionBadge("Satisfied", "good")}</td></tr>
-            <tr><td>Qualifying encounter</td><td>Office visit on 2026-04-03</td><td>${visionBadge("Satisfied", "good")}</td></tr>
-            <tr><td>Attributed to MVP subgroup</td><td>SG-00000004 infectious disease subgroup</td><td>${visionBadge("Satisfied", "good")}</td></tr>
-          </tbody>
-        </table>
-        <h2 class="section-gap">Numerator ${visionBadge("Not satisfied", "bad")}</h2>
-        <table class="vision-table">
-          <thead><tr><th>Specification criteria</th><th>Patient evidence</th><th>Result</th></tr></thead>
-          <tbody>
-            <tr><td>HIV screening result during eligible period</td><td>External lab result present, missing LOINC mapping</td><td>${visionBadge("Not satisfied", "bad")}</td></tr>
-            <tr><td>Result linked to supported data source</td><td>Result source is not attached to the measure calculation feed</td><td>${visionBadge("Not evidenced", "warn")}</td></tr>
-          </tbody>
-        </table>
-      </article>
-      <aside class="vision-stack">
-        <article class="vision-soft-card">
-          <h2>Validation Answer</h2>
-          <p><strong>Why is this patient not in the numerator?</strong></p>
-          <p>The patient is in the denominator and has external lab evidence, but the lab result is not mapped to the supported LOINC/source feed used by CMS349v8. This should be routed to mapping review before chart chase.</p>
-        </article>
-        <article class="vision-card"><h2>Closeness</h2><div class="near-miss-meter"><span style="width:83%"></span></div><p><strong>83% close.</strong> One source-linking criterion blocks numerator satisfaction.</p></article>
-        <article class="vision-card"><h2>Validation Actions</h2><div class="vision-status-row"><strong>Assign to</strong><span>Interface analyst</span></div><div class="vision-status-row"><strong>Registry check</strong><span>Cross-check face-up registry record</span></div><div class="vision-status-row"><strong>Claim attribution</strong><span>Confirm billing provider on non-Hyperion encounter</span></div></article>
-      </aside>
-    </div>
-  `;
+  const measure = selectedValidationMeasure();
+  const patient = selectedValidationPatient(measure);
+  return renderVisionPatientOutcomePanel(measure, patient, { standalone: true });
 }
 
 function renderVisionPatientEvidenceScreen() {
+  const measure = selectedValidationMeasure();
+  const patient = selectedValidationPatient(measure);
   return renderVisionScreenFrame({
     id: "patient-evidence",
-    crumb: "Patient Evidence",
-    title: "Patient HY-10482 / CMS349v8",
-    subtitle: "Show exactly why a patient qualifies, why the result is currently not met, and what evidence can change the result.",
+    crumb: "Outcome Explainability",
+    title: `${patient.patient} / ${measure.code}`,
+    subtitle: "Explain why a selected patient is in the current measure outcome state.",
     filters: `<span>Measurement Period: 2026</span><span>Source refresh: Today 6:10 AM</span>`,
-    actions: `<button class="vision-btn secondary" data-toast="Evidence exported" type="button">Export evidence</button>`,
+    actions: `<button class="vision-btn secondary" data-vision-jump="performance:patient-level" type="button">Back to validation</button>`,
     body: `
-      <div class="vision-grid-3">
-        <article class="vision-card"><h2>Patient HY-10482</h2><p>Age 49 / Infectious disease cohort / attributed to subgroup SG-00000004.</p><button class="vision-btn secondary" data-toast="Patient chart opened" type="button">View chart</button></article>
-        <article class="vision-card"><h2>Measure</h2><strong class="vision-metric">CMS349v8</strong><p>HIV Screening</p></article>
-        <article class="vision-card"><h2>Overall Result</h2><strong class="vision-metric danger">NOT MET</strong><p>Evidence exists but is not mapped into numerator logic.</p></article>
-      </div>
-      <div class="vision-grid-5 spaced">
-        <article class="vision-card"><span class="vision-kicker">Satisfied</span><strong class="vision-metric">4</strong><p>criteria</p></article>
-        <article class="vision-card"><span class="vision-kicker">Not satisfied</span><strong class="vision-metric danger">2</strong><p>criteria</p></article>
-        <article class="vision-card"><span class="vision-kicker">Not evidenced</span><strong class="vision-metric">5</strong><p>criteria</p></article>
-        <article class="vision-card"><span class="vision-kicker">Exceptions</span><strong class="vision-metric">0</strong><p>criteria</p></article>
-        <article class="vision-card"><span class="vision-kicker">Denominator</span><strong class="vision-metric">Yes</strong>${visionBadge("Included", "info")}</article>
-      </div>
-      <div class="vision-wide-left spaced">
-        <article class="vision-card">
-          ${renderVisionTabs([
-            { id: "evaluation", label: "Measure Evaluation" },
-            { id: "timeline", label: "Timeline" },
-            { id: "logic", label: "CQL Logic Map" },
-            { id: "source", label: "Source Evidence" },
-          ], "visionEvidenceTab")}
-          <h2>Initial Population ${visionBadge("Satisfied", "good")}</h2>
-          <table class="vision-table">
-            <thead><tr><th>Specification criteria</th><th>Patient evidence</th><th>Result</th></tr></thead>
-            <tbody>
-              <tr><td>Age is 15 to 65</td><td>DOB 1977-06-17, age 49 in 2026</td><td>${visionBadge("Satisfied", "good")}</td></tr>
-              <tr><td>Qualifying encounter</td><td>Office visit on 2026-04-03</td><td>${visionBadge("Satisfied", "good")}</td></tr>
-              <tr><td>Attributed to MVP subgroup</td><td>SG-00000004 infectious disease subgroup</td><td>${visionBadge("Satisfied", "good")}</td></tr>
-            </tbody>
-          </table>
-          <h2 class="section-gap">Numerator ${visionBadge("Not satisfied", "bad")}</h2>
-          <table class="vision-table">
-            <thead><tr><th>Specification criteria</th><th>Patient evidence</th><th>Result</th></tr></thead>
-            <tbody>
-              <tr><td>HIV screening result during eligible period</td><td>External lab result present, missing LOINC mapping</td><td>${visionBadge("Not satisfied", "bad")}</td></tr>
-              <tr><td>Result linked to supported data source</td><td>Result source not attached to measure calculation feed</td><td>${visionBadge("Not evidenced", "warn")}</td></tr>
-            </tbody>
-          </table>
-        </article>
-        <aside class="vision-stack">
-          <article class="vision-soft-card"><h2>Interpretation</h2><p>Patient is correctly included in the denominator. Numerator can change if the lab mapping and source evidence are accepted.</p></article>
-          <article class="vision-card"><h2>Key Patient Data</h2><ul class="vision-list"><li><span class="vision-dot good"></span><span><strong>Qualifying encounter</strong><em>Office visit on Apr 03, 2026</em></span></li><li><span class="vision-dot warn"></span><span><strong>Screening result</strong><em>External lab evidence found, mapping incomplete</em></span></li><li><span class="vision-dot good"></span><span><strong>Attribution</strong><em>Infectious disease subgroup</em></span></li></ul></article>
-          <article class="vision-card"><h2>Data Sources</h2><p>EHR encounters, external lab feed, attribution roster, QPP subgroup registration draft.</p><div class="vision-status-row"><strong>Data refreshed</strong><span>Today 6:10 AM</span></div></article>
-        </aside>
-      </div>
+      ${renderVisionPatientOutcomePanel(measure, patient, { standalone: true })}
     `,
   });
 }
@@ -4535,7 +4570,7 @@ function renderVisionAuditScreen() {
           <tbody>
             <tr><td>Jan 22, 10:42 AM</td><td>Quality Admin</td><td>Approved submission strategy</td><td>SUB-2026-00912</td><td>${visionBadge("Success", "good")}</td></tr>
             <tr><td>Jan 22, 10:30 AM</td><td>Reviewer A</td><td>Created patient worklist</td><td>HIV evidence cohort</td><td>${visionBadge("Success", "good")}</td></tr>
-            <tr><td>Jan 22, 10:21 AM</td><td>Reviewer A</td><td>Viewed patient evidence</td><td>CMS349v8 / HY-10482</td><td>${visionBadge("Success", "good")}</td></tr>
+            <tr><td>Jan 22, 10:21 AM</td><td>Reviewer A</td><td>Viewed outcome explanation</td><td>CMS349v8 / HY-10482</td><td>${visionBadge("Success", "good")}</td></tr>
             <tr><td>Jan 22, 10:39 AM</td><td>Quality Admin</td><td>Generated QRDA package</td><td>QRDA_III_Hyperion_2026.xml</td><td>${visionBadge("Success", "good")}</td></tr>
             <tr><td>Jan 21, 4:08 PM</td><td>Analyst B</td><td>Resolved attribution alias</td><td>NPI roster</td><td>${visionBadge("Success", "good")}</td></tr>
           </tbody>
@@ -5287,11 +5322,49 @@ function renderDesignLab() {
   });
   content.querySelectorAll("[data-validation-measure]").forEach((button) => {
     button.addEventListener("click", () => {
-      state.selectedValidationMeasure = button.dataset.validationMeasure;
+      const nextMeasure = visionValidationPatientMeasures.find((measure) => measure.id === button.dataset.validationMeasure);
+      state.selectedValidationMeasure = nextMeasure?.id || button.dataset.validationMeasure;
+      state.selectedValidationPatient = nextMeasure?.patients[0]?.patient || state.selectedValidationPatient;
+      state.patientValidationSearch = "";
       state.visionValidationTab = "patient-level";
       state.visionPerformanceTab = "patient-level";
       state.visionRoute = "performance";
       render();
+    });
+  });
+  content.querySelectorAll("[data-validation-patient]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.selectedValidationPatient = button.dataset.validationPatient;
+      state.patientValidationSearch = button.dataset.validationPatient;
+      state.visionPerformanceTab = "patient-level";
+      state.visionRoute = "performance";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-patient-search-action]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const input = button.closest(".patient-search-bar")?.querySelector("[data-patient-search]");
+      const query = input?.value || "";
+      state.patientValidationSearch = query;
+      const match = patientValidationSearchMatch(query);
+      if (match) {
+        state.selectedValidationMeasure = match.measure.id;
+        state.selectedValidationPatient = match.patient.patient;
+        showToast(`${match.patient.patient} opened in patient level validation`);
+      } else {
+        showToast("No matching patient found");
+      }
+      state.visionPerformanceTab = "patient-level";
+      state.visionRoute = "performance";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-patient-search]").forEach((input) => {
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        input.closest(".patient-search-bar")?.querySelector("[data-patient-search-action]")?.click();
+      }
     });
   });
   content.querySelectorAll("[data-quality-target]").forEach((input) => {
