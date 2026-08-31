@@ -1,6 +1,6 @@
 {
   "name": "hdids-design-lab-prototype",
-  "version": "0.48.0",
+  "version": "0.49.0",
   "private": true,
   "description": "Static Oracle Health Data Submissions clickable prototype for internal design review.",
   "scripts": {

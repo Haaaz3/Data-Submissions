@@ -1,5 +1,13 @@
 # Changelog
 
+## v49
+
+- Rebuilt Patient Level Validation around outcome populations instead of task tracking.
+- Made the measure selector a compact table with selected count, satisfaction rate, WoW change, and numerator/denominator/exclusion counts.
+- Defaulted the lower table to all selected validation patients for the chosen measure.
+- Replaced review queue/workstream fields with patient, provider, specialty, current state, prior state, state change, evidence summary, and source columns.
+- Removed the 5/5/5 sample strip, review remaining column, and task-management footer actions.
+
 ## v48
 
 - Rebuilt Patient Level Validation as a full-width validation work queue instead of a split table/detail layout.
