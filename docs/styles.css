@@ -181,6 +181,28 @@
   width: 100%;
 }
 
+.selected-patient-actions .patient-search-bar {
+  grid-template-columns: minmax(260px, 360px) auto;
+}
+
+.inline-action-group,
+.row-action-stack {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.row-action-stack {
+  min-width: 142px;
+}
+
+.row-action-stack .vision-row-button,
+.inline-action-group .vision-row-button {
+  white-space: nowrap;
+}
+
 .patient-validation-measure-table-wrap {
   border: 1px solid var(--vision-line);
   border-radius: 14px;
@@ -634,6 +656,33 @@
   overflow-x: auto;
 }
 
+.workbench-summary-row {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--vision-line);
+  border-radius: 14px;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 13px 16px;
+}
+
+.workbench-summary-row strong {
+  color: var(--vision-ink);
+  display: block;
+  font-size: 17px;
+  line-height: 1.25;
+  margin-top: 3px;
+}
+
+.workbench-summary-row em {
+  color: var(--vision-muted);
+  display: block;
+  font-size: 13px;
+  font-style: normal;
+  margin-top: 4px;
+}
+
 .quality-trend-table th,
 .quality-trend-table td {
   vertical-align: middle;
@@ -643,6 +692,11 @@
 .quality-trend-table td:nth-child(6) {
   text-align: center;
   width: 420px;
+}
+
+.quality-trend-table th:last-child,
+.quality-trend-table td:last-child {
+  width: 132px;
 }
 
 .quality-target-control {

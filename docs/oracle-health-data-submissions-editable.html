@@ -194,6 +194,28 @@
   width: 100%;
 }
 
+.selected-patient-actions .patient-search-bar {
+  grid-template-columns: minmax(260px, 360px) auto;
+}
+
+.inline-action-group,
+.row-action-stack {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.row-action-stack {
+  min-width: 142px;
+}
+
+.row-action-stack .vision-row-button,
+.inline-action-group .vision-row-button {
+  white-space: nowrap;
+}
+
 .patient-validation-measure-table-wrap {
   border: 1px solid var(--vision-line);
   border-radius: 14px;
@@ -647,6 +669,33 @@
   overflow-x: auto;
 }
 
+.workbench-summary-row {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--vision-line);
+  border-radius: 14px;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 13px 16px;
+}
+
+.workbench-summary-row strong {
+  color: var(--vision-ink);
+  display: block;
+  font-size: 17px;
+  line-height: 1.25;
+  margin-top: 3px;
+}
+
+.workbench-summary-row em {
+  color: var(--vision-muted);
+  display: block;
+  font-size: 13px;
+  font-style: normal;
+  margin-top: 4px;
+}
+
 .quality-trend-table th,
 .quality-trend-table td {
   vertical-align: middle;
@@ -656,6 +705,11 @@
 .quality-trend-table td:nth-child(6) {
   text-align: center;
   width: 420px;
+}
+
+.quality-trend-table th:last-child,
+.quality-trend-table td:last-child {
+  width: 132px;
 }
 
 .quality-target-control {
@@ -7789,7 +7843,7 @@ body.oj-redwood {
     <section class="lab-bar" aria-label="HDIDS Design Lab controls">
       <div class="lab-title">
         <strong>HDIDS Design Lab</strong>
-        <span>Oracle Health Data Submissions prototypes · v51</span>
+        <span>Oracle Health Data Submissions prototypes · v52</span>
       </div>
       <label>
         View
@@ -7855,7 +7909,7 @@ body.oj-redwood {
 
       <footer class="footer">
         <div class="oracle-wordmark">ORACLE</div>
-        <div class="footer-copy">Copyright © 2013, 2026, Oracle and/or its affiliates. Prototype v51.</div>
+        <div class="footer-copy">Copyright © 2013, 2026, Oracle and/or its affiliates. Prototype v52.</div>
         <div class="footer-powered">
           <span>Powered by</span>
           <strong>Oracle Health Data Intelligence</strong>
@@ -8771,40 +8825,82 @@ const visionSubmissionRows = [
 
 const visionMeasureOpportunityRows = [
   {
+    measureId: "cms349",
     measure: "HIV Screening",
     id: "CMS349v8",
     subgroup: "M1368 infectious disease",
-    current: "0.0%",
     benchmark: "88.2%",
     nearMiss: "428",
     closeness: "72%",
     lift: "+3.4 pts",
     issue: "External lab evidence found, LOINC mapping incomplete",
-    owner: "Interface + chart chase",
+    representativePatient: "HY-10482",
+    focus: "Lab source mapping",
   },
   {
+    measureId: "cms2",
     measure: "Screening for Depression and Follow-Up Plan",
     id: "CMS2v15",
     subgroup: "M1368 and M1369",
-    current: "86.47%",
     benchmark: "91.0%",
     nearMiss: "112",
     closeness: "81%",
     lift: "+1.2 pts",
     issue: "Follow-up plan documented, not coded consistently",
-    owner: "Clinical operations",
+    representativePatient: "HY-12372",
+    focus: "Documentation capture",
   },
   {
+    measureId: "cms165",
+    measure: "Controlling High Blood Pressure",
+    id: "CMS165v14",
+    subgroup: "APP Plus",
+    benchmark: "86.0%",
+    nearMiss: "96",
+    closeness: "88%",
+    lift: "+0.9 pts",
+    issue: "Controlled BP present under non-Hyperion encounter attribution",
+    representativePatient: "HY-13822",
+    focus: "Attribution + vitals feed",
+  },
+  {
+    measureId: "cms130",
+    measure: "Colorectal Cancer Screening",
+    id: "CMS130v14",
+    subgroup: "APP Plus",
+    benchmark: "82.5%",
+    nearMiss: "84",
+    closeness: "82%",
+    lift: "+0.8 pts",
+    issue: "Registry evidence found, source reconciliation incomplete",
+    representativePatient: "HY-14013",
+    focus: "Registry reconciliation",
+  },
+  {
+    measureId: "cms122",
+    measure: "Diabetes: Glycemic Status Assessment Greater Than 9%",
+    id: "CMS122v14",
+    subgroup: "APP Plus",
+    benchmark: "78.0%",
+    nearMiss: "73",
+    closeness: "77%",
+    lift: "+0.7 pts",
+    issue: "A1c assessment present, result value missing from accepted feed",
+    representativePatient: "HY-15319",
+    focus: "Lab value mapping",
+  },
+  {
+    measureId: "cms153",
     measure: "Chlamydia Screening in Women",
     id: "CMS153v14",
     subgroup: "M1366 women's health",
-    current: "9.64%",
     benchmark: "74.0%",
     nearMiss: "39",
     closeness: "64%",
-    lift: "+0.9 pts",
+    lift: "+0.3 pts",
     issue: "Small stratum volumes and missing lab-source evidence",
-    owner: "Quality analyst",
+    representativePatient: "HY-12812",
+    focus: "Small-volume review",
   },
 ];
 
@@ -11299,12 +11395,37 @@ function renderVisionTabs(tabs, stateKey) {
 const validationCurrentSnapshotLabel = "08/31";
 const validationPriorSnapshotLabel = "08/17";
 
+function validationMeasureById(measureId) {
+  return visionValidationPatientMeasures.find((measure) => measure.id === measureId) || visionValidationPatientMeasures[0];
+}
+
 function selectedValidationMeasure() {
-  return visionValidationPatientMeasures.find((measure) => measure.id === state.selectedValidationMeasure) || visionValidationPatientMeasures[0];
+  return validationMeasureById(state.selectedValidationMeasure);
 }
 
 function selectedValidationPatient(measure = selectedValidationMeasure()) {
   return validationPatientsForMeasure(measure).find((patient) => patient.patient === state.selectedValidationPatient) || validationPatientsForMeasure(measure)[0];
+}
+
+function patientsForValidationFilter(measure, filter = "all") {
+  const patients = validationPatientsForMeasure(measure);
+  if (["numerator", "denominator", "exclusion"].includes(filter)) {
+    return patients.filter((patient) => patientOutcomeCategory(patient) === filter);
+  }
+  if (filter === "changed") return patients.filter(patientHasStateChange);
+  return patients;
+}
+
+function focusValidationMeasure(measureId, options = {}) {
+  const measure = validationMeasureById(measureId);
+  const filter = options.filter || "all";
+  const matchingPatients = patientsForValidationFilter(measure, filter);
+  const fallbackPatient = matchingPatients[0] || validationPatientsForMeasure(measure)[0];
+  state.selectedValidationMeasure = measure.id;
+  state.selectedValidationPatient = options.patientId || fallbackPatient?.patient || state.selectedValidationPatient;
+  state.patientValidationFilter = filter;
+  state.patientValidationSearch = options.patientId || "";
+  state.patientValidationSort = options.sort || state.patientValidationSort || "changed-first";
 }
 
 function allValidationPatients() {
@@ -11368,6 +11489,10 @@ function patientOutcomeBadge(patient) {
 
 function patientHasStateChange(patient) {
   return patient.change !== "No change";
+}
+
+function changedPatientCountForMeasure(measure) {
+  return validationPatientsForMeasure(measure).filter(patientHasStateChange).length;
 }
 
 function patientDataSources(patient) {
@@ -11921,6 +12046,7 @@ function renderVisionStrategyAssumptionsTab() {
 }
 
 function renderVisionPerformanceScreen() {
+  const selected = selectedValidationMeasure();
   const tabs = [
     { id: "trending-quality", label: "Trending Quality Over Time" },
     { id: "patient-opportunities", label: "Patient Opportunities" },
@@ -11938,8 +12064,8 @@ function renderVisionPerformanceScreen() {
     id: "performance",
     crumb: "Quality Workbench",
     title: "Quality Workbench",
-    subtitle: "Focus on the patients, measures, and population shifts most likely to improve or validate the submission.",
-    filters: `<span>Program: MVP specialty subgroups + APP Plus</span><span>Score refresh: Today 6:10 AM</span><span>Validation round: Round 1 frozen</span>`,
+    subtitle: "Monitor measure movement, work patient opportunities, and validate selected patient outcomes from one place.",
+    filters: `<span>Focused measure: ${selected.measure}</span><span>Score refresh: Today 6:10 AM</span><span>Prior comparison: ${validationPriorSnapshotLabel} -> ${validationCurrentSnapshotLabel}</span>`,
     body: `
       ${renderVisionTabs(tabs, "visionPerformanceTab")}
       ${tabContent}
@@ -11948,30 +12074,42 @@ function renderVisionPerformanceScreen() {
 }
 
 function renderVisionNearMissTab() {
+  const selected = selectedValidationMeasure();
+  const totalNearMisses = visionMeasureOpportunityRows.reduce((sum, row) => sum + Number(row.nearMiss), 0);
+  const totalLift = "5.5";
   return `
-    <div class="vision-grid-4">
-      <article class="vision-card"><span class="vision-kicker">Near-miss patients</span><strong class="vision-metric">428</strong><p>One criterion away</p></article>
-      <article class="vision-card"><span class="vision-kicker">Potential lift</span><strong class="vision-metric">+5.5</strong><p>Modeled score points</p></article>
-      <article class="vision-card"><span class="vision-kicker">Data issues</span><strong class="vision-metric danger">3</strong><p>Mapping/feed review</p></article>
-      <article class="vision-card"><span class="vision-kicker">Review packet</span><strong class="vision-metric">230</strong><p>Selected patients</p></article>
+    <div class="workbench-summary-row">
+      <div>
+        <span class="vision-kicker">Patient opportunities</span>
+        <strong>${totalNearMisses} near-miss patients · +${totalLift} pts modeled lift</strong>
+        <em>Focused on submitted measures where evidence, workflow, or mapping changes could move performance.</em>
+      </div>
+      <div class="inline-action-group">
+        <button class="vision-row-button" data-validation-measure="${selected.id}" type="button">Open ${selected.measure} patients</button>
+        <button class="vision-row-button" data-workbench-trend-measure="${selected.id}" type="button">View trend</button>
+      </div>
     </div>
     <article class="vision-card spaced">
       <div class="vision-section-title compact">
-        <span class="vision-kicker">Patient opportunities</span>
-        <h3>Work the measures most likely to move performance</h3>
+        <span class="vision-kicker">Performance lift</span>
+        <h3>Measures ranked by actionable opportunity</h3>
       </div>
       <table class="vision-table">
-        <thead><tr><th>Measure</th><th>Current rate</th><th>Near-miss patients</th><th>Modeled lift</th><th>Likely issue</th><th>Owner</th><th></th></tr></thead>
+        <thead><tr><th>Measure</th><th>Current / target</th><th>Patient signal</th><th>Modeled lift</th><th>Likely reason</th><th></th></tr></thead>
         <tbody>
           ${visionMeasureOpportunityRows.map((row) => `
-            <tr>
+            <tr class="${row.measureId === selected.id ? "selected" : ""}">
               <td><strong>${row.measure}</strong><span class="subline">${row.id} / ${row.subgroup}</span></td>
-              <td>${row.current}<span class="subline">Benchmark ${row.benchmark}</span></td>
-              <td>${row.nearMiss}<span class="subline">${row.closeness} close</span></td>
+              <td><strong>${attestationTrendFor(row.measureId).current}</strong><span class="subline">Target ${qualityTargetFor(row.measureId)}% · benchmark ${row.benchmark}</span></td>
+              <td><strong>${row.nearMiss}</strong><span class="subline">${row.closeness} close · ${changedPatientCountForMeasure(validationMeasureById(row.measureId))} status changes</span></td>
               <td>${visionBadge(row.lift, row.lift.includes("3.4") ? "bad" : row.lift.includes("1.2") ? "good" : "warn")}</td>
-              <td>${row.issue}</td>
-              <td>${row.owner}</td>
-              <td><button class="vision-row-button" data-vision-jump="validation:selected-patients" type="button">Patients</button></td>
+              <td><strong>${row.focus}</strong><span class="subline">${row.issue}</span></td>
+              <td>
+                <div class="row-action-stack">
+                  <button class="vision-row-button" data-opportunity-patients="${row.measureId}" type="button">Open patients</button>
+                  <button class="vision-row-button" data-opportunity-explain="${row.measureId}:${row.representativePatient}" type="button">Explain example</button>
+                </div>
+              </td>
             </tr>
           `).join("")}
         </tbody>
@@ -12067,13 +12205,7 @@ function renderVisionPatientOutcomePanel(measure, patient, options = {}) {
 
 function patientValidationRowsForMeasure(measure) {
   const filter = state.patientValidationFilter || "all";
-  const patients = validationPatientsForMeasure(measure);
-  const filteredPatients = ["numerator", "denominator", "exclusion"].includes(filter)
-    ? patients.filter((patient) => patientOutcomeCategory(patient) === filter)
-    : filter === "changed"
-      ? patients.filter(patientHasStateChange)
-      : patients;
-  return sortPatientValidationRows(filteredPatients);
+  return sortPatientValidationRows(patientsForValidationFilter(measure, filter));
 }
 
 function sortPatientValidationRows(patients) {
@@ -12123,15 +12255,21 @@ function renderVisionSelectedPatientsTab() {
       <div class="validation-worklist-header compact">
         <div>
           <span class="vision-kicker">Patient level validation</span>
-          <h3>Select a measure population</h3>
-          <p>Choose a submitted measure, compare current satisfaction and week-over-week movement, then inspect the selected numerator, denominator, and exclusion patients below.</p>
+          <h3>Validate selected patient populations</h3>
+          <p>Choose a submitted measure, filter its selected patients by outcome population or state change, then open explainability for any patient.</p>
         </div>
-        <div class="patient-search-bar">
-          <label>
-            <span>Open patient</span>
-            <input type="search" data-patient-search value="${searchValue}" placeholder="HY-10482, provider, specialty..." />
-          </label>
-          <button class="vision-btn secondary" data-patient-search-action type="button">Search</button>
+        <div class="selected-patient-actions">
+          <div class="patient-search-bar">
+            <label>
+              <span>Open patient</span>
+              <input type="search" data-patient-search value="${searchValue}" placeholder="HY-10482, provider, specialty..." />
+            </label>
+            <button class="vision-btn secondary" data-patient-search-action type="button">Search</button>
+          </div>
+          <div class="inline-action-group">
+            <button class="vision-row-button" data-workbench-trend-measure="${selected.id}" type="button">Trend</button>
+            <button class="vision-row-button" data-workbench-opportunities="${selected.id}" type="button">Opportunities</button>
+          </div>
         </div>
       </div>
       <div class="patient-validation-measure-table-wrap">
@@ -12173,9 +12311,9 @@ function renderVisionSelectedPatientsTab() {
         <div class="validation-filter-group" aria-label="Patient validation filters">
           ${renderPatientValidationFilterButton("all", "All selected", filterCounts.all, true)}
           ${renderPatientValidationFilterButton("changed", "Status changed", filterCounts.changed, true)}
-          ${renderPatientValidationFilterButton("numerator", "Numerator", filterCounts.numerator)}
-          ${renderPatientValidationFilterButton("denominator", "Denominator", filterCounts.denominator)}
-          ${renderPatientValidationFilterButton("exclusion", "Exclusion", filterCounts.exclusion)}
+          ${renderPatientValidationFilterButton("numerator", "Numerator", filterCounts.numerator, true)}
+          ${renderPatientValidationFilterButton("denominator", "Denominator", filterCounts.denominator, true)}
+          ${renderPatientValidationFilterButton("exclusion", "Exclusion", filterCounts.exclusion, true)}
         </div>
         <label class="validation-sort-control">
           <span>Sort</span>
@@ -12212,7 +12350,8 @@ function renderVisionSelectedPatientsTab() {
 
 function renderVisionTrendingQualityTab() {
   const belowTarget = visionValidationPatientMeasures.filter((measure) => currentTrendValue(measure.id) < qualityTargetFor(measure.id)).length;
-  const totalChanged = visionValidationPatientMeasures.reduce((sum, measure) => sum + measure.changed, 0);
+  const totalChanged = visionValidationPatientMeasures.reduce((sum, measure) => sum + changedPatientCountForMeasure(measure), 0);
+  const totalSelected = visionValidationPatientMeasures.reduce((sum, measure) => sum + validationPatientsForMeasure(measure).length, 0);
   const largestMove = visionValidationPatientMeasures.reduce((largest, measure) => {
     const currentChange = Math.abs(Number.parseFloat(attestationTrendFor(measure.id).wowChange));
     const largestChange = Math.abs(Number.parseFloat(attestationTrendFor(largest.id).wowChange));
@@ -12220,15 +12359,20 @@ function renderVisionTrendingQualityTab() {
   }, visionValidationPatientMeasures[0]);
   const largestMoveTrend = attestationTrendFor(largestMove.id);
   return `
-    <div class="vision-grid-4">
-      <article class="vision-card"><span class="vision-kicker">Measures tracked</span><strong class="vision-metric">${visionValidationPatientMeasures.length}</strong><p>Each measure evaluated separately</p></article>
-      <article class="vision-card"><span class="vision-kicker">Below target</span><strong class="vision-metric danger">${belowTarget}</strong><p>Measures need review</p></article>
-      <article class="vision-card"><span class="vision-kicker">Largest WoW change</span><strong class="vision-metric">${largestMoveTrend.wowChange}</strong><p>${largestMove.measure}</p></article>
-      <article class="vision-card"><span class="vision-kicker">Changed outcomes</span><strong class="vision-metric">${totalChanged}</strong><p>Since prior week</p></article>
+    <div class="workbench-summary-row">
+      <div>
+        <span class="vision-kicker">Population validation</span>
+        <strong>${visionValidationPatientMeasures.length} measures · ${belowTarget} below target · ${totalChanged} changed patient outcomes</strong>
+        <em>Largest WoW movement is ${largestMoveTrend.wowChange} on ${largestMove.measure}; selected validation population contains ${totalSelected} patients.</em>
+      </div>
+      <div class="inline-action-group">
+        <button class="vision-row-button" data-validation-changes="${largestMove.id}" type="button">Review largest change</button>
+        <button class="vision-row-button" data-validation-measure="${selectedValidationMeasure().id}" type="button">Open selected patients</button>
+      </div>
     </div>
     <article class="vision-card spaced quality-trend-workspace">
       <div class="vision-section-title compact">
-        <span class="vision-kicker">Population validation</span>
+        <span class="vision-kicker">Measure trends</span>
         <h3>Trending quality over time</h3>
       </div>
       <table class="vision-table quality-trend-table">
@@ -12249,9 +12393,9 @@ function renderVisionTrendingQualityTab() {
         const trend = attestationTrendFor(measure.id);
         const target = qualityTargetFor(measure.id);
         return `
-          <tr>
+          <tr class="${measure.id === selectedValidationMeasure().id ? "selected" : ""}">
             <td><strong>${measure.measure}</strong><span class="subline">${measure.code} / ${measure.mvp}</span></td>
-            <td><strong>${trend.current}</strong><span class="subline">${measure.reviewComplete} patient review complete</span></td>
+            <td><strong>${trend.current}</strong><span class="subline">${validationPatientsForMeasure(measure).length} selected patients</span></td>
             <td><span class="wow-change-badge ${trend.wowTone}">${trend.wowChange}</span></td>
             <td>
               <label class="quality-target-control">
@@ -12261,8 +12405,16 @@ function renderVisionTrendingQualityTab() {
             </td>
             <td data-quality-gap="${measure.id}">${qualityTargetGapBadge(measure.id)}</td>
             <td>${renderAttestationTrendChart(measure, { table: true })}</td>
-            <td><strong>${measure.changed}</strong><span class="subline">${trend.action}</span></td>
-            <td><button class="vision-row-button" data-validation-measure="${measure.id}" type="button">Patients</button></td>
+            <td>
+              <button class="vision-row-button" data-validation-changes="${measure.id}" type="button">${changedPatientCountForMeasure(measure)} changed</button>
+              <span class="subline">${validationPriorSnapshotLabel} -> ${validationCurrentSnapshotLabel}</span>
+            </td>
+            <td>
+              <div class="row-action-stack">
+                <button class="vision-row-button" data-validation-measure="${measure.id}" type="button">Patients</button>
+                <button class="vision-row-button" data-workbench-opportunities="${measure.id}" type="button">Opportunities</button>
+              </div>
+            </td>
           </tr>
         `;
       }).join("")}
@@ -13365,14 +13517,53 @@ function renderDesignLab() {
   });
   content.querySelectorAll("[data-validation-measure]").forEach((button) => {
     button.addEventListener("click", () => {
-      const nextMeasure = visionValidationPatientMeasures.find((measure) => measure.id === button.dataset.validationMeasure);
-      state.selectedValidationMeasure = nextMeasure?.id || button.dataset.validationMeasure;
-      state.selectedValidationPatient = nextMeasure?.patients[0]?.patient || state.selectedValidationPatient;
-      state.patientValidationSearch = "";
-      state.patientValidationFilter = "all";
+      focusValidationMeasure(button.dataset.validationMeasure, { filter: "all" });
       state.visionValidationTab = "patient-level";
       state.visionPerformanceTab = "patient-level";
       state.visionRoute = "performance";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-validation-changes]").forEach((button) => {
+    button.addEventListener("click", () => {
+      focusValidationMeasure(button.dataset.validationChanges, { filter: "changed" });
+      state.visionValidationTab = "patient-level";
+      state.visionPerformanceTab = "patient-level";
+      state.visionRoute = "performance";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-workbench-opportunities]").forEach((button) => {
+    button.addEventListener("click", () => {
+      focusValidationMeasure(button.dataset.workbenchOpportunities, { filter: "all" });
+      state.visionPerformanceTab = "patient-opportunities";
+      state.visionRoute = "performance";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-workbench-trend-measure]").forEach((button) => {
+    button.addEventListener("click", () => {
+      focusValidationMeasure(button.dataset.workbenchTrendMeasure, { filter: "all" });
+      state.visionPerformanceTab = "trending-quality";
+      state.visionRoute = "performance";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-opportunity-patients]").forEach((button) => {
+    button.addEventListener("click", () => {
+      focusValidationMeasure(button.dataset.opportunityPatients, { filter: "all" });
+      state.visionValidationTab = "patient-level";
+      state.visionPerformanceTab = "patient-level";
+      state.visionRoute = "performance";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-opportunity-explain]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const [measureId, patientId] = button.dataset.opportunityExplain.split(":");
+      focusValidationMeasure(measureId, { patientId, filter: "all" });
+      state.visionPerformanceTab = "patient-level";
+      state.visionRoute = "patient-evidence";
       render();
     });
   });

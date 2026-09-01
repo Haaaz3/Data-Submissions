@@ -1,5 +1,13 @@
 # Changelog
 
+## v52
+
+- Rewired Quality Workbench around a shared focused measure across trends, opportunities, patient validation, and outcome explainability.
+- Simplified Trending Quality Over Time into the primary control-table view with direct patient, changed-outcome, and opportunity drill-ins.
+- Expanded Patient Opportunities to all submitted measures with measure-specific forecast lift, near-miss signal, selected-patient access, and example explainability.
+- Added compact Workbench action groups so Trend, Opportunities, and Patient Level Validation behave as one workflow instead of separate destinations.
+- Kept Patient Level Validation centered on selected patients, outcome population filters, state-change filtering, and patient outcome explainability.
+
 ## v51
 
 - Added a Status changed filter to Patient Level Validation.
