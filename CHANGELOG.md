@@ -1,5 +1,12 @@
 # Changelog
 
+## v51
+
+- Added a Status changed filter to Patient Level Validation.
+- Added a compact patient-table sort control with Status changed first, Outcome population, and Patient ID options.
+- Kept the default view on all selected patients while surfacing changed patients first.
+- Added a subtle scan cue for rows where prior state differs from current state.
+
 ## v50
 
 - Removed remaining sampled-minimum language from Patient Level Validation and Validation Plan.

@@ -23,6 +23,7 @@ const state = {
   selectedValidationPatient: "HY-10482",
   patientValidationSearch: "",
   patientValidationFilter: "all",
+  patientValidationSort: "changed-first",
   patientValidationRound: "current",
   qualityTargets: {
     cms349: 85,
@@ -3484,6 +3485,7 @@ function patientOutcomeCategory(patient) {
 function patientOutcomeCategoryName(category) {
   const names = {
     all: "All selected",
+    changed: "Status changed",
     numerator: "Numerator",
     denominator: "Denominator",
     exclusion: "Exclusion",
@@ -3495,6 +3497,10 @@ function patientOutcomeBadge(patient) {
   const category = patientOutcomeCategory(patient);
   const tone = category === "numerator" ? "good" : category === "exclusion" ? "info" : "warn";
   return visionBadge(patientOutcomeCategoryName(category), tone);
+}
+
+function patientHasStateChange(patient) {
+  return patient.change !== "No change";
 }
 
 function patientDataSources(patient) {
@@ -4195,16 +4201,38 @@ function renderVisionPatientOutcomePanel(measure, patient, options = {}) {
 function patientValidationRowsForMeasure(measure) {
   const filter = state.patientValidationFilter || "all";
   const patients = validationPatientsForMeasure(measure);
-  if (["numerator", "denominator", "exclusion"].includes(filter)) {
-    return patients.filter((patient) => patientOutcomeCategory(patient) === filter);
+  const filteredPatients = ["numerator", "denominator", "exclusion"].includes(filter)
+    ? patients.filter((patient) => patientOutcomeCategory(patient) === filter)
+    : filter === "changed"
+      ? patients.filter(patientHasStateChange)
+      : patients;
+  return sortPatientValidationRows(filteredPatients);
+}
+
+function sortPatientValidationRows(patients) {
+  const sort = state.patientValidationSort || "changed-first";
+  const rows = [...patients];
+  const outcomeOrder = { numerator: 0, denominator: 1, exclusion: 2 };
+  if (sort === "patient-id") {
+    return rows.sort((first, second) => first.patient.localeCompare(second.patient));
   }
-  return patients;
+  if (sort === "outcome") {
+    return rows.sort((first, second) =>
+      outcomeOrder[patientOutcomeCategory(first)] - outcomeOrder[patientOutcomeCategory(second)]
+      || first.patient.localeCompare(second.patient),
+    );
+  }
+  return rows.sort((first, second) =>
+    Number(patientHasStateChange(second)) - Number(patientHasStateChange(first))
+    || first.patient.localeCompare(second.patient),
+  );
 }
 
 function patientValidationFilterCounts(measure) {
   const patients = validationPatientsForMeasure(measure);
   return {
     all: patients.length,
+    changed: patients.filter(patientHasStateChange).length,
     numerator: patients.filter((patient) => patientOutcomeCategory(patient) === "numerator").length,
     denominator: patients.filter((patient) => patientOutcomeCategory(patient) === "denominator").length,
     exclusion: patients.filter((patient) => patientOutcomeCategory(patient) === "exclusion").length,
@@ -4277,16 +4305,25 @@ function renderVisionSelectedPatientsTab() {
       <div class="validation-worklist-controls">
         <div class="validation-filter-group" aria-label="Patient validation filters">
           ${renderPatientValidationFilterButton("all", "All selected", filterCounts.all, true)}
+          ${renderPatientValidationFilterButton("changed", "Status changed", filterCounts.changed, true)}
           ${renderPatientValidationFilterButton("numerator", "Numerator", filterCounts.numerator)}
           ${renderPatientValidationFilterButton("denominator", "Denominator", filterCounts.denominator)}
           ${renderPatientValidationFilterButton("exclusion", "Exclusion", filterCounts.exclusion)}
         </div>
+        <label class="validation-sort-control">
+          <span>Sort</span>
+          <select data-validation-sort>
+            <option value="changed-first" ${state.patientValidationSort === "changed-first" ? "selected" : ""}>Status changed first</option>
+            <option value="outcome" ${state.patientValidationSort === "outcome" ? "selected" : ""}>Outcome population</option>
+            <option value="patient-id" ${state.patientValidationSort === "patient-id" ? "selected" : ""}>Patient ID</option>
+          </select>
+        </label>
       </div>
       <table class="vision-table selected-patient-table validation-queue-table">
         <thead><tr><th>Patient</th><th>Provider / specialty</th><th>Outcome</th><th>Current (${validationCurrentSnapshotLabel})</th><th>Prior (${validationPriorSnapshotLabel})</th><th>State change</th><th>Evidence summary</th><th>Sources</th><th></th></tr></thead>
         <tbody>
           ${visiblePatients.length ? visiblePatients.map((row) => `
-              <tr>
+              <tr class="${patientHasStateChange(row) ? "state-changed" : ""}">
                 <td><strong>${row.patient}</strong><span class="subline">${selected.code}</span></td>
                 <td><strong>${row.provider}</strong><span class="subline">${row.specialty}</span></td>
                 <td>${patientOutcomeBadge(row)}</td>
@@ -5475,6 +5512,14 @@ function renderDesignLab() {
   content.querySelectorAll("[data-validation-filter]").forEach((button) => {
     button.addEventListener("click", () => {
       state.patientValidationFilter = button.dataset.validationFilter;
+      state.visionPerformanceTab = "patient-level";
+      state.visionRoute = "performance";
+      render();
+    });
+  });
+  content.querySelectorAll("[data-validation-sort]").forEach((select) => {
+    select.addEventListener("change", () => {
+      state.patientValidationSort = select.value;
       state.visionPerformanceTab = "patient-level";
       state.visionRoute = "performance";
       render();
