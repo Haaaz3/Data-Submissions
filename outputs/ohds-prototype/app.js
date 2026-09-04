@@ -1611,7 +1611,7 @@ const mvpScorecards = {
         { measure: "CMS153v14 - Chlamydia Screening in Women - Stratum 1", ipp: "40", denomExclusions: "2", denom: "38", numerator: "3", exceptions: "0", notMet: "35" },
         { measure: "CMS153v14 - Chlamydia Screening in Women - Stratum 2", ipp: "47", denomExclusions: "2", denom: "45", numerator: "5", exceptions: "0", notMet: "40" },
       ] },
-      { measure: "HIV Screening", id: "CMS349v8", ipp: "4366", denomExclusions: "0", denom: "4366", numerator: "0", exceptions: "6", notMet: "4360", rate: "0.0%", score: "0.0" },
+      { measure: "HIV Screening", id: "CMS349v8", ipp: "4366", denomExclusions: "0", denom: "4366", numerator: "3231", exceptions: "6", notMet: "1129", rate: "74.0%", score: "7.4" },
       { measure: "Preventive Care and Screening: Screening for Depression and Follow-Up Plan", id: "CMS2v15", ipp: "8057", denomExclusions: "238", denom: "7819", numerator: "6761", exceptions: "0", notMet: "1058", rate: "86.47%", score: "9.5" },
     ],
   },

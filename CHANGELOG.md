@@ -1,5 +1,10 @@
 # Changelog
 
+## v53
+
+- Corrected HIV Screening normal scorecard data so it no longer shows a zero numerator.
+- Aligned the HIV scorecard with the Quality Workbench story: realistic performance with remaining lab-source mapping opportunity.
+
 ## v52
 
 - Rewired Quality Workbench around a shared focused measure across trends, opportunities, patient validation, and outcome explainability.
